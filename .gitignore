@@ -1,6 +1,9 @@
 # Claude Code personal context
 CLAUDE.local.md
 
+# Git worktrees
+.worktrees/
+
 # Logs
 logs
 *.log
