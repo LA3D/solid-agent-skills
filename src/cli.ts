@@ -7,6 +7,8 @@ import { shapes } from './commands/shapes.js'
 import { links } from './commands/links.js'
 import { types } from './commands/types.js'
 import { backlinks } from './commands/backlinks.js'
+import { create } from './commands/create.js'
+import { patch } from './commands/patch.js'
 
 program
   .name('solid-pod')
@@ -48,5 +50,20 @@ program
   .description('Find resources linking to this URL')
   .option('--source <url>', 'Pod or container URL to search in')
   .action(backlinks)
+
+program
+  .command('create <container-url>')
+  .description('Create a new resource in a container')
+  .requiredOption('--slug <name>', 'Resource filename')
+  .option('--content-type <type>', 'Content type', 'text/markdown')
+  .option('--body <text>', 'Resource body content')
+  .option('--meta <triples>', 'N3 triples to insert into .meta')
+  .action(create)
+
+program
+  .command('patch <url>')
+  .description('Patch a .meta resource with N3 insert')
+  .requiredOption('--insert <triples>', 'N3 triples to insert')
+  .action(patch)
 
 program.parse()
