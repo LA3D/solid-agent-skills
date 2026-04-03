@@ -1,0 +1,16 @@
+export const SOLID_CONTEXT = {
+  ldp: 'http://www.w3.org/ns/ldp#',
+  dct: 'http://purl.org/dc/terms/',
+  skos: 'http://www.w3.org/2004/02/skos/core#',
+  prov: 'http://www.w3.org/ns/prov#',
+  solid: 'http://www.w3.org/ns/solid/terms#',
+  void: 'http://rdfs.org/ns/void#',
+  dcat: 'http://www.w3.org/ns/dcat#',
+  sh: 'http://www.w3.org/ns/shacl#',
+  rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+  rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
+  pim: 'http://www.w3.org/ns/pim/space#',
+  vault: 'http://pod.vardeman.me/vault/ontology#',
+  prof: 'http://www.w3.org/ns/dx/prof/',
+  role: 'http://www.w3.org/ns/dx/prof/role/',
+} as const
