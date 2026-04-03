@@ -27,8 +27,9 @@ program
 
 program
   .command('sparql <url> <query>')
-  .description('Execute raw SPARQL via Comunica link-traversal')
-  .action(sparql)
+  .description('Execute SPARQL via Comunica (auto-discovers .meta sources for containers)')
+  .option('--no-meta', 'Skip .meta auto-discovery')
+  .action((url: string, query: string, opts: { noMeta?: boolean }) => sparql(url, query, opts))
 
 program
   .command('shapes <url>')

@@ -196,10 +196,12 @@ Wrong predicates?             -> Re-read sh:agentInstruction from the shape
   Using the pod root queries everything but is slow. Use the most specific
   container URL that covers your query.
 
-- **Comunica .meta gap**: Link-traversal follows `ldp:contains` but NOT
-  `describedby` headers on non-RDF resources. If your query needs `.meta`
-  triples from non-RDF resources, you may need to query the `.meta` URLs
-  directly as sources.
+- **Auto .meta discovery**: When you query a container URL (ending in `/`),
+  the CLI automatically discovers `.meta` sidecar URLs and includes them as
+  Comunica sources. This means SPARQL queries against container URLs can
+  find triples from `.meta` files (like `skos:prefLabel`, `dct:subject`)
+  transparently. Use `--no-meta` to disable this if you only want
+  container-level triples.
 
 - **Prefix expansion**: SPARQL queries need full prefix declarations or
   the CLI handles them. Check that `solid-pod sparql` expands standard

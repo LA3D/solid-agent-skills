@@ -27,20 +27,21 @@ Solid-OIDC — handled transparently by Bashlib when credentials are configured.
 |---------|---------|
 | `solid-pod info <url>` | Discover pod capabilities via `.well-known/solid` |
 | `solid-pod read <url>` | Fetch resource + Link headers + `.meta` sidecar |
-| `solid-pod sparql <url> <query>` | Raw SPARQL via Comunica sidecar |
+| `solid-pod sparql <url> <query>` | SPARQL via Comunica (auto-discovers .meta for containers) |
 | `solid-pod shapes <url>` | List SHACL shapes with `sh:agentInstruction` |
+
+| `solid-pod links <url>` | Outgoing references from .meta |
+| `solid-pod types <url>` | Browse rdf:type values with counts |
+| `solid-pod backlinks <url>` | Find resources linking to this URL |
+| `solid-pod create <container-url>` | Create resource (PUT + PATCH .meta) |
+| `solid-pod patch <url>` | N3 Patch to .meta sidecar |
 
 Planned:
 
 | Command | Purpose |
 |---------|---------|
 | `solid-pod search <url> <terms>` | Full-text search (OSLC Query) |
-| `solid-pod backlinks <url> <resource>` | Find resources linking to a target |
-| `solid-pod links <url> <resource>` | Outgoing links from a resource |
-| `solid-pod types <url>` | List Type Index entries (class-to-container) |
 | `solid-pod properties <url>` | Property usage statistics |
-| `solid-pod create <url> <container> <data>` | Create conformant resource (SHACL-validated) |
-| `solid-pod patch <url> <resource> <n3>` | N3 Patch to `.meta` sidecar |
 
 ## Output Format
 

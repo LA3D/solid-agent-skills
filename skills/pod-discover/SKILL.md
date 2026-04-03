@@ -53,11 +53,16 @@ solid-pod read <pod-url>.meta
 
 ## Step 3: Check the PROF Profile (L2)
 
-If Step 1 showed a `dct:conformsTo` pointing to a `SolidPodProfile`, dereference it:
+If Step 1 showed a `dct:conformsTo` pointing to a profile, dereference it.
+The profile URL comes from the `info` output — don't hardcode a path.
 
 ```bash
-solid-pod read <pod-url>settings/solidPodProfile
+# Find the profile URL in the info output's dct:conformsTo field, then:
+solid-pod read <profile-url>
 ```
+
+Common locations: `/ontology/solid-pod-profile.ttl` or `/settings/solidPodProfile`.
+Always follow the link from `dct:conformsTo` rather than guessing.
 
 Look for `prof:hasResource` entries with W3C roles:
 

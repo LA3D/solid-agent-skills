@@ -75,6 +75,33 @@ export async function putResource(url: string, body: string, contentType: string
   }
 }
 
+/**
+ * Discover .meta sidecar URLs for all resources in a container.
+ *
+ * Comunica's link-traversal cannot follow `describedby` Link headers on
+ * non-RDF resources (the RDF parse failure skips metadata extraction).
+ * This function works around that gap by:
+ * 1. Fetching the container listing (Turtle)
+ * 2. Parsing ldp:contains to find contained resources
+ * 3. Constructing .meta URLs for each resource
+ *
+ * Returns the .meta URLs suitable for use as explicit Comunica sources.
+ * See: vault finding "Comunica Link-Traversal Meta Sidecar Gap"
+ */
+export async function discoverMetaSources(containerUrl: string): Promise<string[]> {
+  const url = containerUrl.endsWith('/') ? containerUrl : containerUrl + '/'
+  const res = await fetchResource(url, 'text/turtle')
+  if (res.status !== 200) return []
+
+  const N3 = (await import('n3')).default
+  const quads = new N3.Parser({ baseIRI: url }).parse(res.body)
+  const ldpContains = 'http://www.w3.org/ns/ldp#contains'
+
+  return quads
+    .filter(q => q.predicate.value === ldpContains)
+    .map(q => q.object.value + '.meta')
+}
+
 export async function patchResource(url: string, n3patch: string): Promise<FetchResult> {
   const res = await fetch(url, {
     method: 'PATCH',
