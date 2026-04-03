@@ -3,6 +3,7 @@ import { program } from 'commander'
 import { info } from './commands/info.js'
 import { read } from './commands/read.js'
 import { sparql } from './commands/sparql.js'
+import { shapes } from './commands/shapes.js'
 
 program
   .name('solid-pod')
@@ -23,5 +24,10 @@ program
   .command('sparql <url> <query>')
   .description('Execute raw SPARQL via Comunica link-traversal')
   .action(sparql)
+
+program
+  .command('shapes <url>')
+  .description('List SHACL shapes with sh:agentInstruction guidance')
+  .action(shapes)
 
 program.parse()
