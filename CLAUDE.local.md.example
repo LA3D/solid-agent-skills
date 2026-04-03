@@ -1,0 +1,24 @@
+# Personal Development Context (template)
+
+# Copy this to CLAUDE.local.md and fill in your local paths.
+# CLAUDE.local.md is gitignored and never committed.
+
+## Vault Integration (optional)
+
+# If you have the Obsidian vault, launch Claude Code with:
+# CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1
+# Vault path: ~/Obsidian/obsidian
+
+## Sibling Repo Paths
+
+# Uncomment and set paths to sibling repos on your machine:
+# - Reference pod: ~/path/to/cogitarelink-solid
+# - Fabric nodes: ~/path/to/cogitarelink-fabric
+# - RLM substrate: ~/path/to/rlm
+
+## Reference Pod
+
+# To run the reference pod for testing:
+# cd /path/to/cogitarelink-solid && make up
+# Pod URL: http://pod.vardeman.me:3000/vault/
+# Requires: 127.0.0.1 pod.vardeman.me in /etc/hosts
