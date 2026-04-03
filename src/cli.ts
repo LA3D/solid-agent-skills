@@ -2,6 +2,7 @@
 import { program } from 'commander'
 import { info } from './commands/info.js'
 import { read } from './commands/read.js'
+import { sparql } from './commands/sparql.js'
 
 program
   .name('solid-pod')
@@ -17,5 +18,10 @@ program
   .command('read <url>')
   .description('GET resource with Link headers and .meta sidecar as JSON-LD')
   .action(read)
+
+program
+  .command('sparql <url> <query>')
+  .description('Execute raw SPARQL via Comunica link-traversal')
+  .action(sparql)
 
 program.parse()
