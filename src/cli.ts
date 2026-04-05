@@ -10,6 +10,7 @@ import { backlinks } from './commands/backlinks.js'
 import { create } from './commands/create.js'
 import { patch } from './commands/patch.js'
 import { search } from './commands/search.js'
+import { properties } from './commands/properties.js'
 
 program
   .name('solid-pod')
@@ -74,5 +75,11 @@ program
   .option('--source <url>', 'Explicit source URL to search')
   .option('--no-fallback', 'Skip OSLC attempt, go straight to SPARQL')
   .action(search)
+
+program
+  .command('properties <url>')
+  .description('Show predicate usage statistics from container .meta files')
+  .option('--source <url>', 'Explicit source URL')
+  .action(properties)
 
 program.parse()
