@@ -1,5 +1,6 @@
 import { fetchResource, discoverMetaSources } from '../lib/http.js'
 import { output } from '../lib/jsonld.js'
+import N3 from 'n3'
 
 interface SearchResult {
   resource: string
@@ -12,20 +13,18 @@ interface SearchResult {
 async function searchMeta(
   metaUrl: string,
   pattern: RegExp,
-  N3: typeof import('n3'),
 ): Promise<SearchResult[]> {
   try {
     const res = await fetchResource(metaUrl, 'text/turtle')
     if (res.status !== 200) return []
 
-    const quads = new N3.default.Parser({ baseIRI: metaUrl }).parse(res.body)
+    const quads = new N3.Parser({ baseIRI: metaUrl }).parse(res.body)
     const results: SearchResult[] = []
 
-    // Find the subject (resource this .meta describes)
-    // .meta URL = resourceUrl + '.meta', so strip '.meta' to get subject
+    // .meta URL = resourceUrl + '.meta', so strip to get subject
     const resourceUrl = metaUrl.replace(/\.meta$/, '')
 
-    // Collect labels for the resource
+    // Collect label for the resource
     const labelPredicates = [
       'http://www.w3.org/2004/02/skos/core#prefLabel',
       'http://www.w3.org/2000/01/rdf-schema#label',
@@ -74,7 +73,6 @@ export async function search(
       return
     }
 
-    const N3 = await import('n3')
     const escaped = terms.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     const pattern = new RegExp(escaped, 'i')
 
@@ -84,7 +82,7 @@ export async function search(
     for (let i = 0; i < metaSources.length; i += batchSize) {
       const batch = metaSources.slice(i, i + batchSize)
       const batchResults = await Promise.all(
-        batch.map(ms => searchMeta(ms, pattern, N3)),
+        batch.map(ms => searchMeta(ms, pattern)),
       )
       allResults.push(...batchResults.flat())
     }
