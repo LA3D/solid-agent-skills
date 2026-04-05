@@ -35,13 +35,8 @@ Solid-OIDC — handled transparently by Bashlib when credentials are configured.
 | `solid-pod backlinks <url>` | Find resources linking to this URL |
 | `solid-pod create <container-url>` | Create resource (PUT + PATCH .meta) |
 | `solid-pod patch <url>` | N3 Patch to .meta sidecar |
-
-Planned:
-
-| Command | Purpose |
-|---------|---------|
-| `solid-pod search <url> <terms>` | Full-text search (OSLC Query) |
-| `solid-pod properties <url>` | Property usage statistics |
+| `solid-pod search <url> <terms>` | Text search across .meta files (OSLC-ready, SPARQL fallback) |
+| `solid-pod properties <url>` | Predicate usage statistics from .meta files |
 
 ## Output Format
 
@@ -112,11 +107,13 @@ well-described pod.
 ## Discovery Workflow
 
 ```
-1. solid-pod info <url>        Read .well-known/solid (L1)
-2. Follow SolidPodProfile      Find shapes, schemas (L2)
-3. solid-pod shapes <url>      Read sh:agentInstruction (L3)
-4. solid-pod sparql <url> ...  Use discovered patterns (L3-L4)
-5. solid-pod read <url>/path   Browse resources with affordances
+1. solid-pod info <url>            Read .well-known/solid (L1)
+2. Follow SolidPodProfile          Find shapes, schemas (L2)
+3. solid-pod shapes <url>          Read sh:agentInstruction (L3)
+4. solid-pod properties <url>      Learn actual predicates in a container
+5. solid-pod sparql <url> ...      Use discovered patterns (L3-L4)
+   solid-pod search <url> <terms>  Or text search for quick discovery
+6. solid-pod read <url>/path       Browse resources with affordances
 ```
 
 ## Reference

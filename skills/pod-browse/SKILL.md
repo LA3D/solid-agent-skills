@@ -110,6 +110,31 @@ solid-pod read <sub-container-url>
 Repeat Steps 1-5 for each sub-container. Each has its own `.meta`
 with its own `sh:agentInstruction` and `dct:type`.
 
+## Step 7: Check Predicate Usage
+
+Before querying a container, find out what vocabulary it actually uses:
+
+```bash
+solid-pod properties <container-url>
+```
+
+This scans all `.meta` sidecars in the container and returns predicate
+counts — showing which predicates exist and how many resources use them:
+
+```json
+{
+  "source": "http://pod.vardeman.me:3000/vault/resources/concepts/",
+  "metaSources": 107,
+  "properties": [
+    {"predicate": "http://www.w3.org/2004/02/skos/core#prefLabel", "count": 107},
+    {"predicate": "http://purl.org/dc/terms/subject", "count": 95}
+  ]
+}
+```
+
+Use this to learn the container's actual vocabulary before constructing
+SPARQL queries. If a predicate has count 0 or is missing, don't query for it.
+
 ## Navigation Patterns
 
 ### Top-Down (broad to specific)
@@ -138,6 +163,7 @@ After browsing, decide your next action:
 
 ```
 Found relevant resources?     -> Read them, follow their links
+Need to know what vocab is used? -> solid-pod properties (predicate stats)
 Need structured query?        -> /pod-query (SPARQL guided by shapes)
 Want to add a resource?       -> /pod-create (shape-conformant creation)
 Lost in the structure?        -> /pod-discover (re-orient from .well-known)

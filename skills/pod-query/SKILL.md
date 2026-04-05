@@ -144,6 +144,47 @@ SELECT ?s ?label WHERE {
 }
 ```
 
+## Text Search
+
+When you need text matching rather than structured SPARQL, use `search`:
+
+```bash
+solid-pod search <container-url> "<terms>"
+```
+
+Search scans `.meta` sidecars for literal values matching your terms.
+It tries OSLC Query first (if the pod supports it), then falls back to
+direct SPARQL over `.meta` files.
+
+```json
+{
+  "source": "http://pod.vardeman.me:3000/vault/resources/concepts/",
+  "terms": "knowledge",
+  "method": "sparql",
+  "metaSources": 107,
+  "results": [
+    {
+      "resource": "http://pod.vardeman.me:3000/vault/resources/concepts/knowledge-representation-for-agents.md",
+      "label": "Knowledge Representation for Agents",
+      "matchedPredicate": "http://www.w3.org/2004/02/skos/core#prefLabel",
+      "matchedValue": "Knowledge Representation for Agents"
+    }
+  ]
+}
+```
+
+**When to use `search` vs `sparql`**:
+
+| Use case | Command |
+|----------|---------|
+| Find resources by keyword | `search` — text matching across literals |
+| Structured graph patterns | `sparql` — joins, filters, aggregates |
+| "What mentions X?" | `search` — fast, no query construction |
+| "How does X relate to Y?" | `sparql` — follow predicates, build patterns |
+
+Use `search` for discovery (what's here?), then `sparql` for precise
+queries once you know the predicates and structure.
+
 ## Container .meta Queries
 
 Container `.meta` files also have `sh:agentInstruction`. Read them
@@ -186,6 +227,7 @@ Key predicates by use case:
 ```
 Query returned results?       -> Read interesting resources with /pod-browse
 No results?                   -> Widen source URL or check predicate spelling
+Just need keyword matching?   -> solid-pod search (text search, no SPARQL needed)
 Need to create something?     -> /pod-create (shape-guided resource creation)
 Wrong predicates?             -> Re-read sh:agentInstruction from the shape
 ```
