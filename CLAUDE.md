@@ -18,13 +18,29 @@ Agent skills for Solid Pod interaction, not a traditional CLI. Skills are compos
 context-aware, and integrated into the agent's reasoning loop. Evaluate the Vercel Skills
 framework (https://skills.sh/, https://github.com/vercel-labs/skills) as a substrate.
 
-### Skill Candidates
+### CLI Commands (11)
+
+| Command | Purpose |
+|---------|---------|
+| `solid-pod info <url>` | GET .well-known/solid, return VoID/DCAT as JSON-LD |
+| `solid-pod read <url>` | GET resource with Link headers and .meta sidecar |
+| `solid-pod sparql <url> <query>` | SPARQL via Comunica (auto .meta discovery) |
+| `solid-pod shapes <url>` | List SHACL shapes with sh:agentInstruction |
+| `solid-pod links <url>` | Outgoing references from .meta |
+| `solid-pod types <url>` | rdf:type values with counts |
+| `solid-pod backlinks <url>` | Reverse references |
+| `solid-pod search <url> <terms>` | Text search (OSLC-ready, SPARQL fallback) |
+| `solid-pod properties <url>` | Predicate usage stats from .meta |
+| `solid-pod create <url>` | PUT resource + PATCH .meta |
+| `solid-pod patch <url>` | N3 Patch .meta sidecar |
+
+### Agent Skills (5)
 
 | Skill | Purpose | Pod Discovery Layer |
 |-------|---------|-------------------|
 | `/pod-discover` | Read `.well-known/solid` -> PROF profile -> vocabularies, shapes | L1-L2 |
 | `/pod-browse` | Navigate LDP containers, follow `.meta`, read `sh:agentInstruction` | L2-L3 |
-| `/pod-query` | Construct SPARQL from shape guidance, handle source discovery | L3-L4 |
+| `/pod-query` | Construct SPARQL from shape guidance, text search, source discovery | L3-L4 |
 | `/pod-create` | Read SHACL shape, generate conformant resource, PUT + PATCH `.meta` | L3 |
 
 ### Key Technical Context
