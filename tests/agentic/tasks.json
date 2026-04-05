@@ -1,0 +1,42 @@
+[
+  {
+    "id": "discover-pod",
+    "type": "discovery",
+    "instruction": "You have been given a pod URL. Discover what this pod contains, what vocabularies it uses, and what shapes constrain its resources.",
+    "pod_url": "http://pod.vardeman.me:3000/vault/",
+    "expected_commands": ["info", "shapes"],
+    "success_criteria": "Agent identifies VoID vocabularies (SKOS, DCT, PROV) and finds at least one SHACL shape with sh:agentInstruction"
+  },
+  {
+    "id": "find-concepts",
+    "type": "navigation",
+    "instruction": "Find all concept notes in the pod and list their labels.",
+    "pod_url": "http://pod.vardeman.me:3000/vault/",
+    "expected_commands": ["read", "sparql"],
+    "success_criteria": "Agent navigates to concepts container and retrieves labels via SPARQL using the predicate from sh:agentInstruction"
+  },
+  {
+    "id": "search-topic",
+    "type": "search",
+    "instruction": "Find resources related to 'knowledge graphs' in the concepts container.",
+    "pod_url": "http://pod.vardeman.me:3000/vault/",
+    "expected_commands": ["search"],
+    "success_criteria": "Agent finds at least one matching resource"
+  },
+  {
+    "id": "create-conformant",
+    "type": "creation",
+    "instruction": "Create a new concept note about 'Agent Testing Patterns' that conforms to the pod's concept-note SHACL shape. Include appropriate metadata.",
+    "pod_url": "http://pod.vardeman.me:3000/vault/",
+    "expected_commands": ["shapes", "create"],
+    "success_criteria": "Agent reads the shape first, then creates a resource with metadata matching shape constraints (skos:prefLabel, dct:subject at minimum)"
+  },
+  {
+    "id": "find-connections",
+    "type": "navigation",
+    "instruction": "Find what resources are connected to the 'context-graphs' concept note.",
+    "pod_url": "http://pod.vardeman.me:3000/vault/",
+    "expected_commands": ["links", "backlinks"],
+    "success_criteria": "Agent uses links to find outgoing references and backlinks to find incoming references"
+  }
+]

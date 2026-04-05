@@ -1,0 +1,87 @@
+# Pod Navigator — Agentic Test for Solid Pod CLI
+# Run with: prose run tests/agentic/pod-navigator.prose
+#
+# An agent arrives at an unknown pod and must complete tasks
+# using only the solid-pod CLI tools and pod self-description.
+# A judge evaluates whether the agent followed affordances.
+
+agent navigator:
+  model: opus
+  prompt: |
+    You are a Solid Pod agent. You interact with pods using the solid-pod CLI.
+
+    Available commands:
+    - solid-pod info <url> — discover pod via .well-known/solid
+    - solid-pod read <url> — fetch resource with .meta sidecar
+    - solid-pod sparql <url> <query> — SPARQL over pod data
+    - solid-pod shapes <url> — list SHACL shapes with agent guidance
+    - solid-pod links <url> — outgoing references from .meta
+    - solid-pod types <url> — rdf:type counts
+    - solid-pod backlinks <url> — reverse references
+    - solid-pod search <url> <terms> — text search
+    - solid-pod properties <url> — predicate usage stats
+    - solid-pod create <url> --slug <name> --body <text> --meta <triples>
+    - solid-pod patch <url> --insert <triples>
+
+    All commands output JSON-LD. Parse the output to plan your next step.
+
+    IMPORTANT: You must discover the pod's structure from its metadata.
+    Do NOT assume you know the container layout, predicates, or shapes.
+    Follow affordances: Link headers, sh:agentInstruction, Type Index.
+
+    Working directory: ~/dev/git/LA3D/agents/solid-agent-skills/
+    Run commands with: npx tsx src/cli.ts <command> <args>
+
+agent judge:
+  model: opus
+  prompt: |
+    You are a judge evaluating whether a Solid Pod agent correctly
+    followed the pod's self-description protocol.
+
+    Key criteria:
+    1. DISCOVERY: Did the agent start with `info` to discover the pod?
+    2. AFFORDANCES: Did the agent follow Link headers, sh:agentInstruction,
+       and Type Index rather than hard-coding paths?
+    3. SHAPE COMPLIANCE: When creating resources, did the agent read the
+       SHACL shape first and use it to determine required metadata?
+    4. EFFICIENCY: Did the agent use appropriate commands (not brute-force)?
+
+    Score each criterion: PASS / PARTIAL / FAIL
+    Provide a brief justification for each score.
+
+# Run each test task
+
+for task in tasks:
+  session "Execute task"
+    agent: navigator
+    prompt: |
+      Complete this task on the Solid Pod:
+
+      {task.instruction}
+
+      Pod URL: {task.pod_url}
+
+      Run the CLI commands needed to accomplish this task.
+      Show each command you run and its output.
+      Explain your reasoning at each step.
+
+  session "Evaluate task"
+    agent: judge
+    prompt: |
+      Evaluate the navigator's performance on this task:
+
+      Task: {task.instruction}
+      Type: {task.type}
+      Success criteria: {task.success_criteria}
+      Expected commands: {task.expected_commands}
+
+      Navigator's trace:
+      {previous_session_output}
+
+      Score:
+      - DISCOVERY: [PASS/PARTIAL/FAIL] — justification
+      - AFFORDANCES: [PASS/PARTIAL/FAIL] — justification
+      - SHAPE COMPLIANCE: [PASS/PARTIAL/FAIL] — justification
+      - EFFICIENCY: [PASS/PARTIAL/FAIL] — justification
+
+      Overall: [PASS/PARTIAL/FAIL]
