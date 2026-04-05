@@ -9,6 +9,7 @@ import { types } from './commands/types.js'
 import { backlinks } from './commands/backlinks.js'
 import { create } from './commands/create.js'
 import { patch } from './commands/patch.js'
+import { search } from './commands/search.js'
 
 program
   .name('solid-pod')
@@ -66,5 +67,12 @@ program
   .description('Patch a .meta resource with N3 insert')
   .requiredOption('--insert <triples>', 'N3 triples to insert')
   .action(patch)
+
+program
+  .command('search <url> <terms>')
+  .description('Search container resources by text (OSLC Query with SPARQL fallback)')
+  .option('--source <url>', 'Explicit source URL to search')
+  .option('--no-fallback', 'Skip OSLC attempt, go straight to SPARQL')
+  .action(search)
 
 program.parse()
