@@ -1,7 +1,6 @@
 import { fetchResource } from '../lib/http.js'
-import { compactOutput, output } from '../lib/jsonld.js'
+import { turtleToJsonld, output } from '../lib/jsonld.js'
 import N3 from 'n3'
-import jsonld from 'jsonld'
 
 export async function shapes(url: string): Promise<void> {
   // Fetch the shapes container listing
@@ -25,21 +24,8 @@ export async function shapes(url: string): Promise<void> {
   for (const shapeUrl of shapeUrls) {
     const shapeRes = await fetchResource(shapeUrl, 'text/turtle')
     if (shapeRes.status !== 200) continue
-    const shapeQuads = new N3.Parser({ baseIRI: shapeUrl }).parse(shapeRes.body)
-    const writer = new N3.Writer({ format: 'application/n-quads' })
-    shapeQuads.forEach(q => writer.addQuad(q))
-    const nquads = await new Promise<string>((resolve, reject) => {
-      writer.end((err, r) => err ? reject(err) : resolve(r))
-    })
-    const expanded = await jsonld.fromRDF(nquads, { format: 'application/n-quads' })
-    const compactedNodes = []
-    for (const node of expanded) {
-      compactedNodes.push(await compactOutput(node))
-    }
-    shapeDocs.push({
-      source: shapeUrl,
-      nodes: compactedNodes.length === 1 ? compactedNodes[0] : compactedNodes,
-    })
+    const compacted = await turtleToJsonld(shapeRes.body, shapeUrl)
+    shapeDocs.push({ source: shapeUrl, nodes: compacted })
   }
 
   output({

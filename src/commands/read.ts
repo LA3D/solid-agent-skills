@@ -1,7 +1,5 @@
 import { fetchResource } from '../lib/http.js'
-import { compactOutput, output } from '../lib/jsonld.js'
-import N3 from 'n3'
-import jsonld from 'jsonld'
+import { turtleToJsonld, output } from '../lib/jsonld.js'
 
 export async function read(url: string): Promise<void> {
   const res = await fetchResource(url)
@@ -23,14 +21,7 @@ export async function read(url: string): Promise<void> {
     const metaUrl = new URL(res.headers.describedby as string, url).href
     const metaRes = await fetchResource(metaUrl, 'text/turtle')
     if (metaRes.status === 200) {
-      const quads = new N3.Parser({ baseIRI: metaUrl }).parse(metaRes.body)
-      const writer = new N3.Writer({ format: 'application/n-quads' })
-      quads.forEach(q => writer.addQuad(q))
-      const nquads = await new Promise<string>((resolve, reject) => {
-        writer.end((err, r) => err ? reject(err) : resolve(r))
-      })
-      const expanded = await jsonld.fromRDF(nquads, { format: 'application/n-quads' })
-      result.meta = await compactOutput(expanded.length === 1 ? expanded[0] : expanded)
+      result.meta = await turtleToJsonld(metaRes.body, metaUrl)
     }
   }
 

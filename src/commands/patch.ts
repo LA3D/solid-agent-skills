@@ -1,13 +1,6 @@
 import { patchResource } from '../lib/http.js'
 import { output } from '../lib/jsonld.js'
-
-function buildN3Patch(triples: string): string {
-  return `@prefix solid: <http://www.w3.org/ns/solid/terms#>.
-<> a solid:InsertDeletePatch;
-solid:inserts {
-    ${triples}
-}.`
-}
+import { buildN3Patch } from '../lib/n3.js'
 
 export async function patch(
   url: string,
