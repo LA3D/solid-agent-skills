@@ -11,7 +11,7 @@ interface SearchResult {
 }
 
 /** Fetch a .meta file, parse it, and return quads matching the search regex. */
-async function searchMeta(
+export async function searchMeta(
   metaUrl: string,
   pattern: RegExp,
 ): Promise<SearchResult[]> {

@@ -9,7 +9,7 @@ interface PropertyStat {
 }
 
 /** Fetch a .meta file and return all predicate URIs found. */
-async function collectPredicates(metaUrl: string): Promise<string[]> {
+export async function collectPredicates(metaUrl: string): Promise<string[]> {
   try {
     const res = await fetchResource(metaUrl, 'text/turtle')
     if (res.status !== 200) return []
