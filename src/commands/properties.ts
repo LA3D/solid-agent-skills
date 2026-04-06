@@ -26,7 +26,9 @@ export async function properties(
   const containerUrl = url.endsWith('/') ? url : url + '/'
 
   try {
-    const metaSources = await discoverMetaSources(containerUrl)
+    const metaSources = options.source
+      ? [options.source]
+      : await discoverMetaSources(containerUrl)
     if (metaSources.length === 0) {
       output({ source: containerUrl, metaSources: 0, properties: [] })
       return

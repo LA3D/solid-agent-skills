@@ -71,9 +71,8 @@ program
 
 program
   .command('search <url> <terms>')
-  .description('Search container resources by text (OSLC Query with SPARQL fallback)')
-  .option('--source <url>', 'Explicit source URL to search')
-  .option('--no-fallback', 'Skip OSLC attempt, go straight to SPARQL')
+  .description('Search container .meta files by text (client-side, OSLC when available)')
+  .option('--source <url>', 'Explicit .meta URL to search (replaces auto-discovery)')
   .action(search)
 
 program

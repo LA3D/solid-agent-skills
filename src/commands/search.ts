@@ -57,19 +57,18 @@ async function searchMeta(
 export async function search(
   url: string,
   terms: string,
-  options: { source?: string; noFallback?: boolean } = {},
+  options: { source?: string } = {},
 ): Promise<void> {
   const containerUrl = url.endsWith('/') ? url : url + '/'
 
-  // OSLC Query path is future-proofing — CSS ignores unknown query params
-  // and returns the normal container listing. Skip OSLC until the pod
-  // advertises support (via void:feature or similar).
-
-  // Direct .meta fetch + in-process search (avoids Comunica overhead)
+  // Direct .meta fetch + in-process search (avoids Comunica overhead).
+  // OSLC Query will be method: 'oslc' when pod advertises support.
   try {
-    const metaSources = await discoverMetaSources(containerUrl)
+    const metaSources = options.source
+      ? [options.source]
+      : await discoverMetaSources(containerUrl)
     if (metaSources.length === 0) {
-      output({ source: containerUrl, terms, method: 'sparql', results: [] })
+      output({ source: containerUrl, terms, method: 'client', results: [] })
       return
     }
 
@@ -96,7 +95,7 @@ export async function search(
       return true
     })
 
-    output({ source: containerUrl, terms, method: 'sparql', metaSources: metaSources.length, results })
+    output({ source: containerUrl, terms, method: 'client', metaSources: metaSources.length, results })
   } catch (err) {
     output({
       error: `Search failed: ${(err as Error).message}`,

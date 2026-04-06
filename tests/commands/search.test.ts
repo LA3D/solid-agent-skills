@@ -36,6 +36,6 @@ describe.skipIf(!podAvailable)('solid-pod search', { timeout: 60_000 }, () => {
       { encoding: 'utf8', cwd: process.cwd(), timeout: 55_000 },
     )
     const result = JSON.parse(out)
-    expect(result.method).toMatch(/oslc|sparql/)
+    expect(result.method).toMatch(/oslc|client/)
   })
 })
