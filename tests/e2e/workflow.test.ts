@@ -28,7 +28,6 @@ describe.skipIf(!podAvailable)('end-to-end: discover → browse → query → cr
     expect(result['@context']).toBeDefined()
     expect(result['@type']).toBeDefined()
     const json = JSON.stringify(result)
-    // VoID dataset with vocabulary info
     expect(json).toContain('void')
   })
 
@@ -47,9 +46,7 @@ describe.skipIf(!podAvailable)('end-to-end: discover → browse → query → cr
   })
 
   it('Step 4: query .meta for concept labels', () => {
-    // Use single quotes inside the SPARQL to avoid shell escaping issues
-    const query = "SELECT ?s ?label WHERE { ?s <http://www.w3.org/2004/02/skos/core#prefLabel> ?label } LIMIT 3"
-    // Pass query via env var to avoid shell escaping entirely
+    const query = 'SELECT ?s ?label WHERE { ?s <http://www.w3.org/2004/02/skos/core#prefLabel> ?label } LIMIT 3'
     const out = execSync(
       `npx tsx src/cli.ts sparql "${containerUrl}" "${query}"`,
       { encoding: 'utf8', cwd: process.cwd(), timeout: 120_000 },
@@ -66,16 +63,11 @@ describe.skipIf(!podAvailable)('end-to-end: discover → browse → query → cr
   })
 
   it('Step 6: create a conformant resource', () => {
+    // Pipe body via stdin, pass meta via JSON.stringify to handle quotes safely
+    const body = '# E2E Test Concept\n\nCreated by end-to-end test.'
     const meta = '<> <http://www.w3.org/2004/02/skos/core#prefLabel> "E2E Test Concept" .'
-    const body = '# E2E Test Concept\\n\\nCreated by end-to-end test.'
     const out = execSync(
-      [
-        'npx tsx src/cli.ts create',
-        containerUrl,
-        `--slug "${slug}"`,
-        `--body "${body}"`,
-        `--meta '${meta}'`,
-      ].join(' '),
+      `echo ${JSON.stringify(body)} | npx tsx src/cli.ts create ${containerUrl} --slug ${slug} --meta ${JSON.stringify(meta)}`,
       { encoding: 'utf8', cwd: process.cwd(), timeout: 30_000 },
     )
     const result = JSON.parse(out) as Record<string, unknown>
