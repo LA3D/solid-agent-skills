@@ -1,5 +1,6 @@
 import { fetchResource, discoverMetaSources } from '../lib/http.js'
 import { output } from '../lib/jsonld.js'
+import { SOLID_CONTEXT } from '../lib/context.js'
 import N3 from 'n3'
 
 interface PropertyStat {
@@ -30,7 +31,7 @@ export async function properties(
       ? [options.source]
       : await discoverMetaSources(containerUrl)
     if (metaSources.length === 0) {
-      output({ source: containerUrl, metaSources: 0, properties: [] })
+      output({ '@context': SOLID_CONTEXT, source: containerUrl, metaSources: 0, properties: [] })
       return
     }
 
@@ -55,7 +56,7 @@ export async function properties(
       .map(([predicate, count]) => ({ predicate, count }))
       .sort((a, b) => b.count - a.count)
 
-    output({ source: containerUrl, metaSources: metaSources.length, properties: props })
+    output({ '@context': SOLID_CONTEXT, source: containerUrl, metaSources: metaSources.length, properties: props })
   } catch (err) {
     output({
       error: `Properties failed: ${(err as Error).message}`,

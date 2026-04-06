@@ -12,6 +12,7 @@ describe.skipIf(!podAvailable)('solid-pod search', { timeout: 60_000 }, () => {
       { encoding: 'utf8', cwd: process.cwd(), timeout: 55_000 },
     )
     const result = JSON.parse(out)
+    expect(result['@context']).toBeDefined()
     expect(result.source).toBe(url)
     expect(result.terms).toBe('context graph')
     expect(result.results).toBeDefined()

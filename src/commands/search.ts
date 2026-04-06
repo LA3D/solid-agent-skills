@@ -1,5 +1,6 @@
 import { fetchResource, discoverMetaSources } from '../lib/http.js'
 import { output } from '../lib/jsonld.js'
+import { SOLID_CONTEXT } from '../lib/context.js'
 import N3 from 'n3'
 
 interface SearchResult {
@@ -68,7 +69,7 @@ export async function search(
       ? [options.source]
       : await discoverMetaSources(containerUrl)
     if (metaSources.length === 0) {
-      output({ source: containerUrl, terms, method: 'client', results: [] })
+      output({ '@context': SOLID_CONTEXT, source: containerUrl, terms, method: 'client', results: [] })
       return
     }
 
@@ -95,7 +96,7 @@ export async function search(
       return true
     })
 
-    output({ source: containerUrl, terms, method: 'client', metaSources: metaSources.length, results })
+    output({ '@context': SOLID_CONTEXT, source: containerUrl, terms, method: 'client', metaSources: metaSources.length, results })
   } catch (err) {
     output({
       error: `Search failed: ${(err as Error).message}`,
