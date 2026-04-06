@@ -99,7 +99,9 @@ export async function discoverMetaSources(containerUrl: string): Promise<string[
 
   return quads
     .filter(q => q.predicate.value === ldpContains)
-    .map(q => q.object.value + '.meta')
+    .map(q => q.object.value)
+    .filter(u => !u.endsWith('/'))  // skip sub-containers
+    .map(u => u + '.meta')
 }
 
 export async function patchResource(url: string, n3patch: string): Promise<FetchResult> {
