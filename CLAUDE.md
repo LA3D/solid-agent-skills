@@ -4,13 +4,40 @@ Agent skills for Solid Pod interaction — discover, browse, query, create confo
 
 ## Project Context
 
-This project builds on Phase 1 of the SOLID Pod Integration (cogitarelink-solid).
-If the Obsidian vault (`~/Obsidian/obsidian`) is available as an additional working directory,
-it contains the master project plan, decisions log (D1-D35), and research context under
-`01 - Projects/SOLID Pod Integration/`. Use it for architectural context and decision history.
+This project builds on the SOLID Pod Integration (cogitarelink-solid). The reference
+Pod is now at **Rung 1.4** state — wiki-memory L3 reference profile with storage
+description router (D44), affordance catalog (D52), body-projection listener (D58/D71),
+class-based SHACL dispatch (D78), JSON-LD context (D79), predicate-level governance
+(D81), and Memento time-travel (D61–D68). Architectural decisions D1–D81 + K1–K3 are
+canonical at `cogitarelink-solid/.claude/rules/decisions-index.md`.
+
+If the Obsidian vault (`~/Obsidian/obsidian`) is available as an additional working
+directory, it contains the master project plan and decisions log under
+`01 - Projects/SOLID Pod Integration/`. Use it for architectural context and
+decision history.
 
 If the vault is not available, the in-repo instructions and `.claude/memory/` provide
 sufficient context for development work.
+
+## Skill suite reset (2026-05-15)
+
+The 5 Phase 2 skills (`pod-shared`, `pod-discover`, `pod-browse`, `pod-create`,
+`pod-query`) were removed in May 2026 after the reference Pod underwent major
+architectural changes (D42–D81). The skills assumed Phase 2's generic PARA container
+layout, `procedures/shapes/` discovery path, and single-stage resource creation —
+all superseded by wiki-memory L3 (D70–D81). The legacy state is preserved at git
+tag `phase-2-skills-archive`.
+
+The replacement suite is being rebuilt incrementally, one skill per sprint, each
+validated via the skill-creator harness (with-skill vs without-skill eval against
+the live Pod). Planned skills, foundation-first:
+
+1. **`pod-discover`** — Cold-start arrival: storage description → affordance catalog → Type Index → JSON-LD context → class-based SHACL dispatch
+2. **`pod-read`** — Read a typed resource with dual-layer awareness (body markdown + `.meta` projection per D58/D71/D81)
+3. **`pod-query`** — Comunica SPARQL with explicit `.meta` sources (RQ-Pod-4 workaround), class-targeted queries
+4. **`pod-write`** — Two-stage commit (D73): low-ceremony POST to `/wiki/working/`, then `mem:Crystallize` to durable container
+5. **`pod-memento`** — Time-travel queries (RFC 7089) — TimeGate, TimeMap, version-specific reads
+6. **`pod-affordance-inspect`** — Read affordance descriptors at `/meta/affordances/` to learn substrate behaviors
 
 ## Architecture
 
@@ -34,30 +61,42 @@ framework (https://skills.sh/, https://github.com/vercel-labs/skills) as a subst
 | `solid-pod create <url>` | PUT resource + PATCH .meta |
 | `solid-pod patch <url>` | N3 Patch .meta sidecar |
 
-### Agent Skills (5)
+### Agent Skills
 
-| Skill | Purpose | Pod Discovery Layer |
-|-------|---------|-------------------|
-| `/pod-discover` | Read `.well-known/solid` -> PROF profile -> vocabularies, shapes | L1-L2 |
-| `/pod-browse` | Navigate LDP containers, follow `.meta`, read `sh:agentInstruction` | L2-L3 |
-| `/pod-query` | Construct SPARQL from shape guidance, text search, source discovery | L3-L4 |
-| `/pod-create` | Read SHACL shape, generate conformant resource, PUT + PATCH `.meta` | L3 |
+See "Skill suite reset" above. The skills directory was reset 2026-05-15 against
+the new Pod architecture and is being rebuilt one skill per sprint.
 
 ### Key Technical Context
 
-- **SHACL 1.2 `sh:agentInstruction`** (S8.3) is the crucial piece for agent guidance — shapes tell agents which SPARQL patterns to use
-- **PROF ResourceDescriptors** with W3C roles (`role:schema`, `role:constraints`, `role:guidance`) provide the connective tissue between discovery layers
-- **Comunica link-traversal gap**: follows `ldp:contains` but NOT `describedby` headers on non-RDF resources. Skills must handle `.meta` discovery explicitly.
-- **Pod self-description validated**: zero-shot agent tests confirmed agents can discover pod structure from metadata alone
+- **SHACL 1.2 `sh:agentInstruction`** (§8.3) is the crucial piece for agent guidance — shapes tell agents which SPARQL patterns to use (D50)
+- **Class-based shape targeting** (D78) — shapes target `rdf:type` (`wiki:Concept`, `wiki:Source`, etc.) via `sh:targetClass`. Type Index does double duty for routing class → container
+- **Body-affordance projection** (D58/D71) — body markdown wikilinks `[[Note]]{.class}` project to `.meta` triples via `MarkdownProjectionListener`. Dual-layer linking at single-request cost
+- **Predicate-level governance** (D81 Model A) — SHACL shape declares which predicates the substrate governs; agent owns the rest
+- **Comunica `.meta` traversal gap** (RQ-Pod-4) — Comunica link-traversal follows `ldp:contains` but skips `describedby` on `text/markdown` resources. Workaround: explicit `default-graph-uri` parameters pointing at `.meta` URLs
+- **Pod self-description (Rung 1.5 hypothesis)** — whether agents reliably discover and use the affordance architecture cold is the open question Rung 1.5 measures (RQ-Discovery-1)
 
-### Four-Layer Self-Description
+### Discovery chain on the current Pod
 
 ```
-L1: .well-known/solid    -> VoID + DCAT (discovery)
-L2: SolidPodProfile      -> PROF ResourceDescriptors (structure)
-L3: /procedures/shapes/  -> SHACL + sh:agentInstruction (validation)
-L4: /procedures/queries/ -> SPARQL examples (guidance)
+GET /vault/ (Pod root)
+  → Link: <.../.well-known/solid>; rel="solid:storageDescription"  (D44)
+  ↓
+GET /vault/.well-known/solid
+  → void:vocabulary <skos:>, <dct:>, <prov:>, <cito:>, <wiki:>, ...   (D49)
+  → wiki:contextDocument  </meta/context.jsonld>                     (D79)
+  → wiki:shapeCatalog     </meta/shapes/>
+  → wiki:affordanceCatalog </meta/affordances/>                       (D52)
+  → wiki:typeIndex        </settings/publicTypeIndex>                  (D8)
+  → rdfs:seeAlso  </wiki/{pages,sources,people,procedures,working}/>  (D76)
+  ↓
+GET /vault/meta/affordances/   → ldp:contains markdown-projection, hub-view, breadcrumb-view, memento
+GET /vault/meta/context.jsonld → canonical prefix→IRI registry, short-form predicates
+GET /vault/settings/publicTypeIndex → class → container routing
 ```
+
+Every step is standard LDP + Solid Protocol. Storage description is the entry point
+(D44 replaced the legacy `.well-known/void` pattern). Affordance catalog and
+JSON-LD context surface substrate behaviors agents need to know about.
 
 ## Tech Stack
 
