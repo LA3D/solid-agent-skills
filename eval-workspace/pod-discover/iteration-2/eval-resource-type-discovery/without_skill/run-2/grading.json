@@ -1,0 +1,74 @@
+{
+  "summary": {
+    "pass_rate": 0.75,
+    "passed": 9,
+    "failed": 3,
+    "total": 12
+  },
+  "execution_metrics": {
+    "total_tool_calls": 17,
+    "errors_encountered": 0
+  },
+  "expectations": [
+    {
+      "text": "fetched_root_or_any_url",
+      "passed": false,
+      "evidence": "no request to /vault/ in transcript"
+    },
+    {
+      "text": "discovered_storage_description",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "read_affordance_catalog",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "named_all_5_wiki_containers",
+      "passed": true,
+      "evidence": "all 5 paths present"
+    },
+    {
+      "text": "named_all_5_wiki_classes",
+      "passed": false,
+      "evidence": "only 2/5 wiki classes named: ['wiki:Page or wiki:Concept', 'wiki:Person']"
+    },
+    {
+      "text": "named_affordances",
+      "passed": true,
+      "evidence": "4/4 affordances named: ['markdown-projection', 'hub-view', 'breadcrumb-view', 'memento']"
+    },
+    {
+      "text": "declared_vocabularies",
+      "passed": true,
+      "evidence": "6/6 vocabularies named: ['SKOS', 'DCT/Dublin Core', 'PROV', 'CITO', 'FOAF', 'wiki/vault local']"
+    },
+    {
+      "text": "noticed_substrate_gap",
+      "passed": false,
+      "evidence": "neither substrate gap identified"
+    },
+    {
+      "text": "no_hallucinated_urls",
+      "passed": true,
+      "evidence": "no invented paths found in transcript"
+    },
+    {
+      "text": "recognized_capability_catalog",
+      "passed": true,
+      "evidence": "fetched /meta/capabilities/ AND named cap:* descriptors"
+    },
+    {
+      "text": "class_iri_resolved",
+      "passed": true,
+      "evidence": "fetched wiki vocab + named wiki vocab IRI"
+    },
+    {
+      "text": "no_phase_2_residue_reported",
+      "passed": true,
+      "evidence": "no PARA residue paths in response"
+    }
+  ]
+}

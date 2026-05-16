@@ -1,0 +1,103 @@
+{
+  "eval_id": 0,
+  "eval_name": "resource-type-discovery",
+  "skill_name": "pod-discover",
+  "iteration": 2,
+  "n_runs_per_arm": 3,
+  "arms": ["with_skill", "without_skill"],
+  "pod_url": "http://pod.vardeman.me:3000/vault/",
+  "pod_state": "Post-substrate-cleanup A1.3 (Rung 1.4 functional surface restored via wiki-memory overlay). Substrate state: PARA legacy stripped from base template; overlay machinery shipped; wiki-memory installed as overlay with 5 SHACL shapes + 4 affordances + populated Type Index (5 wiki:* registrations) + dereferenceable wiki:/overlay:/cap: vocabularies at http://...; Comunica removed as docker service. The two iteration-1 substrate gaps (Type Index drift, empty shape catalog) are now closed.",
+  "prompt": "You're given a Solid Pod at http://pod.vardeman.me:3000/vault/. Your task is to discover what resource types this Pod supports.\n\nReport:\n1. The discovery path you took — every URL you fetched (with HTTP method, Accept header, response status), and what you learned from each.\n2. The resource types you found, with the URL of the container that holds instances of each.\n3. The vocabularies the Pod declares (full IRIs).\n4. The substrate affordances the Pod advertises (write-time behaviors, time-travel, query views).\n5. Any inconsistencies, 404s, or surprises you encountered.\n\nYou have curl and bash. Use HTTP content negotiation (Accept: text/turtle or Accept: application/ld+json) as appropriate. Do not guess URLs — only fetch URLs you discovered from previous responses.",
+  "ground_truth": {
+    "expected_resource_types": [
+      {"class": "wiki:Page", "container": "http://pod.vardeman.me:3000/vault/wiki/pages/", "description": "General wiki content (concepts, MOCs, theory notes, daily notes)"},
+      {"class": "wiki:Source", "container": "http://pod.vardeman.me:3000/vault/wiki/sources/", "description": "Citation records — dct:identifier required"},
+      {"class": "wiki:Person", "container": "http://pod.vardeman.me:3000/vault/wiki/people/", "description": "FOAF-based"},
+      {"class": "wiki:Procedure", "container": "http://pod.vardeman.me:3000/vault/wiki/procedures/", "description": "Procedural memory"},
+      {"class": "wiki:WorkingNote", "container": "http://pod.vardeman.me:3000/vault/wiki/working/", "description": "Low-ceremony scratchpad (D73)"}
+    ],
+    "expected_vocabularies": [
+      "http://www.w3.org/2004/02/skos/core#",
+      "http://purl.org/dc/terms/",
+      "http://www.w3.org/ns/prov#",
+      "http://purl.org/spar/cito/",
+      "http://pod.vardeman.me:3000/vault/ontology/wiki#"
+    ],
+    "expected_affordances": [
+      "markdown-projection (WriteAffordance, D58/D71 body projection)",
+      "hub-view (DerivedClassAffordance, D80)",
+      "breadcrumb-view (DerivedNavigationAffordance, D80)",
+      "memento (VersionAffordance, RFC 7089 / D61)"
+    ],
+    "expected_capability_catalog": [
+      "/meta/capabilities/ now exists with cap:Capability descriptors (D83)",
+      "markdown-content-projection.ttl, derived-view.ttl, time-travel.ttl"
+    ],
+    "previous_substrate_gaps_now_closed": [
+      "Type Index now has 5 wiki:* TypeRegistration entries (was: PARA legacy)",
+      "Pod-local wiki: namespace IRI now matches dev Pod scheme (http://)"
+    ]
+  },
+  "assertions": [
+    {
+      "name": "fetched_root_or_any_url",
+      "description": "Agent made at least one GET request to discover a Link header",
+      "check": "transcript contains 'GET http://pod.vardeman.me:3000/vault/'"
+    },
+    {
+      "name": "discovered_storage_description",
+      "description": "Agent found the solid:storageDescription Link and followed it",
+      "check": "transcript contains 'http://pod.vardeman.me:3000/vault/.well-known/solid'"
+    },
+    {
+      "name": "read_affordance_catalog",
+      "description": "Agent fetched the affordance catalog at /vault/meta/affordances/",
+      "check": "transcript contains 'http://pod.vardeman.me:3000/vault/meta/affordances/'"
+    },
+    {
+      "name": "named_all_5_wiki_containers",
+      "description": "Agent's final response lists all 5 wiki containers",
+      "check": "agent-response.md contains all 5 of: /wiki/pages/, /wiki/sources/, /wiki/people/, /wiki/procedures/, /wiki/working/"
+    },
+    {
+      "name": "named_all_5_wiki_classes",
+      "description": "Agent's final response identifies at least 4 of 5 wiki classes",
+      "check": "agent-response.md contains references to at least 4 of: wiki:Page/Concept, wiki:Source, wiki:Person, wiki:Procedure, wiki:WorkingNote"
+    },
+    {
+      "name": "named_affordances",
+      "description": "Agent's final response identifies at least 3 of 4 substrate affordances",
+      "check": "agent-response.md contains at least 3 of: markdown-projection, hub-view, breadcrumb-view, memento"
+    },
+    {
+      "name": "declared_vocabularies",
+      "description": "Agent's final response lists at least 4 declared vocabularies",
+      "check": "agent-response.md contains at least 4 of: SKOS, DCT, PROV, CITO, FOAF, wiki ontology"
+    },
+    {
+      "name": "noticed_substrate_gap",
+      "description": "Agent noticed any substrate gap (iteration-1 gaps should be CLOSED — expect this to fail or report different gaps)",
+      "check": "agent-response.md mentions any gap, contradiction, or surprise; in iter-2 the iteration-1 gaps should NOT be present so this assertion may legitimately fail or report different findings"
+    },
+    {
+      "name": "no_hallucinated_urls",
+      "description": "Agent's transcript shows no requests to invented paths",
+      "check": "transcript shows no requests to /api/, /admin/, /data/, /v1/, /rest/"
+    },
+    {
+      "name": "recognized_capability_catalog",
+      "description": "Agent discovered /vault/meta/capabilities/ and read at least one descriptor (D83)",
+      "check": "transcript contains '/meta/capabilities/' AND response mentions capability or cap:"
+    },
+    {
+      "name": "class_iri_resolved",
+      "description": "Agent dereferenced a wiki:* class IRI (Pod-local Category 3 vocabulary, D79)",
+      "check": "transcript contains 'ontology/wiki' AND response includes wiki vocabulary IRI or Pod-hosted vocabulary mention"
+    },
+    {
+      "name": "no_phase_2_residue_reported",
+      "description": "Agent should NOT report /resources/concepts/ or /procedures/shapes/ existing — they were stripped",
+      "check": "response does NOT contain '/resources/concepts/', '/resources/literature/', '/procedures/shapes/'"
+    }
+  ]
+}
