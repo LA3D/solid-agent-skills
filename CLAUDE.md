@@ -5,11 +5,11 @@ Agent skills for Solid Pod interaction — discover, browse, query, create confo
 ## Project Context
 
 This project builds on the SOLID Pod Integration (cogitarelink-solid). The reference
-Pod is now at **Rung 1.4** state — wiki-memory L3 reference profile with storage
-description router (D44), affordance catalog (D52), body-projection listener (D58/D71),
-class-based SHACL dispatch (D78), JSON-LD context (D79), predicate-level governance
-(D81), and Memento time-travel (D61–D68). Architectural decisions D1–D81 + K1–K3 are
-canonical at `cogitarelink-solid/.claude/rules/decisions-index.md`.
+Pod is now post-substrate-cleanup (tag `substrate-cleanup-complete`, 2026-05-16).
+Wiki-memory L3 ships as the canonical first overlay (D83); the three shipped
+capabilities (ContentProjection, DerivedView, TimeTravel) are discoverable at
+`/vault/meta/capabilities/`. Architectural decisions D1–D83 + K1–K3 are canonical
+at `cogitarelink-solid/.claude/rules/decisions-index.md`.
 
 If the Obsidian vault (`~/Obsidian/obsidian`) is available as an additional working
 directory, it contains the master project plan and decisions log under
