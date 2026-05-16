@@ -2,7 +2,8 @@
 import { program } from 'commander'
 import { info } from './commands/info.js'
 import { read } from './commands/read.js'
-import { sparql } from './commands/sparql.js'
+import { sparql, SparqlOptions } from './commands/sparql.js'
+import { invoke, InvokeOptions } from './commands/invoke.js'
 import { shapes } from './commands/shapes.js'
 import { links } from './commands/links.js'
 import { types } from './commands/types.js'
@@ -11,6 +12,11 @@ import { create } from './commands/create.js'
 import { patch } from './commands/patch.js'
 import { search } from './commands/search.js'
 import { properties } from './commands/properties.js'
+
+// Commander variadic-flag collector: each --flag <value> appends to the list.
+function collectRepeating(value: string, previous: string[] = []): string[] {
+  return [...previous, value]
+}
 
 program
   .name('solid-pod')
@@ -29,9 +35,20 @@ program
 
 program
   .command('sparql <url> <query>')
-  .description('Execute SPARQL via Comunica (auto-discovers .meta sources for containers)')
+  .description('Execute SPARQL via embedded Comunica (auto-discovers .meta sources for containers)')
   .option('--no-meta', 'Skip .meta auto-discovery')
-  .action((url: string, query: string, opts: { noMeta?: boolean }) => sparql(url, query, opts))
+  .option('--source <url>', 'Explicit Comunica source (repeatable); short-circuits .meta auto-discovery', collectRepeating, [])
+  .option('--default-graph-uri <url>', 'SPARQL Protocol default-graph-uri (repeatable); RQ-Pod-4 workaround', collectRepeating, [])
+  .option('--accept-datetime <rfc1123>', 'RFC 7089 Accept-Datetime for Memento time-travel')
+  .action((url: string, query: string, opts: SparqlOptions) => sparql(url, query, opts))
+
+program
+  .command('invoke <url> <affordance>')
+  .description('Execute an affordance descriptor (wiki:constructQuery / wiki:selectQuery) via embedded Comunica')
+  .option('--source <url>', 'Explicit Comunica source (repeatable)', collectRepeating, [])
+  .option('--default-graph-uri <url>', 'SPARQL Protocol default-graph-uri (repeatable)', collectRepeating, [])
+  .option('--accept-datetime <rfc1123>', 'RFC 7089 Accept-Datetime for Memento time-travel')
+  .action((url: string, affordance: string, opts: InvokeOptions) => invoke(url, affordance, opts))
 
 program
   .command('shapes <url>')

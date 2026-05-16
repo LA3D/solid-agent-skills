@@ -45,13 +45,14 @@ Agent skills for Solid Pod interaction, not a traditional CLI. Skills are compos
 context-aware, and integrated into the agent's reasoning loop. Evaluate the Vercel Skills
 framework (https://skills.sh/, https://github.com/vercel-labs/skills) as a substrate.
 
-### CLI Commands (11)
+### CLI Commands (12)
 
 | Command | Purpose |
 |---------|---------|
 | `solid-pod info <url>` | GET .well-known/solid, return VoID/DCAT as JSON-LD |
 | `solid-pod read <url>` | GET resource with Link headers and .meta sidecar |
-| `solid-pod sparql <url> <query>` | SPARQL via Comunica (auto .meta discovery) |
+| `solid-pod sparql <url> <query>` | SPARQL via embedded Comunica; auto `.meta` discovery for containers; `--source` (repeatable) overrides discovery; `--default-graph-uri` (repeatable) is the RQ-Pod-4 workaround; `--accept-datetime` for Memento time-travel |
+| `solid-pod invoke <url> <affordance>` | Fetch `/meta/affordances/<name>.ttl` and execute its `wiki:constructQuery` / `wiki:selectQuery` via embedded Comunica (D52 machine-actionable affordance) |
 | `solid-pod shapes <url>` | List SHACL shapes with sh:agentInstruction |
 | `solid-pod links <url>` | Outgoing references from .meta |
 | `solid-pod types <url>` | rdf:type values with counts |

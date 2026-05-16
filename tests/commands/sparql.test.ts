@@ -33,4 +33,43 @@ describe.skipIf(!podAvailable)('solid-pod sparql', { timeout: 30_000 }, () => {
       expect(result.query).toBe(badQuery)
     }
   })
+
+  it('accepts repeated --source flags as explicit Comunica sources', () => {
+    const src1 = POD + 'wiki/pages/'
+    const src2 = POD + 'wiki/sources/'
+    const query = 'SELECT ?s WHERE { ?s ?p ?o } LIMIT 1'
+    const out = execSync(
+      `npx tsx src/cli.ts sparql "${POD}" "${query}" --source "${src1}" --source "${src2}"`,
+      { encoding: 'utf8', cwd: process.cwd() },
+    )
+    const result = JSON.parse(out)
+    expect(result.sources).toEqual([src1, src2])
+    // explicit --source must short-circuit .meta auto-discovery
+    expect(result.metaSources).toBe(0)
+  })
+
+  it('accepts repeated --default-graph-uri (RQ-Pod-4 workaround)', () => {
+    const graph = POD + 'wiki/pages/'
+    const query = 'SELECT ?s WHERE { ?s ?p ?o } LIMIT 1'
+    const out = execSync(
+      `npx tsx src/cli.ts sparql "${POD}" "${query}" --source "${POD}" --default-graph-uri "${graph}"`,
+      { encoding: 'utf8', cwd: process.cwd() },
+    )
+    const result = JSON.parse(out)
+    expect(result.defaultGraphUris).toEqual([graph])
+  })
+
+  it('accepts --accept-datetime flag and surfaces it in output', () => {
+    // Memento integration: the flag is reported in the JSON output so callers
+    // can verify it was applied. Actual time-travel behavior is exercised by
+    // the memento extension's own tests.
+    const query = 'SELECT ?s WHERE { ?s ?p ?o } LIMIT 1'
+    const datetime = 'Thu, 01 Jan 2026 00:00:00 GMT'
+    const out = execSync(
+      `npx tsx src/cli.ts sparql "${POD}" "${query}" --source "${POD}" --accept-datetime "${datetime}"`,
+      { encoding: 'utf8', cwd: process.cwd() },
+    )
+    const result = JSON.parse(out)
+    expect(result.acceptDatetime).toBe(datetime)
+  })
 })
