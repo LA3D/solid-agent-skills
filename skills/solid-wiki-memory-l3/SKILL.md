@@ -117,3 +117,38 @@ The `--meta` argument is patched via `solid:inserts` into the `.meta` sidecar. T
 **Slug collision**: if `/vault/wiki/people/<slug>/index.md` already exists (HTTP 200 on the URL), ask the human to disambiguate before overwriting. If the existing page already has `foaf:primaryTopic <WebID>`, treat it as the bridge target — return the existing IRI without writing.
 
 **Deferred to Memory Structuring Sprint**: two-stage commit via `/vault/wiki/working/` permissive shape → `mem:Crystallize` → durable container. For setup-owner, write the Person page directly to its durable container — the use case is bootstrap, not in-flight knowledge consolidation.
+
+## Procedure — Bridge a wiki Person page to identity (L1 + L2)
+
+Called by `solid-owner-identity` Phase D. The wiki page (L3) asserts its
+membership in the identity stack via two `.meta` triples:
+
+```
+solid-pod patch /vault/wiki/people/<slug>/index.md.meta --insert "
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+</vault/wiki/people/<slug>/index.md>
+    foaf:primaryTopic   </vault/profile/card#me> ;
+    owl:sameAs          </vault/contacts/Person/<contact-uuid>.ttl#this> .
+"
+```
+
+The reverse direction is asserted by `solid-owner-identity` Phase E via the
+webid-enrich template:
+
+- `<WebID> foaf:isPrimaryTopicOf <wiki-page>` — endorsed by Solid WebID Profile §3.1 for "extended profile documents"
+- `<wiki-page> a wiki:Person` — *inlined in the WebID response* so an LLM dereferencing the WebID recognizes the L3 agentic-memory record in a single round-trip (follow-the-nose discovery)
+
+**Symmetry table:**
+
+| Direction | Predicate | Lives in |
+|---|---|---|
+| WebID → wiki page | `foaf:isPrimaryTopicOf` | `/vault/profile/card` (body) |
+| WebID → wiki page type | `<wiki-page> a wiki:Person` | `/vault/profile/card` (body, inlined) |
+| Wiki page → WebID | `foaf:primaryTopic` | `<wiki-page>.meta` |
+| Wiki page → contact card | `owl:sameAs <contact-#this>` | `<wiki-page>.meta` |
+| WebID → contact card | `owl:sameAs <contact-#this>` | `/vault/profile/card` (body) |
+| Contact card → WebID | `vcard:url [ vcard:WebId ; vcard:value <WebID> ]` | contact-card body (SolidOS convention, optional) |
+
+**Idempotence:** before patching, `solid-pod read /vault/wiki/people/<slug>/index.md.meta` and check for existing `foaf:primaryTopic` and `owl:sameAs` triples. Drop any duplicates from the `--insert` argument (CSS returns 409 Conflict otherwise).
