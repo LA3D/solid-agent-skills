@@ -64,3 +64,48 @@ solid-pod read /vault/settings/prefs.ttl       # 200 + facts, or 404
 
 If 404 or empty: this is a fresh Pod; SetupPodOwner Phase A creates it.
 If 200 + setupOwnerCompleted: short-circuit; this skill's job is done.
+
+## Procedure — Set up Pod owner (Phases A–F)
+
+The cross-cutting flow. Each phase is idempotent on read; re-runs resume cleanly.
+
+### Phase A — Preferences elicitation
+
+The goal: produce a `/vault/settings/prefs.ttl` file conforming to `PodOwnerPreferencesShape` with the required facts (`prefs:fullName`, `prefs:orcid`, `prefs:wikiSlug`) populated from the human's answers.
+
+```
+1. solid-pod read /vault/settings/prefs.ttl
+   404 → fetch prefs-init template, PUT skeleton:
+       solid-pod read /vault/meta/templates/prefs-init.ttl
+       (copy tmpl:templateBody verbatim — no placeholders to fill)
+       solid-pod create /vault/settings/ --slug prefs.ttl \
+           --content-type text/turtle --body "<template body>"
+   200 → parse existing facts; check for prefs:setupOwnerCompleted = true → SHORT-CIRCUIT
+
+2. For each REQUIRED predicate from PodOwnerPreferencesShape:
+   - prefs:fullName    — "What's the Pod owner's full display name?"
+   - prefs:orcid       — "What's their ORCID id? (format: XXXX-XXXX-XXXX-XXXX, X may be a digit or X)"
+   - prefs:wikiSlug    — Suggest from fullName (lowercase first name or last name). Ask:
+                         "Wiki slug for /vault/wiki/people/<slug>/? Default: <suggestion>"
+
+   For each answer, PATCH /vault/settings/prefs.ttl:
+       solid-pod patch /vault/settings/prefs.ttl --insert "
+           @prefix prefs: <https://pod.vardeman.me/vault/ontology/owner-prefs#> .
+           </vault/settings/prefs.ttl#owner> prefs:<PREDICATE> \"<VALUE>\" .
+       "
+
+3. For OPTIONAL predicates (affiliation/role/dates/email/avatar): ask, accept "skip":
+   - "Current primary institutional affiliation? (ROR id if known, else display name; skip is OK)"
+   - "Role at that affiliation? (skip OK)"
+   - "Start date of that affiliation? (YYYY-MM-DD; skip OK)"
+   - "Work email? (skip OK)"
+   - "Avatar URL? (skip OK)"
+
+   Persist any non-skipped answers via the same PATCH pattern.
+
+4. Validate prefs.ttl against PodOwnerPreferencesShape (offline with pyshacl,
+   or trust the substrate to enforce on next write). If MUSTs unsatisfied,
+   re-ask the missing field.
+```
+
+**Important** (agentInstruction reminder): don't infer or guess proper nouns. CLAUDE.md / project memory may suggest a name or ORCID, but **the prefs file is the owner's authoritative self-declaration**. Ask before persisting.
