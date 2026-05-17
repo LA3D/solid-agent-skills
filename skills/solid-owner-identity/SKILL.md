@@ -109,3 +109,49 @@ The goal: produce a `/vault/settings/prefs.ttl` file conforming to `PodOwnerPref
 ```
 
 **Important** (agentInstruction reminder): don't infer or guess proper nouns. CLAUDE.md / project memory may suggest a name or ORCID, but **the prefs file is the owner's authoritative self-declaration**. Ask before persisting.
+
+### Phase B — AddressBook Person card
+
+Calls into the **`solid-addressbook`** skill ("Procedure — Pod-owner setup contribution"). The flow:
+
+```
+1. Check for existing owner card:
+   solid-pod sparql https://pod.vardeman.me/vault/ "
+     PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+     PREFIX owl: <http://www.w3.org/2002/07/owl#>
+     SELECT ?card WHERE {
+       ?card a vcard:Individual ;
+             vcard:inAddressBook <https://pod.vardeman.me/vault/contacts/index.ttl#this> ;
+             owl:sameAs <https://orcid.org/<prefs:orcid>> .
+     }
+   " --default-graph-uri https://pod.vardeman.me/vault/contacts/people.ttl
+   → if 1+ result, capture <contact-card-IRI> and SKIP step 2.
+
+2. Mint Person card via solid-addressbook procedure:
+   - read /vault/meta/templates/contact-create.ttl
+   - mint UUIDv4 slug
+   - fill <<FULL_NAME>>=prefs:fullName, <<ORCID>>=prefs:orcid
+   - solid-pod create /vault/contacts/Person/ --slug <uuid>.ttl ...
+   - solid-pod patch /vault/contacts/people.ttl --insert "<#book> vcard:fn ... ; vcard:hasMember ... ."
+   - capture <contact-card-IRI> = https://pod.vardeman.me/vault/contacts/Person/<uuid>.ttl#this
+```
+
+### Phase C — Optional: Organization + Membership
+
+Run only if `prefs:primaryAffiliationROR` OR `prefs:primaryAffiliationName` present in prefs.ttl.
+
+```
+1. Ensure Organization exists:
+   if prefs:primaryAffiliationROR present:
+       solid-pod sparql ... "SELECT ?org WHERE { ?org owl:sameAs <https://ror.org/<ROR>> . }"
+       → if exists, capture <org-IRI>; else mint via org-create template
+   else (only name): always mint (no canonical anchor to dedupe against)
+
+2. Mint Membership (always — even if Org existed, this is a new owner-to-org link):
+   - check for existing Membership: SPARQL for ?m where ?m org:member <contact-card-IRI> + org:organization <org-IRI>
+   - if exists, capture <membership-IRI>; SKIP mint
+   - else: read membership-create template, fill placeholders, PUT
+   - capture <membership-IRI> = https://pod.vardeman.me/vault/contacts/Membership/<uuid>.ttl#this
+```
+
+Phase C is **fully optional** — if the human skips affiliation facts in Phase A, skip Phase C entirely. The WebID enrichment in Phase E omits `org:hasMembership` cleanly.
