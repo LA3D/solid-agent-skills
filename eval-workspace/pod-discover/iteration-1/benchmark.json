@@ -1,0 +1,441 @@
+{
+  "metadata": {
+    "skill_name": "pod-discover",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-05-16T00:12:21Z",
+    "evals_run": [
+      0
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 0,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 125.3,
+        "tokens": 100740,
+        "tool_calls": 10,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "fetched_root_or_any_url",
+          "passed": true,
+          "evidence": "HEAD http://pod.vardeman.me:3000/vault/`"
+        },
+        {
+          "text": "discovered_storage_description",
+          "passed": true,
+          "evidence": "GET http://pod.vardeman.me:3000/vault/.well-known/solid`"
+        },
+        {
+          "text": "read_affordance_catalog",
+          "passed": true,
+          "evidence": "GET http://pod.vardeman.me:3000/vault/meta/affordances/`"
+        },
+        {
+          "text": "named_all_5_wiki_containers",
+          "passed": true,
+          "evidence": "all 5 paths present"
+        },
+        {
+          "text": "named_all_5_wiki_classes",
+          "passed": true,
+          "evidence": "5/5 wiki classes named: ['wiki:Page or wiki:Concept', 'wiki:Source', 'wiki:Person', 'wiki:Procedure', 'wiki:WorkingNote']"
+        },
+        {
+          "text": "named_affordances",
+          "passed": true,
+          "evidence": "4/4 affordances named: ['markdown-projection', 'hub-view', 'breadcrumb-view', 'memento']"
+        },
+        {
+          "text": "declared_vocabularies",
+          "passed": true,
+          "evidence": "6/6 vocabularies named: ['SKOS', 'DCT/Dublin Core', 'PROV', 'CITO', 'FOAF', 'wiki/vault local']"
+        },
+        {
+          "text": "noticed_substrate_gap",
+          "passed": true,
+          "evidence": "identified: type-index drift, empty shape catalog / .shacl.ttl 404s"
+        },
+        {
+          "text": "no_hallucinated_urls",
+          "passed": true,
+          "evidence": "no invented paths found in transcript"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 0,
+      "configuration": "with_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 122.2,
+        "tokens": 100267,
+        "tool_calls": 8,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "fetched_root_or_any_url",
+          "passed": true,
+          "evidence": "HEAD http://pod.vardeman.me:3000/vault/"
+        },
+        {
+          "text": "discovered_storage_description",
+          "passed": true,
+          "evidence": "GET  http://pod.vardeman.me:3000/vault/.well-known/solid"
+        },
+        {
+          "text": "read_affordance_catalog",
+          "passed": true,
+          "evidence": "GET  http://pod.vardeman.me:3000/vault/meta/affordances/"
+        },
+        {
+          "text": "named_all_5_wiki_containers",
+          "passed": true,
+          "evidence": "all 5 paths present"
+        },
+        {
+          "text": "named_all_5_wiki_classes",
+          "passed": true,
+          "evidence": "4/5 wiki classes named: ['wiki:Page or wiki:Concept', 'wiki:Source', 'wiki:Person', 'wiki:Procedure']"
+        },
+        {
+          "text": "named_affordances",
+          "passed": true,
+          "evidence": "4/4 affordances named: ['markdown-projection', 'hub-view', 'breadcrumb-view', 'memento']"
+        },
+        {
+          "text": "declared_vocabularies",
+          "passed": true,
+          "evidence": "6/6 vocabularies named: ['SKOS', 'DCT/Dublin Core', 'PROV', 'CITO', 'FOAF', 'wiki/vault local']"
+        },
+        {
+          "text": "noticed_substrate_gap",
+          "passed": true,
+          "evidence": "identified: type-index drift, empty shape catalog / .shacl.ttl 404s"
+        },
+        {
+          "text": "no_hallucinated_urls",
+          "passed": true,
+          "evidence": "no invented paths found in transcript"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 0,
+      "configuration": "with_skill",
+      "run_number": 3,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 146.6,
+        "tokens": 101509,
+        "tool_calls": 10,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "fetched_root_or_any_url",
+          "passed": true,
+          "evidence": "HEAD http://pod.vardeman.me:3000/vault/"
+        },
+        {
+          "text": "discovered_storage_description",
+          "passed": true,
+          "evidence": "GET  http://pod.vardeman.me:3000/vault/.well-known/solid"
+        },
+        {
+          "text": "read_affordance_catalog",
+          "passed": true,
+          "evidence": "GET  http://pod.vardeman.me:3000/vault/meta/affordances/"
+        },
+        {
+          "text": "named_all_5_wiki_containers",
+          "passed": true,
+          "evidence": "all 5 paths present"
+        },
+        {
+          "text": "named_all_5_wiki_classes",
+          "passed": true,
+          "evidence": "5/5 wiki classes named: ['wiki:Page or wiki:Concept', 'wiki:Source', 'wiki:Person', 'wiki:Procedure', 'wiki:WorkingNote']"
+        },
+        {
+          "text": "named_affordances",
+          "passed": true,
+          "evidence": "4/4 affordances named: ['markdown-projection', 'hub-view', 'breadcrumb-view', 'memento']"
+        },
+        {
+          "text": "declared_vocabularies",
+          "passed": true,
+          "evidence": "6/6 vocabularies named: ['SKOS', 'DCT/Dublin Core', 'PROV', 'CITO', 'FOAF', 'wiki/vault local']"
+        },
+        {
+          "text": "noticed_substrate_gap",
+          "passed": true,
+          "evidence": "identified: type-index drift, empty shape catalog / .shacl.ttl 404s"
+        },
+        {
+          "text": "no_hallucinated_urls",
+          "passed": true,
+          "evidence": "no invented paths found in transcript"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 0,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 183.3,
+        "tokens": 112086,
+        "tool_calls": 20,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "fetched_root_or_any_url",
+          "passed": true,
+          "evidence": "GET http://pod.vardeman.me:3000/vault/"
+        },
+        {
+          "text": "discovered_storage_description",
+          "passed": true,
+          "evidence": "GET http://pod.vardeman.me:3000/vault/.well-known/solid"
+        },
+        {
+          "text": "read_affordance_catalog",
+          "passed": true,
+          "evidence": "GET http://pod.vardeman.me:3000/vault/meta/affordances/"
+        },
+        {
+          "text": "named_all_5_wiki_containers",
+          "passed": true,
+          "evidence": "all 5 paths present"
+        },
+        {
+          "text": "named_all_5_wiki_classes",
+          "passed": true,
+          "evidence": "5/5 wiki classes named: ['wiki:Page or wiki:Concept', 'wiki:Source', 'wiki:Person', 'wiki:Procedure', 'wiki:WorkingNote']"
+        },
+        {
+          "text": "named_affordances",
+          "passed": true,
+          "evidence": "4/4 affordances named: ['markdown-projection', 'hub-view', 'breadcrumb-view', 'memento']"
+        },
+        {
+          "text": "declared_vocabularies",
+          "passed": true,
+          "evidence": "6/6 vocabularies named: ['SKOS', 'DCT/Dublin Core', 'PROV', 'CITO', 'FOAF', 'wiki/vault local']"
+        },
+        {
+          "text": "noticed_substrate_gap",
+          "passed": true,
+          "evidence": "identified: type-index drift, empty shape catalog / .shacl.ttl 404s"
+        },
+        {
+          "text": "no_hallucinated_urls",
+          "passed": true,
+          "evidence": "no invented paths found in transcript"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 0,
+      "configuration": "without_skill",
+      "run_number": 2,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 178.2,
+        "tokens": 102681,
+        "tool_calls": 9,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "fetched_root_or_any_url",
+          "passed": true,
+          "evidence": "HEAD  http://pod.vardeman.me:3000/vault/"
+        },
+        {
+          "text": "discovered_storage_description",
+          "passed": true,
+          "evidence": "GET   http://pod.vardeman.me:3000/vault/.well-known/solid"
+        },
+        {
+          "text": "read_affordance_catalog",
+          "passed": true,
+          "evidence": "GET   http://pod.vardeman.me:3000/vault/meta/affordances/"
+        },
+        {
+          "text": "named_all_5_wiki_containers",
+          "passed": true,
+          "evidence": "all 5 paths present"
+        },
+        {
+          "text": "named_all_5_wiki_classes",
+          "passed": true,
+          "evidence": "5/5 wiki classes named: ['wiki:Page or wiki:Concept', 'wiki:Source', 'wiki:Person', 'wiki:Procedure', 'wiki:WorkingNote']"
+        },
+        {
+          "text": "named_affordances",
+          "passed": true,
+          "evidence": "4/4 affordances named: ['markdown-projection', 'hub-view', 'breadcrumb-view', 'memento']"
+        },
+        {
+          "text": "declared_vocabularies",
+          "passed": true,
+          "evidence": "6/6 vocabularies named: ['SKOS', 'DCT/Dublin Core', 'PROV', 'CITO', 'FOAF', 'wiki/vault local']"
+        },
+        {
+          "text": "noticed_substrate_gap",
+          "passed": true,
+          "evidence": "identified: type-index drift, empty shape catalog / .shacl.ttl 404s"
+        },
+        {
+          "text": "no_hallucinated_urls",
+          "passed": true,
+          "evidence": "no invented paths found in transcript"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 0,
+      "configuration": "without_skill",
+      "run_number": 3,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 185.3,
+        "tokens": 103715,
+        "tool_calls": 22,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "fetched_root_or_any_url",
+          "passed": true,
+          "evidence": "HEAD http://pod.vardeman.me:3000/vault/"
+        },
+        {
+          "text": "discovered_storage_description",
+          "passed": true,
+          "evidence": "GET  http://pod.vardeman.me:3000/vault/.well-known/solid"
+        },
+        {
+          "text": "read_affordance_catalog",
+          "passed": true,
+          "evidence": "GET  http://pod.vardeman.me:3000/vault/meta/affordances/"
+        },
+        {
+          "text": "named_all_5_wiki_containers",
+          "passed": true,
+          "evidence": "all 5 paths present"
+        },
+        {
+          "text": "named_all_5_wiki_classes",
+          "passed": true,
+          "evidence": "5/5 wiki classes named: ['wiki:Page or wiki:Concept', 'wiki:Source', 'wiki:Person', 'wiki:Procedure', 'wiki:WorkingNote']"
+        },
+        {
+          "text": "named_affordances",
+          "passed": true,
+          "evidence": "4/4 affordances named: ['markdown-projection', 'hub-view', 'breadcrumb-view', 'memento']"
+        },
+        {
+          "text": "declared_vocabularies",
+          "passed": true,
+          "evidence": "6/6 vocabularies named: ['SKOS', 'DCT/Dublin Core', 'PROV', 'CITO', 'FOAF', 'wiki/vault local']"
+        },
+        {
+          "text": "noticed_substrate_gap",
+          "passed": true,
+          "evidence": "identified: type-index drift, empty shape catalog / .shacl.ttl 404s"
+        },
+        {
+          "text": "no_hallucinated_urls",
+          "passed": true,
+          "evidence": "no invented paths found in transcript"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 131.3667,
+        "stddev": 13.2832,
+        "min": 122.2,
+        "max": 146.6
+      },
+      "tokens": {
+        "mean": 100838.6667,
+        "stddev": 626.8511,
+        "min": 100267,
+        "max": 101509
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 182.2667,
+        "stddev": 3.6611,
+        "min": 178.2,
+        "max": 185.3
+      },
+      "tokens": {
+        "mean": 106160.6667,
+        "stddev": 5157.4674,
+        "min": 102681,
+        "max": 112086
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.00",
+      "time_seconds": "-50.9",
+      "tokens": "-5322"
+    }
+  },
+  "notes": []
+}

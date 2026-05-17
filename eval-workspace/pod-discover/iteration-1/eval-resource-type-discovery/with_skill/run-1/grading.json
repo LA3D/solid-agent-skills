@@ -1,0 +1,59 @@
+{
+  "summary": {
+    "pass_rate": 1.0,
+    "passed": 9,
+    "failed": 0,
+    "total": 9
+  },
+  "execution_metrics": {
+    "total_tool_calls": 10,
+    "errors_encountered": 0
+  },
+  "expectations": [
+    {
+      "text": "fetched_root_or_any_url",
+      "passed": true,
+      "evidence": "HEAD http://pod.vardeman.me:3000/vault/`"
+    },
+    {
+      "text": "discovered_storage_description",
+      "passed": true,
+      "evidence": "GET http://pod.vardeman.me:3000/vault/.well-known/solid`"
+    },
+    {
+      "text": "read_affordance_catalog",
+      "passed": true,
+      "evidence": "GET http://pod.vardeman.me:3000/vault/meta/affordances/`"
+    },
+    {
+      "text": "named_all_5_wiki_containers",
+      "passed": true,
+      "evidence": "all 5 paths present"
+    },
+    {
+      "text": "named_all_5_wiki_classes",
+      "passed": true,
+      "evidence": "5/5 wiki classes named: ['wiki:Page or wiki:Concept', 'wiki:Source', 'wiki:Person', 'wiki:Procedure', 'wiki:WorkingNote']"
+    },
+    {
+      "text": "named_affordances",
+      "passed": true,
+      "evidence": "4/4 affordances named: ['markdown-projection', 'hub-view', 'breadcrumb-view', 'memento']"
+    },
+    {
+      "text": "declared_vocabularies",
+      "passed": true,
+      "evidence": "6/6 vocabularies named: ['SKOS', 'DCT/Dublin Core', 'PROV', 'CITO', 'FOAF', 'wiki/vault local']"
+    },
+    {
+      "text": "noticed_substrate_gap",
+      "passed": true,
+      "evidence": "identified: type-index drift, empty shape catalog / .shacl.ttl 404s"
+    },
+    {
+      "text": "no_hallucinated_urls",
+      "passed": true,
+      "evidence": "no invented paths found in transcript"
+    }
+  ]
+}

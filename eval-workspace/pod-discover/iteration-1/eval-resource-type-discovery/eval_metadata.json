@@ -1,0 +1,84 @@
+{
+  "eval_id": 0,
+  "eval_name": "resource-type-discovery",
+  "skill_name": "pod-discover",
+  "iteration": 1,
+  "n_runs_per_arm": 3,
+  "arms": ["with_skill", "without_skill"],
+  "pod_url": "http://pod.vardeman.me:3000/vault/",
+  "pod_state": "Rung 1.4 (A1.3) — full wiki-memory L3 surface, with two known substrate gaps: Type Index drift to Phase 2 PARA + empty /meta/shapes/",
+  "prompt": "You're given a Solid Pod at http://pod.vardeman.me:3000/vault/. Your task is to discover what resource types this Pod supports.\n\nReport:\n1. The discovery path you took — every URL you fetched (with HTTP method, Accept header, response status), and what you learned from each.\n2. The resource types you found, with the URL of the container that holds instances of each.\n3. The vocabularies the Pod declares (full IRIs).\n4. The substrate affordances the Pod advertises (write-time behaviors, time-travel, query views).\n5. Any inconsistencies, 404s, or surprises you encountered.\n\nYou have curl and bash. Use HTTP content negotiation (Accept: text/turtle or Accept: application/ld+json) as appropriate. Do not guess URLs — only fetch URLs you discovered from previous responses.",
+  "ground_truth": {
+    "expected_resource_types": [
+      {"class": "wiki:Page", "container": "http://pod.vardeman.me:3000/vault/wiki/pages/", "description": "General wiki content (concepts, MOCs, theory notes, daily notes)"},
+      {"class": "wiki:Source", "container": "http://pod.vardeman.me:3000/vault/wiki/sources/", "description": "Citation records — dct:identifier required"},
+      {"class": "wiki:Person", "container": "http://pod.vardeman.me:3000/vault/wiki/people/", "description": "FOAF-based"},
+      {"class": "wiki:Procedure", "container": "http://pod.vardeman.me:3000/vault/wiki/procedures/", "description": "Procedural memory"},
+      {"class": "wiki:WorkingNote", "container": "http://pod.vardeman.me:3000/vault/wiki/working/", "description": "Low-ceremony scratchpad (D73)"}
+    ],
+    "expected_vocabularies": [
+      "http://www.w3.org/2004/02/skos/core#",
+      "http://purl.org/dc/terms/",
+      "http://www.w3.org/ns/prov#",
+      "http://purl.org/spar/cito/",
+      "urn:example:wiki#"
+    ],
+    "expected_affordances": [
+      "markdown-projection (WriteAffordance, D58/D71 body projection)",
+      "hub-view (DerivedClassAffordance, D80)",
+      "breadcrumb-view (DerivedNavigationAffordance, D80)",
+      "memento (VersionAffordance, RFC 7089 / D61)"
+    ],
+    "expected_substrate_gaps": [
+      "Type Index at /vault/settings/publicTypeIndex has Phase 2 PARA registrations, not wiki:* types",
+      "Shape catalog at /vault/meta/shapes/ is empty — *.shacl.ttl files return 404"
+    ]
+  },
+  "assertions": [
+    {
+      "name": "fetched_root_or_any_url",
+      "description": "Agent made at least one GET request to discover a Link header",
+      "check": "transcript contains 'GET http://pod.vardeman.me:3000/vault/'"
+    },
+    {
+      "name": "discovered_storage_description",
+      "description": "Agent found the solid:storageDescription Link and followed it",
+      "check": "transcript contains 'http://pod.vardeman.me:3000/vault/.well-known/solid' AND the response from /vault/ was inspected for Link headers"
+    },
+    {
+      "name": "read_affordance_catalog",
+      "description": "Agent fetched the affordance catalog at /vault/meta/affordances/",
+      "check": "transcript contains 'http://pod.vardeman.me:3000/vault/meta/affordances/'"
+    },
+    {
+      "name": "named_all_5_wiki_containers",
+      "description": "Agent's final response lists all 5 wiki containers (pages, sources, people, procedures, working)",
+      "check": "agent-response.md contains all 5 of: /wiki/pages/, /wiki/sources/, /wiki/people/, /wiki/procedures/, /wiki/working/"
+    },
+    {
+      "name": "named_all_5_wiki_classes",
+      "description": "Agent's final response identifies all 5 wiki classes",
+      "check": "agent-response.md contains references to at least 4 of: wiki:Page, wiki:Source, wiki:Person, wiki:Procedure, wiki:WorkingNote (Page may be reported as Concept due to JSON-LD context aliasing)"
+    },
+    {
+      "name": "named_affordances",
+      "description": "Agent's final response identifies at least 3 of the 4 substrate affordances",
+      "check": "agent-response.md contains at least 3 of: markdown-projection, hub-view, breadcrumb-view, memento"
+    },
+    {
+      "name": "declared_vocabularies",
+      "description": "Agent's final response lists at least 4 declared vocabularies",
+      "check": "agent-response.md contains references to at least 4 of: SKOS, DCT, PROV, CITO, FOAF, wiki ontology"
+    },
+    {
+      "name": "noticed_substrate_gap",
+      "description": "Agent noticed at least one of the known substrate gaps (Type Index drift OR empty shape catalog)",
+      "check": "agent-response.md mentions Type Index drift to PARA types OR /meta/shapes/ being empty/404"
+    },
+    {
+      "name": "no_hallucinated_urls",
+      "description": "Agent's transcript shows no 404s on URLs the agent guessed (vs URLs the Pod pointed at, where 404 is the gap signal)",
+      "check": "transcript shows no requests to /api/, /admin/, /data/, or other invented paths"
+    }
+  ]
+}
