@@ -39,13 +39,17 @@ the live Pod). Planned skills, foundation-first:
 5. **`pod-memento`** — Time-travel queries (RFC 7089) — TimeGate, TimeMap, version-specific reads
 6. **`pod-affordance-inspect`** — Read affordance descriptors at `/meta/affordances/` to learn substrate behaviors
 
+### Shipped out-of-order (sprint scope expanded)
+
+- **`wiki-search`** (shipped 2026-05-18, commit `b17be6f`) — Recursive literal-substring AND-search over wiki-memory L3 markdown pages via the Pod's `?ext=search-grep` affordance (D87). Thin HTTP wrapper around `solid-pod wiki-search`; handles OSLC §7.3 quoting + URL encoding; parses Turtle with N3.js; emits JSON sorted by `oslc:score` with paging metadata. Discovered via Tier-1 `Link: rel="queryBase"` headers or the D83 capability catalog.
+
 ## Architecture
 
 Agent skills for Solid Pod interaction, not a traditional CLI. Skills are composable,
 context-aware, and integrated into the agent's reasoning loop. Evaluate the Vercel Skills
 framework (https://skills.sh/, https://github.com/vercel-labs/skills) as a substrate.
 
-### CLI Commands (12)
+### CLI Commands (13)
 
 | Command | Purpose |
 |---------|---------|
@@ -57,10 +61,11 @@ framework (https://skills.sh/, https://github.com/vercel-labs/skills) as a subst
 | `solid-pod links <url>` | Outgoing references from .meta |
 | `solid-pod types <url>` | rdf:type values with counts |
 | `solid-pod backlinks <url>` | Reverse references |
-| `solid-pod search <url> <terms>` | Text search (OSLC-ready, SPARQL fallback) |
+| `solid-pod search <url> <terms>` | Text search over `.meta` literals (regex over RDF objects; distinct from `wiki-search` which greps markdown bodies) |
 | `solid-pod properties <url>` | Predicate usage stats from .meta |
 | `solid-pod create <url>` | PUT resource + PATCH .meta |
 | `solid-pod patch <url>` | N3 Patch .meta sidecar |
+| `solid-pod wiki-search <container-url> [terms...]` | Recursive literal-substring AND-search over wiki-memory markdown pages via the Pod's `?ext=search-grep` affordance (D87, Phase 7a). OSLC Query 3.0 response parsed to JSON sorted by `oslc:score`. `--page-size N` `--start-index N` for paging |
 
 ### Agent Skills
 
