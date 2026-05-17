@@ -50,7 +50,7 @@ If you encounter cert errors later in the workflow, this is the cause. Full cont
 | Layer | Artifact | Role | URL |
 |---|---|---|---|
 | **L1** | WebID profile | Canonical identity, auth, spec-required | `/vault/profile/card#me` |
-| **L2** | AddressBook contact card | vcard, time-scoped affiliations, app-compat | `/vault/contacts/Person/<uuid>.ttl#this` |
+| **L2** | AddressBook contact card | vcard, time-scoped affiliations, app-compat | `/vault/contacts/Person/<uuid>/index.ttl#this` |
 | **L3** | Wiki person page | Agentic memory — markdown + concept edges + sources | `/vault/wiki/people/<slug>/index.md` |
 
 All three IRIs denote the same agent. Bridge predicates make the equivalence explicit:
@@ -159,7 +159,7 @@ Calls into the **`solid-addressbook`** skill ("Procedure — Pod-owner setup con
    - fill <<FULL_NAME>>=prefs:fullName, <<ORCID>>=prefs:orcid
    - solid-pod create /vault/contacts/Person/ --slug <uuid>.ttl ...
    - solid-pod patch /vault/contacts/people.ttl --insert "<#book> vcard:fn ... ; vcard:hasMember ... ."
-   - capture <contact-card-IRI> = https://pod.vardeman.me/vault/contacts/Person/<uuid>.ttl#this
+   - capture <contact-card-IRI> = https://pod.vardeman.me/vault/contacts/Person/<uuid>/index.ttl#this
 ```
 
 ### Phase C — Optional: Organization + Membership
@@ -177,7 +177,7 @@ Run only if `prefs:primaryAffiliationROR` OR `prefs:primaryAffiliationName` pres
    - check for existing Membership: SPARQL for ?m where ?m org:member <contact-card-IRI> + org:organization <org-IRI>
    - if exists, capture <membership-IRI>; SKIP mint
    - else: read membership-create template, fill placeholders, PUT
-   - capture <membership-IRI> = https://pod.vardeman.me/vault/contacts/Membership/<uuid>.ttl#this
+   - capture <membership-IRI> = https://pod.vardeman.me/vault/contacts/Membership/<uuid>/index.ttl#this
 ```
 
 Phase C is **fully optional** — if the human skips affiliation facts in Phase A, skip Phase C entirely. The WebID enrichment in Phase E omits `org:hasMembership` cleanly.
@@ -290,6 +290,7 @@ Each is a shape MAY extension + a new template + an incremental skill addition. 
 ## Known gaps
 
 - **PATCH is insert-only** (CLI/template limitation). To replace an existing triple (e.g., updating `foaf:name` after a name change), a future `webid-update.ttl` template using `solid:deletes` is needed.
+- **CLI PATCH body does not accept `@prefix` lines.** `buildN3Patch` in `src/lib/n3.ts` wraps user input inside `solid:inserts { ... }`; embedding `@prefix` there fails N3 parsing (`H400 "Expected entity but got @prefix"`). Workaround: pass each triple with full IRIs only (no prefix declarations). A more forgiving builder would lift leading `@prefix` lines out of the inserts block.
 - **Authentication pre-ACL only**. Once Phase 6 enables ACLs, every operation here will require Solid-OIDC + DPoP-bound tokens with the authenticated agent == `/vault/profile/card#me`. CLI client doesn't yet have auth wired (uses plain `fetch()`).
 - **`pim:preferencesFile` is private but unenforced**. The substrate marks it private by convention; ACL enforcement lands with Phase 6.
 - **Wiki Person slug collisions**. If two Pod owners share a slug (unlikely on a single-owner Pod), the agent should disambiguate before overwriting. This skill's Phase D documents the policy but doesn't enforce it.
