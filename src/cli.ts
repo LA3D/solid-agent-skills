@@ -12,6 +12,7 @@ import { create } from './commands/create.js'
 import { patch } from './commands/patch.js'
 import { search } from './commands/search.js'
 import { properties } from './commands/properties.js'
+import { wikiSearch, WikiSearchOptions } from './commands/wikiSearch.js'
 
 // Commander variadic-flag collector: each --flag <value> appends to the list.
 function collectRepeating(value: string, previous: string[] = []): string[] {
@@ -97,5 +98,12 @@ program
   .description('Show predicate usage statistics from container .meta files')
   .option('--source <url>', 'Explicit source URL')
   .action(properties)
+
+program
+  .command('wiki-search <container-url> [terms...]')
+  .description('Recursive literal-substring AND-search over wiki-memory markdown pages (Phase 7a, D87)')
+  .option('--page-size <n>', 'Max results per page (default 25, max 100)')
+  .option('--start-index <n>', '0-based result offset (default 0)')
+  .action((url: string, terms: string[], opts: WikiSearchOptions) => wikiSearch(url, terms, opts))
 
 program.parse()
