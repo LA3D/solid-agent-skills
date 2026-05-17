@@ -152,3 +152,39 @@ webid-enrich template:
 | Contact card → WebID | `vcard:url [ vcard:WebId ; vcard:value <WebID> ]` | contact-card body (SolidOS convention, optional) |
 
 **Idempotence:** before patching, `solid-pod read /vault/wiki/people/<slug>/index.md.meta` and check for existing `foaf:primaryTopic` and `owl:sameAs` triples. Drop any duplicates from the `--insert` argument (CSS returns 409 Conflict otherwise).
+
+## Procedure — Query the wiki graph
+
+Comunica's link-traversal follows `ldp:contains` but **skips `describedby` Link headers on `text/markdown` resources** (RQ-Pod-4). To SPARQL over `.meta` content, pass explicit `default-graph-uri` parameters pointing at each `.meta` URL:
+
+```
+solid-pod sparql https://pod.vardeman.me/vault/ "
+    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX wiki: <https://pod.vardeman.me/vault/ontology/wiki#>
+
+    SELECT ?page ?subjectWebID WHERE {
+      ?page a wiki:Person ;
+            foaf:primaryTopic ?subjectWebID .
+    }
+" \
+    --default-graph-uri https://pod.vardeman.me/vault/wiki/people/charles/index.md.meta
+```
+
+For batch queries across all wiki Person pages, list each `.meta` URL — or use the `solid-pod sparql` auto-discovery against the `/vault/wiki/people/` container, which enumerates contained resources and fetches each `.meta`.
+
+## Known gaps
+
+- **RQ-Pod-4**: Comunica `describedby` skip on `text/markdown`. Workaround: explicit `--default-graph-uri`. Materialized SPARQL index deferred.
+- **RQ-Listener-1**: CSS `FileDataAccessor.writeMetadataFile()` races `MarkdownProjectionListener` — projected predicates on write don't always land if the agent reads the `.meta` immediately after write. Workaround: re-read after a short wait, or trust the write succeeded and proceed.
+- **RQ-Pod-6**: `.meta` richness vs query overhead unbenchmarked beyond 100 resources.
+
+## Deferred to Memory Structuring Sprint
+
+This sprint ships only what setup-owner needs (`wiki:Person` create + bridge). The follow-on sprint covers:
+
+- Two-stage commit (D73): `/vault/wiki/working/` permissive shape + `mem:Crystallize` durable promotion
+- Full coverage of `wiki:Concept`, `wiki:Source`, `wiki:Procedure`, `wiki:Page`, `wiki:WorkingMemory` create procedures
+- Memory-substrate triggers (D74): `mem:*` AS2 vocab on LDN inbox, Solid Notifications dispatch by `rdf:type`
+- Compile-once procedures (D72): substrate maintains compiled state
+- Lifecycle metadata invariants from L2 (when/why a memory was made; access counters; etc.)
+- Empirical guidance from Rung 1.5 eval feeding back into the skill text
