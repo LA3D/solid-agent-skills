@@ -181,3 +181,69 @@ If yes:
 ```
 
 If no: proceed to Phase E without a wiki page IRI. The WebID enrichment omits `foaf:isPrimaryTopicOf` cleanly — it's SHOULD, not MUST, so the shape surfaces a `sh:Warning` but doesn't block.
+
+### Phase E — WebID enrichment
+
+The core. PATCH `/vault/profile/card` with the substrate-shipped template.
+
+```
+1. solid-pod read /vault/meta/templates/webid-enrich.ttl
+   → capture tmpl:templateBody (with <<FULL_NAME>>, <<ORCID>>, <<CONTACT_CARD>>,
+     <<WIKI_PAGE>>, <<MEMBERSHIP>> placeholders)
+
+2. solid-pod read /vault/profile/card  → list existing triples
+
+3. Substitute placeholders from prefs.ttl + Phase B/C/D outputs:
+   <<FULL_NAME>>     = prefs:fullName
+   <<ORCID>>         = prefs:orcid (bare; template body adds https://orcid.org/ prefix)
+   <<CONTACT_CARD>>  = full IRI from Phase B
+   <<WIKI_PAGE>>     = full IRI from Phase D  (omit BOTH foaf:isPrimaryTopicOf and the
+                       inlined <wiki-page> a wiki:Person triples if Phase D was skipped)
+   <<MEMBERSHIP>>    = full IRI from Phase C  (uncomment the optional org:hasMembership
+                       triple only if Phase C ran)
+
+4. Filter out duplicates against the current /vault/profile/card content:
+   - If pim:preferencesFile already present, drop it.
+   - If foaf:Agent already in rdf:type list, drop the `a foaf:Agent` triple.
+   - Similarly for foaf:Person, foaf:name (if value identical), etc.
+
+5. solid-pod patch /vault/profile/card --insert "<filtered body>"
+   - 200/205 → success
+   - 409 → drop the named duplicate triple and retry
+   - 422 → parse sh:ValidationReport. sh:Violation findings are MUSTs — fix
+           and retry. sh:Warning findings are SHOULDs — report to human, don't
+           block.
+
+6. Verify by reading back:
+   solid-pod read /vault/profile/card
+   → confirm foaf:Agent, foaf:name, pim:preferencesFile, owl:sameAs (ORCID + contact),
+     foaf:isPrimaryTopicOf (if Phase D ran), org:hasMembership (if Phase C ran).
+```
+
+### Phase F — Mark setup complete
+
+```
+solid-pod patch /vault/settings/prefs.ttl --insert "
+    @prefix prefs: <https://pod.vardeman.me/vault/ontology/owner-prefs#> .
+    @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+    </vault/settings/prefs.ttl#owner> prefs:setupOwnerCompleted true^^xsd:boolean .
+"
+```
+
+Then report to the human, including:
+- WebID IRI: `<pod-url>/vault/profile/card#me`
+- Contact card IRI: from Phase B
+- Org / Membership IRIs (if Phase C ran)
+- Wiki page IRI (if Phase D ran)
+- Any `sh:Warning` findings that the human chose to skip — these can be filled in later via incremental PATCH (just rerun this skill against the partial state).
+
+## Failure modes
+
+| Code | Cause | Response |
+|---|---|---|
+| 404 on prefs file | First-run | PUT skeleton, continue |
+| 409 on PATCH | Duplicate insert | Drop duplicate, retry |
+| 422 on PUT contact card | SHACL violation | Parse `text/turtle` body, fix, retry |
+| 422 on PATCH WebID | Shape violation | Fix MUSTs; surface SHOULDs as advisory |
+| Human says "skip" on optional fact | Expected | Continue, omit corresponding triple |
+| Human says "skip" on required fact | Setup blocked | Abort with clear message — re-run when ready |
