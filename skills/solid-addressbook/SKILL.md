@@ -80,3 +80,43 @@ solid-pod patch /vault/contacts/people.ttl --insert "
 **Flat layout, not per-person sub-containers** (MEMORY caveat): the `Person/` container has `ldp:constrainedBy` pointing at ContactCardShape, which CSS interprets as blocking sub-container creation. So Person cards live at `/contacts/Person/<uuid>.ttl`, not `/contacts/Person/<uuid>/index.ttl`. Attachment workflows that need a per-person directory must use a separate constrained container (deferred).
 
 **Authoritative anchor preference** (substrate convention): for researchers, `owl:sameAs <https://orcid.org/...>` is the canonical join key — pick it over email when both are known. ORCID enables cross-Pod identity reconciliation; email doesn't.
+
+## Procedure — Create an Organization
+
+Same pattern as Person via `org-create` template. Anchor preference: `owl:sameAs <https://ror.org/<ROR_ID>>` for institutional orgs; `vcard:hasURL` fallback for commercial/informal orgs without ROR. ROR IDs are bare (no URI prefix in template; the template body adds `https://ror.org/`).
+
+```
+solid-pod read /vault/meta/templates/org-create.ttl
+mint UUIDv4
+fill <<ORGANIZATION_NAME>>, <<ROR>> (or <<HOMEPAGE>>)
+solid-pod create /vault/contacts/Organization/ --slug <uuid>.ttl --content-type text/turtle --body "<filled>"
+solid-pod patch /vault/contacts/people.ttl --insert "<#book> vcard:fn \"<NAME>\" ; vcard:hasMember </vault/contacts/Organization/<uuid>.ttl#this> ."
+```
+
+Orgs are co-listed in `people.ttl` with Persons (SolidOS unified name-lookup convention) — single name-emails-index serves both.
+
+## Procedure — Create a Membership (Person ↔ Org with date range)
+
+`org:Membership` reifies the relationship "Person X is a member of Org Y from date A to date B, in role R." Distinct from a flat `vcard:organization-name "Notre Dame"` literal — supports time-scoped affiliations and SPARQL graph traversal.
+
+```
+solid-pod read /vault/meta/templates/membership-create.ttl
+mint UUIDv4
+fill <<PERSON_UUID>>, <<ORG_UUID>>, <<ROLE>>, <<START_DATE>>, optionally <<END_DATE>>
+solid-pod create /vault/contacts/Membership/ --slug <uuid>.ttl --content-type text/turtle --body "<filled>"
+```
+
+The membership-create template generates a body like:
+
+```turtle
+<#this> a <http://www.w3.org/ns/org#Membership> ;
+    <http://www.w3.org/ns/org#member>       </vault/contacts/Person/<PERSON_UUID>.ttl#this> ;
+    <http://www.w3.org/ns/org#organization> </vault/contacts/Organization/<ORG_UUID>.ttl#this> ;
+    <http://www.w3.org/ns/org#memberDuring> [
+        <http://www.w3.org/2006/time#hasBeginning>
+          [ <http://www.w3.org/2006/time#inXSDDate> "<START_DATE>"^^<http://www.w3.org/2001/XMLSchema#date> ]
+    ] ;
+    <http://www.w3.org/ns/org#role> "<ROLE>" .
+```
+
+After PUT, the Membership IRI (`#this` fragment) becomes the value used in `org:hasMembership` triples on the Person's WebID and/or contact card.
