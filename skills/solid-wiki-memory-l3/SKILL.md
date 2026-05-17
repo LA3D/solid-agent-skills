@@ -63,3 +63,57 @@ the page's `.meta` graph as typed RDF predicates:
 The same write produces *both* the LLM-readable markdown body *and* SPARQL-queryable `.meta` triples. The agent's job is to write good body wikilinks; the substrate generates the structured edges.
 
 **Predicate-level governance** (D81 Model A): each shape declares which predicates the substrate owns (projects/validates) and which the agent owns (free-form). The agent only writes wikilinks; the projector emits the typed predicates.
+
+## Procedure — Read a wiki page
+
+```
+solid-pod read /vault/wiki/people/<slug>/index.md
+   → returns:  content  (markdown body)
+               meta     (JSON-LD .meta with wiki:Person + projected predicates)
+               affordances: { describedby: "/vault/wiki/people/<slug>/index.md.meta", ... }
+```
+
+The `solid-pod read` command auto-fetches the `describedby` `.meta` and returns both body + meta in one shot. For SPARQL access to the `.meta` graph specifically, use:
+
+```
+solid-pod sparql https://pod.vardeman.me/vault/ "SELECT ..." \
+    --default-graph-uri https://pod.vardeman.me/vault/wiki/people/<slug>/index.md.meta
+```
+
+## Procedure — Create a wiki Person page
+
+Class-based dispatch (D78): the Type Index says `wiki:Person → /vault/wiki/people/`, the shape catalog says `wiki:Person → person.shacl.ttl`. The minimal `wiki:Person` body is markdown + a few `.meta` triples:
+
+```
+mint slug (lowercase + hyphens; from prefs:wikiSlug or by ask)
+build markdown body (minimal seed):
+  # <Full Name>
+
+  Pod-owner agentic-memory record. The canonical identity is the
+  Pod-owner WebID `[[charles-webid]]{.webid}` (or however the bridge
+  predicate convention names this — see below). Operational identity
+  in the AddressBook at `[[charles-contact]]{.contact}`.
+
+  ## Notes
+  (free-form; this is the L3 deep-context layer)
+
+solid-pod create /vault/wiki/people/ --slug <slug>/index.md \
+    --content-type text/markdown \
+    --body "<markdown body>" \
+    --meta "
+@prefix wiki: <https://pod.vardeman.me/vault/ontology/wiki#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+<> a wiki:Person ;
+   foaf:name \"<Full Name>\" ;
+   foaf:primaryTopic </vault/profile/card#me> ;
+   owl:sameAs </vault/contacts/Person/<contact-uuid>.ttl#this> .
+"
+```
+
+The `--meta` argument is patched via `solid:inserts` into the `.meta` sidecar. The `foaf:primaryTopic <WebID>` triple is the L3 → L1 bridge — declared at write time, the wiki page now formally asserts "the WebID is my primary subject."
+
+**Slug collision**: if `/vault/wiki/people/<slug>/index.md` already exists (HTTP 200 on the URL), ask the human to disambiguate before overwriting. If the existing page already has `foaf:primaryTopic <WebID>`, treat it as the bridge target — return the existing IRI without writing.
+
+**Deferred to Memory Structuring Sprint**: two-stage commit via `/vault/wiki/working/` permissive shape → `mem:Crystallize` → durable container. For setup-owner, write the Person page directly to its durable container — the use case is bootstrap, not in-flight knowledge consolidation.
