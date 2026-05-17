@@ -120,3 +120,30 @@ The membership-create template generates a body like:
 ```
 
 After PUT, the Membership IRI (`#this` fragment) becomes the value used in `org:hasMembership` triples on the Person's WebID and/or contact card.
+
+## Procedure — Find contacts (via affordances)
+
+The substrate ships eight read affordances under `/vault/meta/affordances/`. Each declares a `wiki:selectQuery` parameterized SPARQL. Invoke with `solid-pod invoke`:
+
+```
+solid-pod invoke https://pod.vardeman.me/vault/ contact-find-by-orcid \
+    --default-graph-uri https://pod.vardeman.me/vault/contacts/people.ttl \
+    --default-graph-uri https://pod.vardeman.me/vault/contacts/Person/<any>.ttl
+```
+
+The affordances:
+
+| Name | Inputs | Returns |
+|---|---|---|
+| `contact-find-by-orcid` | ORCID URI | Person card IRI |
+| `contact-find-by-email` | mailto: URI | Person card IRI |
+| `contact-find-by-name` | substring | matching Person/Org IRIs |
+| `contact-find-by-affiliation` | Org IRI | Persons with active membership |
+| `contact-find-by-group` | Group IRI | Group members |
+| `org-find-by-name` | substring | Org IRIs |
+| `org-find-by-ror` | ROR URI | Org IRI |
+| `bridge-card-to-wiki` | card #this IRI | wiki page IRI via foaf:isPrimaryTopicOf |
+
+**RQ-Pod-4 caveat:** Comunica skips `describedby` Link headers on `text/markdown` resources. For affordances querying `.meta` content, pass explicit `--default-graph-uri` arguments pointing at the relevant `.meta` URLs (the affordance's `sh:agentInstruction` typically lists which graphs to load).
+
+**For programmatic use** (e.g., setup-owner Phase B checking "does an owner card already exist?"): prefer `solid-pod sparql` with an explicit query over the `find-by-orcid` invocation — the affordance does the same query, but a custom SELECT lets you control output shape exactly.
