@@ -1,6 +1,16 @@
 ---
 name: solid-owner-identity
-description: Pod-owner identity operations — WebID profile reads + enrichment, preferences-file elicitation, and the canonical cold-start "Set up Pod owner" procedure that orchestrates AddressBook + wiki-memory L3 skills. Use whenever arriving at a Pod and needing to learn who owns it, when enriching a CSS-minted minimal WebID, when walking a human through Pod bootstrap, or when reasoning about Pod-owner identity claims (foaf:name, owl:sameAs <orcid>, org:hasMembership, foaf:isPrimaryTopicOf the L3 agentic-memory page). Forward-looking: extends to VC-issued claims (cred:credentialSubject), DID-WebID bridges (alsoKnownAs <did:>), and ACL ownership wiring as those land in later sprints.
+description: >-
+  Pod-owner identity operations — WebID profile reads + enrichment,
+  preferences-file elicitation, and the canonical cold-start "Set up Pod owner"
+  procedure that orchestrates AddressBook + wiki-memory L3 skills. Use whenever
+  arriving at a Pod and needing to learn who owns it, when enriching a CSS-minted
+  minimal WebID, when walking a human through Pod bootstrap, or when reasoning
+  about Pod-owner identity claims (foaf:name, owl:sameAs <orcid>,
+  org:hasMembership, foaf:isPrimaryTopicOf the L3 agentic-memory page).
+  Forward-looking: extends to VC-issued claims (cred:credentialSubject),
+  DID-WebID bridges (alsoKnownAs <did:>), and ACL ownership wiring as those
+  land in later sprints.
 ---
 
 # Pod-Owner Identity Operations
