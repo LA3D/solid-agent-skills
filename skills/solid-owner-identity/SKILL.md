@@ -34,3 +34,33 @@ All three IRIs denote the same agent. Bridge predicates make the equivalence exp
 - L1→L3: `foaf:isPrimaryTopicOf <wiki-page>` + inlined `<wiki-page> a wiki:Person` (follow-the-nose)
 - L3→L1: `foaf:primaryTopic <WebID>` in wiki page's `.meta`
 - L2→L1: `vcard:url [ vcard:WebId ; vcard:value <WebID> ]` (SolidOS convention, optional)
+
+## Step 1 — Discover the owner-identity overlay
+
+```
+solid-pod info /vault/
+   → storage description carries dct:conformsTo + provided capabilities
+solid-pod read /vault/meta/capabilities/pod-owner-identity.ttl
+   → cap:providedBy <ontology/overlay#owner-identity>
+solid-pod read /vault/meta/shapes/webid-profile.shacl.ttl
+   → PodOwnerWebIDShape with the agentInstruction text (read this!)
+```
+
+## Step 2 — Read current Pod-owner state
+
+```
+solid-pod read /vault/profile/card
+```
+
+Classify the result:
+
+- **CSS-default minimal**: only `foaf:Person`, `solid:oidcIssuer`, `pim:storage`, `solid:publicTypeIndex`. → Full SetupPodOwner needed.
+- **Partially enriched**: some subset of (`foaf:name`, `owl:sameAs`, `foaf:isPrimaryTopicOf`, `pim:preferencesFile`). → Resume from the first missing required predicate.
+- **Fully enriched**: all MUSTs satisfied (foaf:Agent, pim:preferencesFile, oidcIssuer, storage, publicTypeIndex) AND `prefs:setupOwnerCompleted = true` at /vault/settings/prefs.ttl. → Report state, exit.
+
+```
+solid-pod read /vault/settings/prefs.ttl       # 200 + facts, or 404
+```
+
+If 404 or empty: this is a fresh Pod; SetupPodOwner Phase A creates it.
+If 200 + setupOwnerCompleted: short-circuit; this skill's job is done.
