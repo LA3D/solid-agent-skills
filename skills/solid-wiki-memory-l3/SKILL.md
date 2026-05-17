@@ -7,6 +7,25 @@ description: Wiki-memory L3 (memory profile) operations on a Solid Pod — class
 
 This sprint ships **the subset of wiki-memory L3 needed by the setup-owner workflow**: discovery, the `wiki:Person` class path, and the L3→L1/L2 bridge procedure. The two-stage commit (D73 working-memory + `mem:Crystallize`), full coverage of the other shape classes (Concept/Source/Procedure/WorkingMemory/Page), and memory-substrate triggers (D74) are deferred to a follow-on **Memory Structuring Sprint**.
 
+## Pre-flight — TLS dev cert (do this BEFORE any solid-pod / node / curl call)
+
+This Pod runs HTTPS with an **mkcert**-signed dev certificate. Node-based tools
+(the `solid-pod` CLI, Comunica, Bashlib, `@inrupt/solid-client-authn-node`) do
+not read the macOS Keychain, so out of the box they fail with
+`SELF_SIGNED_CERT_IN_CHAIN`. Per D85, the **correct** fix is:
+
+```bash
+export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
+```
+
+Set once per shell session before running `solid-pod`.
+
+**DO NOT** set `NODE_TLS_REJECT_UNAUTHORIZED=0` — that disables TLS verification
+globally and silently drops integrity guarantees on every HTTPS call. Always
+use `NODE_EXTRA_CA_CERTS`.
+
+Full context: `cogitarelink-solid/.claude/skills/solid-tls-deployment/`.
+
 ## Quick reference
 
 | Container | Class | URL |

@@ -11,6 +11,26 @@ templates, eight read affordances. Each write is template-driven: the
 substrate ships the body skeleton + agent-instruction; you fill placeholders
 + PUT/PATCH.
 
+## Pre-flight — TLS dev cert (do this BEFORE any solid-pod / node / curl call)
+
+This Pod runs HTTPS with an **mkcert**-signed dev certificate. Node-based tools
+(the `solid-pod` CLI, Comunica, Bashlib, `@inrupt/solid-client-authn-node`) do
+not read the macOS Keychain, so out of the box they fail with
+`SELF_SIGNED_CERT_IN_CHAIN`. Per D85, the **correct** fix is:
+
+```bash
+export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
+```
+
+Set once per shell session before running `solid-pod`.
+
+**DO NOT** set `NODE_TLS_REJECT_UNAUTHORIZED=0` — that disables TLS verification
+globally for the entire Node process and silently drops integrity guarantees on
+every HTTPS call (not just the Pod). Always use `NODE_EXTRA_CA_CERTS` so the
+Pod's cert remains verified against the mkcert root only.
+
+Full context: `cogitarelink-solid/.claude/skills/solid-tls-deployment/`.
+
 ## Quick reference
 
 | Container | Class | URL |

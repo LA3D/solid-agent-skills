@@ -17,6 +17,22 @@ description: >-
 
 The Pod-owner WebID at `/vault/profile/card#me` is the canonical agent identity of the Pod. CSS mints a minimal version on account creation (foaf:Person, oidcIssuer, storage, publicTypeIndex). This skill enriches it through the agent↔human elicitation pattern and orchestrates the cross-cutting **Set up Pod owner** procedure that wires the three identity layers together.
 
+## Pre-flight — TLS dev cert (do this BEFORE any solid-pod / node / curl call)
+
+This Pod runs HTTPS with an **mkcert**-signed development certificate. Node-based tools (the `solid-pod` CLI, Comunica, Bashlib, `@inrupt/solid-client-authn-node`) do not read the macOS Keychain, so out of the box they fail with `SELF_SIGNED_CERT_IN_CHAIN` on every connection. Per D85 (TLS deployment), the **correct** fix is to point Node at the mkcert root CA:
+
+```bash
+export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
+```
+
+Set this once at the start of the shell session that runs `solid-pod`. After that, `solid-pod info https://pod.vardeman.me/vault/` and every subsequent call works without flags.
+
+**DO NOT** set `NODE_TLS_REJECT_UNAUTHORIZED=0` — that disables TLS verification globally for the entire Node process, which is the wrong shape of fix (silent loss of integrity guarantees on every HTTPS call you make in that shell, not just the Pod). Use `NODE_EXTRA_CA_CERTS` so the Pod's cert remains verified against the mkcert root only.
+
+For Python tools (`solid-pod` CLI is Node, but pytest integration tests use `httpx`) the equivalent is `SSL_CERT_FILE="$(mkcert -CAROOT)/rootCA.pem"` or `httpx.Client(verify=False)` for ephemeral test calls.
+
+If you encounter cert errors later in the workflow, this is the cause. Full context: `cogitarelink-solid/.claude/skills/solid-tls-deployment/`.
+
 ## Quick reference
 
 | Substrate URL | Role |
