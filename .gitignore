@@ -15,6 +15,10 @@ lerna-debug.log*
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
+# Python bytecode (eval-workspace grade scripts use Python)
+__pycache__/
+*.pyc
+
 # Runtime data
 pids
 *.pid
