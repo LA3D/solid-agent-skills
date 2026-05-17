@@ -247,3 +247,23 @@ Then report to the human, including:
 | 422 on PATCH WebID | Shape violation | Fix MUSTs; surface SHOULDs as advisory |
 | Human says "skip" on optional fact | Expected | Continue, omit corresponding triple |
 | Human says "skip" on required fact | Setup blocked | Abort with clear message — re-run when ready |
+
+## Future extensions (deferred, not implemented v1)
+
+The owner-identity shape's `sh:agentInstruction` already names these as extension points:
+
+| Extension | Trigger to implement | Notes |
+|---|---|---|
+| **Verifiable Credentials** (`cred:credentialSubject`) | When VC tooling lands (Inrupt gConsent or equivalent) | The WebID is the subject; VC-gated access via `acp:vc` matchers needs ACP not WAC. |
+| **DID-WebID bridge** (D14: `alsoKnownAs <did:web:...>`) | When federation matters | DID Core spec endorses `alsoKnownAs` for DID→other-identifier direction; pair with `owl:sameAs` for the reverse. |
+| **ACL ownership** (`acl:owner`) | Phase 6 (WAC/ACP turn-on) | Wires the WebID as resource owner across the Pod. |
+| **Multi-WebID Pods** (`solid:account`) | Lab/org-Pod use case | Per-member subtree control via `acl:Control`; org WebID owns the Pod. |
+
+Each is a shape MAY extension + a new template + an incremental skill addition. No substrate restructuring needed.
+
+## Known gaps
+
+- **PATCH is insert-only** (CLI/template limitation). To replace an existing triple (e.g., updating `foaf:name` after a name change), a future `webid-update.ttl` template using `solid:deletes` is needed.
+- **Authentication pre-ACL only**. Once Phase 6 enables ACLs, every operation here will require Solid-OIDC + DPoP-bound tokens with the authenticated agent == `/vault/profile/card#me`. CLI client doesn't yet have auth wired (uses plain `fetch()`).
+- **`pim:preferencesFile` is private but unenforced**. The substrate marks it private by convention; ACL enforcement lands with Phase 6.
+- **Wiki Person slug collisions**. If two Pod owners share a slug (unlikely on a single-owner Pod), the agent should disambiguate before overwriting. This skill's Phase D documents the policy but doesn't enforce it.
