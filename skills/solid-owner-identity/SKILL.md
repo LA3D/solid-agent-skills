@@ -155,3 +155,29 @@ Run only if `prefs:primaryAffiliationROR` OR `prefs:primaryAffiliationName` pres
 ```
 
 Phase C is **fully optional** — if the human skips affiliation facts in Phase A, skip Phase C entirely. The WebID enrichment in Phase E omits `org:hasMembership` cleanly.
+
+### Phase D — Optional: wiki Person page + bridge
+
+Ask the human: *"Create the L3 agentic-memory wiki page now? (Recommended — gives LLMs richer context about the Pod owner; can be created later via solid-wiki-memory-l3 if you prefer.)"*
+
+If yes:
+
+```
+1. Check for existing wiki page:
+   solid-pod read /vault/wiki/people/<prefs:wikiSlug>/index.md
+   200 → check its .meta for foaf:primaryTopic <WebID>
+         if present: capture <wiki-page-IRI>; SKIP step 2.
+         if absent: ask human — overwrite the page's bridge or pick a different slug?
+   404 → proceed to mint.
+
+2. Calls into solid-wiki-memory-l3 skill ("Procedure — Create a wiki Person page"):
+   - mint markdown body (minimal seed; H1 = prefs:fullName; "Pod-owner agentic-memory record")
+   - solid-pod create /vault/wiki/people/ --slug <wikiSlug>/index.md \
+       --content-type text/markdown --body "<markdown>" \
+       --meta "<> a wiki:Person ; foaf:name <fullName> ; \
+               foaf:primaryTopic </vault/profile/card#me> ; \
+               owl:sameAs <contact-card-IRI> ."
+   - capture <wiki-page-IRI> = /vault/wiki/people/<wikiSlug>/index.md
+```
+
+If no: proceed to Phase E without a wiki page IRI. The WebID enrichment omits `foaf:isPrimaryTopicOf` cleanly — it's SHOULD, not MUST, so the shape surfaces a `sh:Warning` but doesn't block.
