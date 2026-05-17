@@ -147,3 +147,21 @@ The affordances:
 **RQ-Pod-4 caveat:** Comunica skips `describedby` Link headers on `text/markdown` resources. For affordances querying `.meta` content, pass explicit `--default-graph-uri` arguments pointing at the relevant `.meta` URLs (the affordance's `sh:agentInstruction` typically lists which graphs to load).
 
 **For programmatic use** (e.g., setup-owner Phase B checking "does an owner card already exist?"): prefer `solid-pod sparql` with an explicit query over the `find-by-orcid` invocation — the affordance does the same query, but a custom SELECT lets you control output shape exactly.
+
+## Procedure — Pod-owner setup contribution
+
+Called by `solid-owner-identity` Phase B and Phase C. Walks the same Person/Org/Membership paths above, parameterized from `/vault/settings/prefs.ttl` facts. Idempotence at each phase:
+
+- **Phase B (Person card):** before mint, query `/vault/contacts/people.ttl` for an entry whose Person has `owl:sameAs <https://orcid.org/<prefs:orcid>>` — if found, return the existing card IRI without writing.
+- **Phase C (Org card):** if `prefs:primaryAffiliationROR` present, query for an Organization with `owl:sameAs <https://ror.org/<that-ROR>>`. Mint only if absent.
+- **Phase C (Membership):** there's no obvious natural key for an org:Membership beyond `(person, org)` pair; if a Membership linking the owner Person to the affiliation Org already exists, skip the new mint.
+
+Hand the resulting IRIs (Person card `#this`, Org card `#this`, Membership `#this`) back up to `solid-owner-identity` for use in Phase D (wiki page bridge) and Phase E (WebID enrichment).
+
+## Known gotchas
+
+- **`vcard:inAddressBook` absolute IRI** (above): use the full `https://pod.vardeman.me/vault/contacts/index.ttl#this`, not a vault-relative IRI.
+- **No per-Person sub-containers** (above): flat `<container>/<uuid>.ttl` layout because `Person/` is constrained.
+- **`people.ttl` index patches** must use absolute IRIs in both subject (`<#book>`) and object (the new member). The CLI's `solid-pod patch` wraps your `--insert` argument in `solid:inserts {...}`, so include prefixes inline or use full IRIs.
+- **`org:Membership` queries via SPARQL** must traverse the reified node; the membership has its own URI, not a direct property of the Person.
+- **D87 capabilities-only deps** mean older overlay code that referenced `overlay:dependsOnOverlay` is gone — declare `cap:requires <descriptor.ttl>` against specific capability descriptors, not against the AddressBook overlay as a whole.
