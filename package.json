@@ -5,7 +5,7 @@
   "type": "module",
   "bin": { "solid-pod": "./dist/cli.js" },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x dist/cli.js",
     "dev": "tsx src/cli.ts",
     "test": "vitest"
   },
