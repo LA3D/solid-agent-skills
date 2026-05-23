@@ -1,0 +1,49 @@
+{
+  "eval_id": 1,
+  "eval_name": "paged-retrieval",
+  "prompt": "Find all wiki pages on the Solid Pod at https://pod.vardeman.me/vault/ that mention \"karpathy\" (case-insensitive substring match). Report each matching page URL plus a brief snippet showing the match. There may be many matches — report all of them, paged if necessary. Indicate how many total matches you found. The Pod is a wiki-memory L3 substrate. Use any web standards and tools available. Report results in markdown.",
+  "ground_truth": {
+    "expected_hits_minimum": 5,
+    "expected_hits_seen_in_verification": 6,
+    "expected_page_urls_include": [
+      "https://pod.vardeman.me/vault/wiki/people/karpathy-andrej.md",
+      "https://pod.vardeman.me/vault/wiki/concepts/wiki-memory.md",
+      "https://pod.vardeman.me/vault/wiki/concepts/compounding-knowledge.md",
+      "https://pod.vardeman.me/vault/wiki/concepts/agentic-engineering.md",
+      "https://pod.vardeman.me/vault/wiki/people/ghumare-andre.md"
+    ],
+    "rationale": "Karpathy is a hub: directly named in karpathy-andrej.md; referenced as [[karpathy-andrej]]{.author} in 3 concept pages (substring 'karpathy' matches); discussed by name in ghumare-andre.md. Verification step found 6 hits (potentially including a pre-existing pod page)."
+  },
+  "assertions": [
+    {
+      "id": "L3-affordance-catalog",
+      "text": "Trajectory shows agent fetched /vault/meta/affordances/ or /vault/meta/capabilities/",
+      "layer": "L3"
+    },
+    {
+      "id": "L3-wiki-search-used",
+      "text": "Trajectory shows agent invoked ?ext=search-grep on a /vault/wiki/ container",
+      "layer": "L3"
+    },
+    {
+      "id": "L3-oslc-quoted",
+      "text": "Agent used OSLC-compliant double-quoted searchTerms",
+      "layer": "L3"
+    },
+    {
+      "id": "L1-storage-description",
+      "text": "Trajectory shows agent fetched /vault/.well-known/solid (or followed Link header)",
+      "layer": "L1"
+    },
+    {
+      "id": "output-multi-hit",
+      "text": "Output reports at least 5 distinct matching pages",
+      "layer": "outcome"
+    },
+    {
+      "id": "output-hub-recognition",
+      "text": "Output mentions karpathy-andrej.md (the canonical Person page)",
+      "layer": "outcome"
+    }
+  ]
+}

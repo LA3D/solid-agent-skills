@@ -1,0 +1,88 @@
+{
+  "expectations": [
+    {
+      "text": "Trajectory shows agent fetched /vault/meta/affordances/ or /vault/meta/capabilities/",
+      "passed": false,
+      "evidence": "No fetch of /vault/meta/affordances/ or /vault/meta/capabilities/ appears in trajectory. Agent read the local SKILL.md, ran `which solid-pod`, then invoked `solid-pod wiki-search` directly. The skill documents the canonical affordance descriptor location but the agent did not dereference it."
+    },
+    {
+      "text": "Trajectory shows agent invoked ?ext=search-grep on a /vault/wiki/ container",
+      "passed": true,
+      "evidence": "Step 4 (toolu_01CFPUneZqmxxoUevDFERUaE): `solid-pod wiki-search https://pod.vardeman.me/vault/wiki/ \"progressive disclosure\" --page-size 100`. The CLI is a documented thin wrapper around the Pod's `?ext=search-grep` affordance (per CLAUDE.md and SKILL.md). Result includes oslc-style totalCount/nextPage/score fields confirming the affordance was invoked under the hood."
+    },
+    {
+      "text": "Agent used OSLC-compliant double-quoted searchTerms (no 400 errors from bare strings)",
+      "passed": true,
+      "evidence": "Search term passed as a double-quoted phrase: `\"progressive disclosure\"`. CLI handles OSLC \u00a77.3 quoting per SKILL.md. Tool result returned 200 with `{\"totalCount\": 1, ...}` \u2014 no error."
+    },
+    {
+      "text": "Trajectory shows agent fetched /vault/.well-known/solid (or followed solid:storageDescription Link header)",
+      "passed": false,
+      "evidence": "No GET to /vault/.well-known/solid or any Link-header following appears in trajectory. Agent went straight from reading SKILL.md to invoking the CLI. Only 5 tool uses: Read SKILL.md, Bash `which solid-pod`, Bash `solid-pod wiki-search`, Bash `mkdir`, Write result.md."
+    },
+    {
+      "text": "Output mentions progressive-disclosure.md as the matching page",
+      "passed": true,
+      "evidence": "result.md line 9: `### 1. https://pod.vardeman.me/vault/wiki/concepts/progressive-disclosure.md`. Matches the ground-truth expected URL exactly."
+    },
+    {
+      "text": "Output reports exactly 1 hit (not more, not fewer)",
+      "passed": true,
+      "evidence": "result.md line 5: `**Total matches**: 1`. Final assistant message: `Found **1 match**`. Matches ground_truth.expected_hits=1."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 2,
+    "total": 6,
+    "pass_rate": 0.67
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Read": 1,
+      "Bash": 3,
+      "Write": 1
+    },
+    "total_tool_calls": 5,
+    "errors_encountered": 0
+  },
+  "timing": {
+    "total_tokens": 72568
+  },
+  "claims": [
+    {
+      "claim": "CLI handles OSLC \u00a77.3 quoting + URL encoding",
+      "type": "process",
+      "verified": true,
+      "evidence": "Documented in SKILL.md read at step 1; agent did not need to manage quoting manually and call succeeded."
+    },
+    {
+      "claim": "Single match was found for the literal phrase 'progressive disclosure'",
+      "type": "factual",
+      "verified": true,
+      "evidence": "CLI returned totalCount=1 with no nextPage; matches the eval_metadata.ground_truth.expected_hits=1."
+    },
+    {
+      "claim": "Snippet shows the matched phrase in context",
+      "type": "quality",
+      "verified": true,
+      "evidence": "result.md snippet contains `# Progressive Disclosure Progressive disclosure is the retrieval pattern...` \u2014 the literal phrase is visible in the snippet."
+    }
+  ],
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "Trajectory shows agent fetched /vault/meta/affordances/ or /vault/meta/capabilities/",
+        "reason": "The skill explicitly hands the agent a CLI shortcut so it does NOT need to fetch the affordance descriptor cold. Failing this assertion may be expected behavior when the skill is loaded \u2014 consider distinguishing 'discovery via skill' from 'discovery via Pod self-description' if the eval wants to measure cold-start discovery vs warm-start skill use."
+      },
+      {
+        "assertion": "Trajectory shows agent fetched /vault/.well-known/solid",
+        "reason": "Same as above \u2014 with the skill loaded, the agent has a tested code path and skips storage-description discovery. If the goal is to measure storage-description traversal as a fallback, this should probably be checked in the WITHOUT_SKILL arm, not WITH_SKILL."
+      },
+      {
+        "reason": "No assertion checks that the agent did NOT produce false positives (wikilinked variants like progressive-disclosure.md that mention the hyphenated form). The ground-truth rationale calls out this nuance \u2014 an assertion `Output does not list any page whose body only contains [[progressive-disclosure]] without the literal space-separated phrase` would discriminate against an agent that confused wikilink targets with phrase matches."
+      }
+    ],
+    "overall": "The L1/L3 discovery assertions read like cold-start discovery checks, but with the skill loaded the agent has no reason to dereference them \u2014 the skill IS the discovery shortcut. The outcome assertions are good and the wiki-search invocation assertion is well-targeted. Consider splitting discovery-path assertions by skill-loading condition."
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "expectations": [
+    {
+      "text": "Trajectory shows agent fetched /vault/meta/affordances/ or /vault/meta/capabilities/",
+      "passed": true,
+      "evidence": "Tool call at step [8]: curl -s https://pod.vardeman.me/vault/meta/affordances/ -H 'Accept: text/turtle' \u2014 returned affordance catalog including wiki-search-grep.ttl"
+    },
+    {
+      "text": "Trajectory shows agent invoked ?ext=search-grep on a /vault/wiki/ container",
+      "passed": true,
+      "evidence": "Tool call at step [14]: curl -s 'https://pod.vardeman.me/vault/wiki/?ext=search-grep&oslc.searchTerms=%22progressive%20disclosure%22&oslc.pageSize=100'"
+    },
+    {
+      "text": "Agent used OSLC-compliant double-quoted searchTerms (no 400 errors from bare strings)",
+      "passed": true,
+      "evidence": "Step [14] used oslc.searchTerms=%22progressive%20disclosure%22 (URL-encoded double quotes). Response at [15] returned a valid OSLC ResponseInfo Turtle with oslc:totalCount 1 \u2014 no 400 error."
+    },
+    {
+      "text": "Trajectory shows agent fetched /vault/.well-known/solid (or followed solid:storageDescription Link header)",
+      "passed": true,
+      "evidence": "Step [4] HEAD on /vault/ surfaced storageDescription link; step [6]: curl -s https://pod.vardeman.me/vault/.well-known/solid -H 'Accept: text/turtle' returned storage description with wiki:affordanceCatalog pointer."
+    },
+    {
+      "text": "Output mentions progressive-disclosure.md as the matching page",
+      "passed": true,
+      "evidence": "result.md lists: 'https://pod.vardeman.me/vault/wiki/concepts/progressive-disclosure.md' as the single match."
+    },
+    {
+      "text": "Output reports exactly 1 hit (not more, not fewer)",
+      "passed": true,
+      "evidence": "result.md states '**Total matches**: 1' and '1 match found' with only progressive-disclosure.md listed."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Bash": 6,
+      "Write": 1
+    },
+    "total_tool_calls": 7,
+    "errors_encountered": 0
+  },
+  "timing": {
+    "total_tokens": 78455
+  },
+  "claims": [
+    {
+      "claim": "Storage description advertises wiki:affordanceCatalog at /meta/affordances/",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Confirmed in step [7] response and [9] container listing showing wiki-search-grep.ttl"
+    },
+    {
+      "claim": "Affordance declares ?ext=search-grep dispatch over /vault/wiki/",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Step [12] returned affordance turtle referencing wiki:dispatchPattern and wiki:targetContainer per the agent's quoted snippet"
+    },
+    {
+      "claim": "Single hit at progressive-disclosure.md",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Step [15] response showed OSLC ResponseInfo with totalCount 1; matches expected ground_truth"
+    }
+  ],
+  "eval_feedback": {
+    "overall": "Assertions are well-discriminating: they cover both trajectory (L1/L3 discovery layers, OSLC quoting) and outcome (correct page, exact count). Without-skill run still succeeded in 37.7s with 7 tool calls \u2014 the affordance catalog is sufficiently self-documenting that cold-start agents can find it. Worth noting in skill-vs-no-skill comparison."
+  }
+}

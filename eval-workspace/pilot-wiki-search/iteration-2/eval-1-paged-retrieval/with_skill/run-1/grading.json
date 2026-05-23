@@ -1,0 +1,59 @@
+{
+  "expectations": [
+    {
+      "id": "L3-affordance-catalog",
+      "text": "Trajectory shows agent fetched /vault/meta/affordances/ or /vault/meta/capabilities/",
+      "passed": false,
+      "evidence": "Agent went straight from reading SKILL.md to invoking the solid-pod wiki-search CLI. No tool_use targeted /vault/meta/affordances/ or /vault/meta/capabilities/. The skill encapsulates the affordance knowledge, so the agent did not dereference the catalog explicitly."
+    },
+    {
+      "id": "L3-wiki-search-used",
+      "text": "Trajectory shows agent invoked ?ext=search-grep on a /vault/wiki/ container",
+      "passed": true,
+      "evidence": "L6 tool_use Bash: `solid-pod wiki-search https://pod.vardeman.me/vault/wiki/ \"karpathy\"` \u2014 the solid-pod wiki-search CLI is the thin wrapper around the ?ext=search-grep affordance per repo CLAUDE.md. L7 returned the OSLC totalCount/nextPage/results envelope confirming the affordance was hit."
+    },
+    {
+      "id": "L3-oslc-quoted",
+      "text": "Agent used OSLC-compliant double-quoted searchTerms",
+      "passed": true,
+      "evidence": "L6 command quoted the term: `solid-pod wiki-search https://pod.vardeman.me/vault/wiki/ \"karpathy\"` \u2014 single literal term in double quotes, OSLC \u00a77.3 compliant."
+    },
+    {
+      "id": "L1-storage-description",
+      "text": "Trajectory shows agent fetched /vault/.well-known/solid (or followed Link header)",
+      "passed": false,
+      "evidence": "No tool_use targeted /vault/.well-known/solid. Agent relied on the skill+CLI directly, bypassing the L1 storage-description discovery step."
+    },
+    {
+      "id": "output-multi-hit",
+      "text": "Output reports at least 5 distinct matching pages",
+      "passed": true,
+      "evidence": "result.md states 'Total matches: 6' and lists 6 distinct URLs: agentic-engineering.md, wiki-memory.md, ghumare-andre.md, compounding-knowledge.md, karpathy-andrej.md, how-to-ingest-source.md."
+    },
+    {
+      "id": "output-hub-recognition",
+      "text": "Output mentions karpathy-andrej.md (the canonical Person page)",
+      "passed": true,
+      "evidence": "Match #5 in result.md: 'https://pod.vardeman.me/vault/wiki/people/karpathy-andrej.md (score 26, line 8)' with snippet referencing 'Andrej Karpathy Researcher and educator.'"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 2,
+    "total": 6,
+    "pass_rate": 0.6667
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Read": 1,
+      "Bash": 2,
+      "Write": 1
+    },
+    "total_tool_calls": 4,
+    "errors_encountered": 0
+  },
+  "timing": {
+    "total_tokens": 73533
+  },
+  "eval_feedback": "With the skill, the agent collapsed the L1 storage-description and L3 affordance-catalog discovery steps into a single CLI call (`solid-pod wiki-search`). This is the intended behavior \u2014 the skill encapsulates the discovery chain \u2014 but it means trajectory-based L1/L3-discovery assertions will fail by design. The outcome assertions (multi-hit count, hub recognition) and the substantive L3 assertions (search-grep invocation, OSLC quoting) all passed. Consider relaxing L1-storage-description and L3-affordance-catalog assertions when grading with-skill runs, or adding a 'skill-encapsulates-discovery' variant that passes when the CLI is invoked correctly."
+}

@@ -1,0 +1,90 @@
+{
+  "expectations": [
+    {
+      "text": "Trajectory shows agent fetched /vault/meta/affordances/ or /vault/meta/capabilities/",
+      "passed": true,
+      "evidence": "Step 3 (toolu_017GERW7HuBP7is9Y8n6sfq4): Bash 'curl -s https://pod.vardeman.me/vault/meta/affordances/ | head -50' returned the affordance catalog listing 19 affordances including wiki-search-grep.ttl. Step 4 also fetched /vault/meta/affordances/wiki-search-grep.ttl."
+    },
+    {
+      "text": "Trajectory shows agent invoked ?ext=search-grep on a /vault/wiki/ container",
+      "passed": true,
+      "evidence": "Step 5 (toolu_01LzdEuqDDufqX7Xia9cSMKv): Bash 'curl -s https://pod.vardeman.me/vault/wiki/?ext=search-grep&oslc.searchTerms=%22karpathy%22&oslc.pageSize=100' invoked the search-grep affordance on /vault/wiki/."
+    },
+    {
+      "text": "Agent used OSLC-compliant double-quoted searchTerms",
+      "passed": true,
+      "evidence": "Query string used 'oslc.searchTerms=%22karpathy%22' where %22 is the URL-encoded double-quote character, matching the OSLC Query 3.0 \u00a77.3 quoting requirement stated in the affordance descriptor."
+    },
+    {
+      "text": "Trajectory shows agent fetched /vault/.well-known/solid (or followed Link header)",
+      "passed": true,
+      "evidence": "Step 1 (toolu_01KF6iU6Uyyeu1XBij8jGYeB): Pod root HEAD revealed Link: <https://pod.vardeman.me/vault/.well-known/solid>; rel=\"...storageDescription\". Step 2 (toolu_01RcujskAq1Ut5ZQkwrRAPUb): Bash 'curl -s https://pod.vardeman.me/vault/.well-known/solid | head -100' fetched the storage description which advertised wiki:affordanceCatalog."
+    },
+    {
+      "text": "Output reports at least 5 distinct matching pages",
+      "passed": true,
+      "evidence": "result.md reports 'Total matches: 6' and enumerates 6 distinct pages: agentic-engineering.md, wiki-memory.md, ghumare-andre.md, compounding-knowledge.md, karpathy-andrej.md, how-to-ingest-source.md."
+    },
+    {
+      "text": "Output mentions karpathy-andrej.md (the canonical Person page)",
+      "passed": true,
+      "evidence": "Match #5 in result.md: 'https://pod.vardeman.me/vault/wiki/people/karpathy-andrej.md (score 26, line 8)' with snippet '# Andrej Karpathy Researcher and educator. Foundational thinker...'"
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Bash": 6,
+      "Write": 1
+    },
+    "total_tool_calls": 7,
+    "total_steps": 7,
+    "errors_encountered": 0
+  },
+  "timing": {
+    "total_tokens": 79457
+  },
+  "claims": [
+    {
+      "claim": "oslc:totalCount = 6 \u2014 full result set returned in a single page",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Tool result from search-grep query (Step 5) shows 'oslc:totalCount 6' and ldp:contains lists exactly 6 resources."
+    },
+    {
+      "claim": "All 5 ground-truth expected URLs are reported",
+      "type": "factual",
+      "verified": true,
+      "evidence": "result.md includes karpathy-andrej.md, wiki-memory.md, compounding-knowledge.md, agentic-engineering.md, and ghumare-andre.md \u2014 all 5 expected URLs from eval_metadata, plus how-to-ingest-source.md as a 6th hit (matching the verification-step count of 6)."
+    },
+    {
+      "claim": "Discovery path: storage description -> affordance catalog -> search-grep descriptor -> query",
+      "type": "process",
+      "verified": true,
+      "evidence": "Trajectory steps 1-5 show exactly this sequence: HEAD root -> GET .well-known/solid -> GET meta/affordances/ -> GET meta/affordances/wiki-search-grep.ttl -> GET wiki/?ext=search-grep."
+    },
+    {
+      "claim": "WAC may have silently omitted matches; totalCount reflects anonymous-readable corpus",
+      "type": "quality",
+      "verified": true,
+      "evidence": "Affordance descriptor stated 'WAC enforced server-side: matches the requester cannot read are omitted, not denied.' Result.md correctly notes this caveat."
+    }
+  ],
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "reason": "The without-skill agent solved this in 7 tool calls / 49s \u2014 essentially as fast as a with-skill agent would. This pilot-eval-1 may not discriminate between with/without skill conditions because the affordance descriptor is so self-documenting that cold discovery is nearly free. Consider an eval where the affordance is intentionally missing, or where multi-term AND or paging across >100 hits is required, to stress what the skill specifically adds."
+      },
+      {
+        "assertion": "Output reports at least 5 distinct matching pages",
+        "reason": "Threshold of 5 passes even if a noisy false-positive sneaks in; consider asserting the exact expected set of 5 URLs is present (set inclusion) rather than a count >=5."
+      }
+    ],
+    "overall": "All 6 assertions pass cleanly with strong evidence. The eval discriminates well on substance (output correctness, discovery-path adherence). Main concern is that without-skill performance is already near-optimal here, raising the question of what the skill condition can demonstrate beyond parity."
+  }
+}

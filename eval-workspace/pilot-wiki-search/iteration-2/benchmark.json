@@ -1,0 +1,262 @@
+{
+  "metadata": {
+    "skill_name": "wiki-search",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-05-23T14:21:53Z",
+    "evals_run": [
+      0,
+      1
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 0,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.67,
+        "passed": 4,
+        "failed": 2,
+        "total": 6,
+        "time_seconds": 24.0,
+        "tokens": 72568,
+        "tool_calls": 5,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Trajectory shows agent fetched /vault/meta/affordances/ or /vault/meta/capabilities/",
+          "passed": false,
+          "evidence": "No fetch of /vault/meta/affordances/ or /vault/meta/capabilities/ appears in trajectory. Agent read the local SKILL.md, ran `which solid-pod`, then invoked `solid-pod wiki-search` directly. The skill documents the canonical affordance descriptor location but the agent did not dereference it."
+        },
+        {
+          "text": "Trajectory shows agent invoked ?ext=search-grep on a /vault/wiki/ container",
+          "passed": true,
+          "evidence": "Step 4 (toolu_01CFPUneZqmxxoUevDFERUaE): `solid-pod wiki-search https://pod.vardeman.me/vault/wiki/ \"progressive disclosure\" --page-size 100`. The CLI is a documented thin wrapper around the Pod's `?ext=search-grep` affordance (per CLAUDE.md and SKILL.md). Result includes oslc-style totalCount/nextPage/score fields confirming the affordance was invoked under the hood."
+        },
+        {
+          "text": "Agent used OSLC-compliant double-quoted searchTerms (no 400 errors from bare strings)",
+          "passed": true,
+          "evidence": "Search term passed as a double-quoted phrase: `\"progressive disclosure\"`. CLI handles OSLC \u00a77.3 quoting per SKILL.md. Tool result returned 200 with `{\"totalCount\": 1, ...}` \u2014 no error."
+        },
+        {
+          "text": "Trajectory shows agent fetched /vault/.well-known/solid (or followed solid:storageDescription Link header)",
+          "passed": false,
+          "evidence": "No GET to /vault/.well-known/solid or any Link-header following appears in trajectory. Agent went straight from reading SKILL.md to invoking the CLI. Only 5 tool uses: Read SKILL.md, Bash `which solid-pod`, Bash `solid-pod wiki-search`, Bash `mkdir`, Write result.md."
+        },
+        {
+          "text": "Output mentions progressive-disclosure.md as the matching page",
+          "passed": true,
+          "evidence": "result.md line 9: `### 1. https://pod.vardeman.me/vault/wiki/concepts/progressive-disclosure.md`. Matches the ground-truth expected URL exactly."
+        },
+        {
+          "text": "Output reports exactly 1 hit (not more, not fewer)",
+          "passed": true,
+          "evidence": "result.md line 5: `**Total matches**: 1`. Final assistant message: `Found **1 match**`. Matches ground_truth.expected_hits=1."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6667,
+        "passed": 4,
+        "failed": 2,
+        "total": 6,
+        "time_seconds": 26.0,
+        "tokens": 73533,
+        "tool_calls": 4,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "L3-affordance-catalog",
+          "text": "Trajectory shows agent fetched /vault/meta/affordances/ or /vault/meta/capabilities/",
+          "passed": false,
+          "evidence": "Agent went straight from reading SKILL.md to invoking the solid-pod wiki-search CLI. No tool_use targeted /vault/meta/affordances/ or /vault/meta/capabilities/. The skill encapsulates the affordance knowledge, so the agent did not dereference the catalog explicitly."
+        },
+        {
+          "id": "L3-wiki-search-used",
+          "text": "Trajectory shows agent invoked ?ext=search-grep on a /vault/wiki/ container",
+          "passed": true,
+          "evidence": "L6 tool_use Bash: `solid-pod wiki-search https://pod.vardeman.me/vault/wiki/ \"karpathy\"` \u2014 the solid-pod wiki-search CLI is the thin wrapper around the ?ext=search-grep affordance per repo CLAUDE.md. L7 returned the OSLC totalCount/nextPage/results envelope confirming the affordance was hit."
+        },
+        {
+          "id": "L3-oslc-quoted",
+          "text": "Agent used OSLC-compliant double-quoted searchTerms",
+          "passed": true,
+          "evidence": "L6 command quoted the term: `solid-pod wiki-search https://pod.vardeman.me/vault/wiki/ \"karpathy\"` \u2014 single literal term in double quotes, OSLC \u00a77.3 compliant."
+        },
+        {
+          "id": "L1-storage-description",
+          "text": "Trajectory shows agent fetched /vault/.well-known/solid (or followed Link header)",
+          "passed": false,
+          "evidence": "No tool_use targeted /vault/.well-known/solid. Agent relied on the skill+CLI directly, bypassing the L1 storage-description discovery step."
+        },
+        {
+          "id": "output-multi-hit",
+          "text": "Output reports at least 5 distinct matching pages",
+          "passed": true,
+          "evidence": "result.md states 'Total matches: 6' and lists 6 distinct URLs: agentic-engineering.md, wiki-memory.md, ghumare-andre.md, compounding-knowledge.md, karpathy-andrej.md, how-to-ingest-source.md."
+        },
+        {
+          "id": "output-hub-recognition",
+          "text": "Output mentions karpathy-andrej.md (the canonical Person page)",
+          "passed": true,
+          "evidence": "Match #5 in result.md: 'https://pod.vardeman.me/vault/wiki/people/karpathy-andrej.md (score 26, line 8)' with snippet referencing 'Andrej Karpathy Researcher and educator.'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 0,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 37.7,
+        "tokens": 78455,
+        "tool_calls": 7,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Trajectory shows agent fetched /vault/meta/affordances/ or /vault/meta/capabilities/",
+          "passed": true,
+          "evidence": "Tool call at step [8]: curl -s https://pod.vardeman.me/vault/meta/affordances/ -H 'Accept: text/turtle' \u2014 returned affordance catalog including wiki-search-grep.ttl"
+        },
+        {
+          "text": "Trajectory shows agent invoked ?ext=search-grep on a /vault/wiki/ container",
+          "passed": true,
+          "evidence": "Tool call at step [14]: curl -s 'https://pod.vardeman.me/vault/wiki/?ext=search-grep&oslc.searchTerms=%22progressive%20disclosure%22&oslc.pageSize=100'"
+        },
+        {
+          "text": "Agent used OSLC-compliant double-quoted searchTerms (no 400 errors from bare strings)",
+          "passed": true,
+          "evidence": "Step [14] used oslc.searchTerms=%22progressive%20disclosure%22 (URL-encoded double quotes). Response at [15] returned a valid OSLC ResponseInfo Turtle with oslc:totalCount 1 \u2014 no 400 error."
+        },
+        {
+          "text": "Trajectory shows agent fetched /vault/.well-known/solid (or followed solid:storageDescription Link header)",
+          "passed": true,
+          "evidence": "Step [4] HEAD on /vault/ surfaced storageDescription link; step [6]: curl -s https://pod.vardeman.me/vault/.well-known/solid -H 'Accept: text/turtle' returned storage description with wiki:affordanceCatalog pointer."
+        },
+        {
+          "text": "Output mentions progressive-disclosure.md as the matching page",
+          "passed": true,
+          "evidence": "result.md lists: 'https://pod.vardeman.me/vault/wiki/concepts/progressive-disclosure.md' as the single match."
+        },
+        {
+          "text": "Output reports exactly 1 hit (not more, not fewer)",
+          "passed": true,
+          "evidence": "result.md states '**Total matches**: 1' and '1 match found' with only progressive-disclosure.md listed."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 49.3,
+        "tokens": 79457,
+        "tool_calls": 7,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Trajectory shows agent fetched /vault/meta/affordances/ or /vault/meta/capabilities/",
+          "passed": true,
+          "evidence": "Step 3 (toolu_017GERW7HuBP7is9Y8n6sfq4): Bash 'curl -s https://pod.vardeman.me/vault/meta/affordances/ | head -50' returned the affordance catalog listing 19 affordances including wiki-search-grep.ttl. Step 4 also fetched /vault/meta/affordances/wiki-search-grep.ttl."
+        },
+        {
+          "text": "Trajectory shows agent invoked ?ext=search-grep on a /vault/wiki/ container",
+          "passed": true,
+          "evidence": "Step 5 (toolu_01LzdEuqDDufqX7Xia9cSMKv): Bash 'curl -s https://pod.vardeman.me/vault/wiki/?ext=search-grep&oslc.searchTerms=%22karpathy%22&oslc.pageSize=100' invoked the search-grep affordance on /vault/wiki/."
+        },
+        {
+          "text": "Agent used OSLC-compliant double-quoted searchTerms",
+          "passed": true,
+          "evidence": "Query string used 'oslc.searchTerms=%22karpathy%22' where %22 is the URL-encoded double-quote character, matching the OSLC Query 3.0 \u00a77.3 quoting requirement stated in the affordance descriptor."
+        },
+        {
+          "text": "Trajectory shows agent fetched /vault/.well-known/solid (or followed Link header)",
+          "passed": true,
+          "evidence": "Step 1 (toolu_01KF6iU6Uyyeu1XBij8jGYeB): Pod root HEAD revealed Link: <https://pod.vardeman.me/vault/.well-known/solid>; rel=\"...storageDescription\". Step 2 (toolu_01RcujskAq1Ut5ZQkwrRAPUb): Bash 'curl -s https://pod.vardeman.me/vault/.well-known/solid | head -100' fetched the storage description which advertised wiki:affordanceCatalog."
+        },
+        {
+          "text": "Output reports at least 5 distinct matching pages",
+          "passed": true,
+          "evidence": "result.md reports 'Total matches: 6' and enumerates 6 distinct pages: agentic-engineering.md, wiki-memory.md, ghumare-andre.md, compounding-knowledge.md, karpathy-andrej.md, how-to-ingest-source.md."
+        },
+        {
+          "text": "Output mentions karpathy-andrej.md (the canonical Person page)",
+          "passed": true,
+          "evidence": "Match #5 in result.md: 'https://pod.vardeman.me/vault/wiki/people/karpathy-andrej.md (score 26, line 8)' with snippet '# Andrej Karpathy Researcher and educator. Foundational thinker...'"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 0.6683,
+        "stddev": 0.0023,
+        "min": 0.6667,
+        "max": 0.67
+      },
+      "time_seconds": {
+        "mean": 25.0,
+        "stddev": 1.4142,
+        "min": 24.0,
+        "max": 26.0
+      },
+      "tokens": {
+        "mean": 73050.5,
+        "stddev": 682.358,
+        "min": 72568,
+        "max": 73533
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 43.5,
+        "stddev": 8.2024,
+        "min": 37.7,
+        "max": 49.3
+      },
+      "tokens": {
+        "mean": 78956.0,
+        "stddev": 708.521,
+        "min": 78455,
+        "max": 79457
+      }
+    },
+    "delta": {
+      "pass_rate": "-0.33",
+      "time_seconds": "-18.5",
+      "tokens": "-5906"
+    }
+  },
+  "notes": []
+}
