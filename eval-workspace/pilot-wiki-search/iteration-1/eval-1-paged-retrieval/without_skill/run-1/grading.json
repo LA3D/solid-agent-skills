@@ -1,0 +1,87 @@
+{
+  "expectations": [
+    {
+      "text": "Trajectory shows agent fetched /vault/meta/affordances/ or /vault/meta/capabilities/",
+      "passed": true,
+      "evidence": "Trajectory step: Bash `curl -s https://pod.vardeman.me/vault/meta/affordances/ -H \"Accept: text/turtle\"` (listed affordances) followed by `curl -s https://pod.vardeman.me/vault/meta/affordances/wiki-search-grep.ttl` (fetched search affordance descriptor)."
+    },
+    {
+      "text": "Trajectory shows agent invoked ?ext=search-grep on a /vault/wiki/ container",
+      "passed": true,
+      "evidence": "Trajectory step: Bash `curl -s 'https://pod.vardeman.me/vault/wiki/?ext=search-grep&oslc.searchTerms=%22karpathy%22&oslc.pageSize=100' -H \"Accept: text/turtle\"`."
+    },
+    {
+      "text": "Agent used OSLC-compliant double-quoted searchTerms",
+      "passed": true,
+      "evidence": "Request URL contains URL-encoded double quotes around the term: `oslc.searchTerms=%22karpathy%22` (decodes to `\"karpathy\"`)."
+    },
+    {
+      "text": "Trajectory shows agent fetched /vault/.well-known/solid (or followed Link header)",
+      "passed": true,
+      "evidence": "Trajectory step: `curl -s https://pod.vardeman.me/vault/.well-known/solid -H \"Accept: text/turtle\"`. Agent also first did HEAD on /vault/ which exposed the storageDescription Link header per the result.md discovery method."
+    },
+    {
+      "text": "Output reports at least 5 distinct matching pages",
+      "passed": true,
+      "evidence": "result.md lists 6 distinct page URLs: agentic-engineering.md, wiki-memory.md, ghumare-andre.md, compounding-knowledge.md, karpathy-andrej.md, how-to-ingest-source.md. Header states 'Total matches: 6'."
+    },
+    {
+      "text": "Output mentions karpathy-andrej.md (the canonical Person page)",
+      "passed": true,
+      "evidence": "result.md item #5: `https://pod.vardeman.me/vault/wiki/people/karpathy-andrej.md` with snippet about Andrej Karpathy."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Bash": 6,
+      "Write": 1
+    },
+    "total_tool_calls": 7,
+    "total_steps": 7,
+    "errors_encountered": 0,
+    "output_chars": 2378,
+    "transcript_chars": 0
+  },
+  "timing": {
+    "executor_duration_seconds": 41.9,
+    "total_tokens": 79393
+  },
+  "claims": [
+    {
+      "claim": "Total matches: 6",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Matches ground_truth.expected_hits_seen_in_verification = 6. All 5 expected URLs in ground_truth.expected_page_urls_include appear in the output, plus one additional page (how-to-ingest-source.md) consistent with the 'potentially including a pre-existing pod page' note."
+    },
+    {
+      "claim": "Single page covers all matches (no oslc:nextPage)",
+      "type": "process",
+      "verified": true,
+      "evidence": "pageSize=100 well exceeds 6 results; assertion consistent with OSLC paging semantics."
+    },
+    {
+      "claim": "Used Pod's native search affordance discovered cold via storage description -> affordance catalog -> wiki-search-grep descriptor",
+      "type": "process",
+      "verified": true,
+      "evidence": "Trajectory shows the four-step discovery chain in order: HEAD /vault/ -> GET /vault/.well-known/solid -> GET /vault/meta/affordances/ -> GET /vault/meta/affordances/wiki-search-grep.ttl -> invoke search."
+    }
+  ],
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "reason": "Despite being the WITHOUT_SKILL run, the agent followed the canonical discovery chain perfectly on the first try and used the native wiki-search affordance. This may indicate the skill provides little marginal value for an Opus-class agent on this task, OR that the eval prompt's hint 'wiki-memory L3 substrate' plus the agent's strong cold-discovery behavior already covers what the skill would teach. Consider an eval variant that omits the 'wiki-memory L3 substrate' phrasing to better isolate skill value."
+      },
+      {
+        "assertion": "L3-affordance-catalog",
+        "reason": "A naive agent could fetch the affordance catalog URL without actually understanding/using it. Consider tightening to 'agent fetched the wiki-search affordance descriptor specifically' (which this run did, but the assertion would also pass for a less competent run that just GET'd the directory)."
+      }
+    ],
+    "overall": "Evals look solid for this task; all 6 assertions pass with strong evidence. Main concern is that the without-skill baseline is already near-perfect, which compresses the dynamic range available to measure skill value in the with-skill comparison."
+  }
+}

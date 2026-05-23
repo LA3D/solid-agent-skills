@@ -1,0 +1,67 @@
+{
+  "eval_id": 0,
+  "eval_name": "substring-find",
+  "condition": "without_skill",
+  "expectations": [
+    {
+      "id": "L3-affordance-catalog",
+      "text": "Trajectory shows agent fetched /vault/meta/affordances/ or /vault/meta/capabilities/",
+      "passed": true,
+      "evidence": "Trajectory tool_use #3: Bash `curl -s https://pod.vardeman.me/vault/meta/affordances/ -H \"Accept: text/turtle\"` (enumerated affordance catalog), then tool_use #4 fetched wiki-search-grep.ttl from same path."
+    },
+    {
+      "id": "L3-wiki-search-used",
+      "text": "Trajectory shows agent invoked ?ext=search-grep on a /vault/wiki/ container",
+      "passed": true,
+      "evidence": "Trajectory tool_use #5: `curl -s 'https://pod.vardeman.me/vault/wiki/?ext=search-grep&oslc.searchTerms=%22progressive%20disclosure%22&oslc.pageSize=100'` \u2014 invoked the search-grep affordance on the /vault/wiki/ container."
+    },
+    {
+      "id": "L3-oslc-quoted",
+      "text": "Agent used OSLC-compliant double-quoted searchTerms (no 400 errors from bare strings)",
+      "passed": true,
+      "evidence": "Search invocation used `oslc.searchTerms=%22progressive%20disclosure%22` \u2014 URL-encoded double quotes (%22) wrapping the phrase per OSLC Query 3.0 \u00a77.3. No 400 errors in trajectory; response returned valid oslc:ResponseInfo Turtle."
+    },
+    {
+      "id": "L1-storage-description",
+      "text": "Trajectory shows agent fetched /vault/.well-known/solid (or followed solid:storageDescription Link header)",
+      "passed": true,
+      "evidence": "Trajectory tool_use #1 fetched Pod root headers (curl -sI /vault/) to find Link rel=storageDescription, then tool_use #2 `curl -s https://pod.vardeman.me/vault/.well-known/solid` retrieved the storage description."
+    },
+    {
+      "id": "output-correct-page",
+      "text": "Output mentions progressive-disclosure.md as the matching page",
+      "passed": true,
+      "evidence": "result.md lists `https://pod.vardeman.me/vault/wiki/concepts/progressive-disclosure.md` as match #1 under '## Matches'."
+    },
+    {
+      "id": "output-correct-count",
+      "text": "Output reports exactly 1 hit (not more, not fewer)",
+      "passed": true,
+      "evidence": "result.md header states `**Total matches**: 1` and only a single numbered match section (### 1.) is present."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Bash": 7,
+      "Write": 1
+    },
+    "total_tool_calls": 8,
+    "errors_encountered": 0
+  },
+  "timing": {
+    "executor_duration_seconds": 42.9,
+    "executor_total_tokens": 78942,
+    "executor_tool_uses": 8,
+    "total_tokens": 78942
+  },
+  "narrative": "Cold-start agent successfully followed the Solid discovery chain (Pod root Link header -> .well-known/solid -> affordance catalog -> wiki-search-grep affordance) and invoked the ?ext=search-grep endpoint with an OSLC-compliant double-quoted, URL-encoded search term. Correctly identified the single matching page (progressive-disclosure.md) with snippet verification. All 6 assertions pass.",
+  "eval_feedback": {
+    "overall": "Strong cold-start performance without the skill \u2014 agent navigated the standards-based discovery chain efficiently in 7 curl calls, used OSLC quoting correctly on first attempt, and verified the match with a follow-up GET. The Pod's self-description (storage description -> affordance catalog -> sh:agentInstruction wire form) was sufficient for an agent fluent in Solid/LDP/OSLC conventions. Positive datapoint for RQ-Discovery-1."
+  }
+}

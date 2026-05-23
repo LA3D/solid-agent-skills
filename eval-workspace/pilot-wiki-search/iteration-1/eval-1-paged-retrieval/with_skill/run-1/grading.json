@@ -1,0 +1,105 @@
+{
+  "expectations": [
+    {
+      "id": "L3-affordance-catalog",
+      "text": "Trajectory shows agent fetched /vault/meta/affordances/ or /vault/meta/capabilities/",
+      "passed": false,
+      "evidence": "No tool_use in the trajectory fetches /vault/meta/affordances/ or /vault/meta/capabilities/. The agent jumped straight from reading the wiki-search SKILL.md to invoking the `solid-pod wiki-search` CLI. Tool calls were: Read SKILL.md, `which solid-pod`, `ls` repo, `ls dist + grep bin`, `node dist/cli.js wiki-search ...`, `mkdir outputs`, `Write result.md`. No HTTP-level discovery of the affordance/capability catalog."
+    },
+    {
+      "id": "L3-wiki-search-used",
+      "text": "Trajectory shows agent invoked ?ext=search-grep on a /vault/wiki/ container",
+      "passed": true,
+      "evidence": "Trajectory tool_use: `node /Users/cvardema/dev/git/LA3D/agents/solid-agent-skills/dist/cli.js wiki-search https://pod.vardeman.me/vault/wiki/ \"karpathy\" --page-size 50`. The `solid-pod wiki-search` CLI is the thin wrapper around the Pod's `?ext=search-grep` affordance per the project CLAUDE.md description; tool_result returned OSLC-shaped JSON with totalCount=6 confirming the search-grep endpoint was hit."
+    },
+    {
+      "id": "L3-oslc-quoted",
+      "text": "Agent used OSLC-compliant double-quoted searchTerms",
+      "passed": true,
+      "evidence": "Tool input passed the search term as `\"karpathy\"` (double-quoted) at the CLI argument layer. The wiki-search skill's parseSearchTerms is OSLC \u00a77.3 strict; the CLI applied OSLC-compliant quoting before URL-encoding for ?ext=search-grep. Result JSON confirms successful parse (6 hits returned, no 400/501)."
+    },
+    {
+      "id": "L1-storage-description",
+      "text": "Trajectory shows agent fetched /vault/.well-known/solid (or followed Link header)",
+      "passed": false,
+      "evidence": "No GET to /vault/.well-known/solid or any Link-header follow appears in the trajectory's 7 tool_use entries. Agent went directly to the skill's CLI command without performing Solid storage-description discovery."
+    },
+    {
+      "id": "output-multi-hit",
+      "text": "Output reports at least 5 distinct matching pages",
+      "passed": true,
+      "evidence": "result.md reports 6 distinct page URLs: agentic-engineering.md, wiki-memory.md, ghumare-andre.md, compounding-knowledge.md, karpathy-andrej.md, how-to-ingest-source.md. Header line `**Total matches**: 6` confirms count."
+    },
+    {
+      "id": "output-hub-recognition",
+      "text": "Output mentions karpathy-andrej.md (the canonical Person page)",
+      "passed": true,
+      "evidence": "result.md item 5: `**https://pod.vardeman.me/vault/wiki/people/karpathy-andrej.md** (score 26, line 8)` with snippet `# Andrej Karpathy Researcher and educator. Foundational thinker for both [[wiki-memory]]...`"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 2,
+    "total": 6,
+    "pass_rate": 0.67
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Read": 1,
+      "Bash": 5,
+      "Write": 1
+    },
+    "total_tool_calls": 7,
+    "total_steps": 7,
+    "errors_encountered": 1,
+    "output_chars": 1855,
+    "transcript_chars": null
+  },
+  "timing": {
+    "executor_duration_seconds": 34.4,
+    "total_tokens": 74695
+  },
+  "claims": [
+    {
+      "claim": "Total matches found = 6",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Matches the eval ground_truth.expected_hits_seen_in_verification = 6. CLI returned totalCount=6 directly."
+    },
+    {
+      "claim": "Single page response, no pagination needed",
+      "type": "process",
+      "verified": true,
+      "evidence": "Tool result shows `nextPage: null`, `pageSize: 6` against `--page-size 50` request. Result.md correctly notes no pagination was exercised."
+    },
+    {
+      "claim": "All 5 expected page URLs from ground truth are covered",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Ground truth expected_page_urls_include lists karpathy-andrej.md, wiki-memory.md, compounding-knowledge.md, agentic-engineering.md, ghumare-andre.md \u2014 all 5 appear in result.md. Output additionally surfaces how-to-ingest-source.md as a 6th hit."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": [
+      "Initial `which solid-pod` failed (Exit code 1) \u2014 CLI not on PATH. Agent recovered by invoking `node dist/cli.js wiki-search ...` directly. The skill workflow worked despite the missing PATH binding."
+    ]
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "L3-affordance-catalog, L1-storage-description",
+        "reason": "Both discovery assertions FAILed because the wiki-search skill is self-contained \u2014 once the agent reads SKILL.md it knows the affordance exists and goes straight to the CLI. This may be the *intended* with-skill behavior (skill obviates cold-start discovery), in which case these assertions are mis-targeted for the with_skill arm. Consider either (a) accepting that with_skill skips discovery as expected and dropping these from the with_skill grading, or (b) tightening the SKILL.md to require an explicit storage-description sanity check on first use. As-is, a 4/6 pass-rate undersells the skill's success on the actual task."
+      },
+      {
+        "assertion": "L3-oslc-quoted",
+        "reason": "With only a single-token search (`karpathy`), OSLC quoting is moot \u2014 the assertion passes trivially. To genuinely discriminate OSLC \u00a77.3 handling, the eval prompt would need a multi-word phrase (e.g., 'wiki memory') where un-quoted vs quoted produces different results."
+      },
+      {
+        "reason": "No assertion verifies that the snippets returned actually contain a case-insensitive substring match for 'karpathy'. A hallucinated 6-URL list with plausible-looking snippets would pass output-multi-hit and output-hub-recognition. Consider adding an assertion that the result.md snippets each contain the literal substring (case-insensitive)."
+      }
+    ],
+    "overall": "Assertions over-weight cold-start discovery for a with_skill run where the skill is designed to short-circuit discovery. Consider revising the L1/L3-affordance assertions for with_skill, or treating them as without_skill-only."
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "agent_id": "ae54507a3d4260aec",
+  "total_tokens": 79393,
+  "tool_uses": 7,
+  "duration_ms": 41862,
+  "total_duration_seconds": 41.9
+}

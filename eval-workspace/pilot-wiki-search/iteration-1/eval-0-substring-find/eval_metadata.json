@@ -1,0 +1,44 @@
+{
+  "eval_id": 0,
+  "eval_name": "substring-find",
+  "prompt": "Find all wiki pages on the Solid Pod at https://pod.vardeman.me/vault/ that mention the phrase \"progressive disclosure\" (literal substring, quoted phrase). For each matching page, report (a) the page URL and (b) a short snippet showing the matched context. The Pod is a wiki-memory L3 substrate; pages are markdown bodies under /vault/wiki/. Use any web standards (Solid Protocol, LDP, HTTP content negotiation) and any tools available to you to accomplish this. If you find an affordance that supports searching, use it. Report results in markdown.",
+  "ground_truth": {
+    "expected_hits": 1,
+    "expected_page_urls": [
+      "https://pod.vardeman.me/vault/wiki/concepts/progressive-disclosure.md"
+    ],
+    "rationale": "wiki-search literal substring match on 'progressive disclosure' (space) only matches the page whose title and body contain the literal phrase. Wikilinks [[progressive-disclosure]] (hyphen) do NOT match the quoted phrase."
+  },
+  "assertions": [
+    {
+      "id": "L3-affordance-catalog",
+      "text": "Trajectory shows agent fetched /vault/meta/affordances/ or /vault/meta/capabilities/",
+      "layer": "L3"
+    },
+    {
+      "id": "L3-wiki-search-used",
+      "text": "Trajectory shows agent invoked ?ext=search-grep on a /vault/wiki/ container",
+      "layer": "L3"
+    },
+    {
+      "id": "L3-oslc-quoted",
+      "text": "Agent used OSLC-compliant double-quoted searchTerms (no 400 errors from bare strings)",
+      "layer": "L3"
+    },
+    {
+      "id": "L1-storage-description",
+      "text": "Trajectory shows agent fetched /vault/.well-known/solid (or followed solid:storageDescription Link header)",
+      "layer": "L1"
+    },
+    {
+      "id": "output-correct-page",
+      "text": "Output mentions progressive-disclosure.md as the matching page",
+      "layer": "outcome"
+    },
+    {
+      "id": "output-correct-count",
+      "text": "Output reports exactly 1 hit (not more, not fewer)",
+      "layer": "outcome"
+    }
+  ]
+}

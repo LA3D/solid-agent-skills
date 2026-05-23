@@ -1,0 +1,113 @@
+{
+  "expectations": [
+    {
+      "text": "Trajectory shows agent fetched /vault/meta/affordances/ or /vault/meta/capabilities/",
+      "passed": false,
+      "evidence": "No tool_use in the trajectory targets /vault/meta/affordances/ or /vault/meta/capabilities/. The agent read the local SKILL.md (Read tool, toolu_01SGuKh4oMEHos4VMfPSzEDw) and then went directly to the CLI invocation. With the skill loaded, the agent shortcut the discovery chain \u2014 the skill already named the affordance, so no on-Pod catalog lookup occurred."
+    },
+    {
+      "text": "Trajectory shows agent invoked ?ext=search-grep on a /vault/wiki/ container",
+      "passed": true,
+      "evidence": "Tool_use toolu_01WMGLqqzbmejo3ztP74V6pz ran `node ~/dev/git/LA3D/agents/solid-agent-skills/dist/cli.js wiki-search https://pod.vardeman.me/vault/wiki/ \"progressive disclosure\" --page-size 50`. The solid-pod wiki-search command is the thin wrapper that issues GET against the container with `?ext=search-grep` (per SKILL.md cross-references and CLAUDE.md description). Pod returned an OSLC Query 3.0 JSON with totalCount=1, nextPage=null, confirming the affordance was exercised on /vault/wiki/."
+    },
+    {
+      "text": "Agent used OSLC-compliant double-quoted searchTerms (no 400 errors from bare strings)",
+      "passed": true,
+      "evidence": "The CLI invocation in toolu_01WMGLqqzbmejo3ztP74V6pz passes the term as a shell-quoted string `\"progressive disclosure\"`, which the CLI URL-encodes into an OSLC-compliant double-quoted searchTerms value. The Pod response was a successful 200 with totalCount=1 \u2014 no 4xx error in the trajectory."
+    },
+    {
+      "text": "Trajectory shows agent fetched /vault/.well-known/solid (or followed solid:storageDescription Link header)",
+      "passed": false,
+      "evidence": "No tool_use in the trajectory targets /vault/.well-known/solid or any Link-header-traversal step. The agent skipped L1 discovery because the wiki-search skill provided the container URL and tool invocation directly. With-skill execution bypassed the storage-description-as-router entry point."
+    },
+    {
+      "text": "Output mentions progressive-disclosure.md as the matching page",
+      "passed": true,
+      "evidence": "result.md line 10: '### 1. https://pod.vardeman.me/vault/wiki/concepts/progressive-disclosure.md' and headline 'Total matches: 1'. The matching URL is reported."
+    },
+    {
+      "text": "Output reports exactly 1 hit (not more, not fewer)",
+      "passed": true,
+      "evidence": "result.md line 6: '**Total matches**: 1'. Only one match is listed (the progressive-disclosure.md entry). Matches the ground_truth.expected_hits=1."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 2,
+    "total": 6,
+    "pass_rate": 0.67
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Read": 1,
+      "Bash": 4,
+      "Write": 1
+    },
+    "total_tool_calls": 6,
+    "total_steps": 6,
+    "errors_encountered": 2,
+    "output_chars": 953,
+    "transcript_chars": null,
+    "notes": "Two Bash errors during CLI bootstrap: (1) `which solid-pod` failed because the CLI isn't on PATH; (2) follow-up probe also exited non-zero but surfaced the dist/cli.js layout, enabling the third invocation via `node dist/cli.js` to succeed."
+  },
+  "timing": {
+    "executor_duration_seconds": 29.9,
+    "executor_total_tokens": 73344,
+    "executor_tool_uses": 6,
+    "executor_duration_ms": 29936,
+    "total_tokens": 73344
+  },
+  "claims": [
+    {
+      "claim": "Search was performed via the Pod's ?ext=search-grep affordance",
+      "type": "process",
+      "verified": true,
+      "evidence": "solid-pod wiki-search is the thin wrapper around ?ext=search-grep per the wiki-search SKILL.md and project CLAUDE.md. The Pod responded with OSLC Query 3.0 JSON (totalCount/nextPage/pageSize/results), the expected affordance response shape."
+    },
+    {
+      "claim": "totalCount=1, nextPage=null \u2014 complete result set",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Tool_result for toolu_01WMGLqqzbmejo3ztP74V6pz contains exactly: \"totalCount\": 1, \"nextPage\": null, \"pageSize\": 1."
+    },
+    {
+      "claim": "CLI not on PATH; ran as node dist/cli.js",
+      "type": "process",
+      "verified": true,
+      "evidence": "First two Bash invocations failed at locating the `solid-pod` binary; third successful invocation used `node ~/dev/git/LA3D/agents/solid-agent-skills/dist/cli.js wiki-search ...`."
+    },
+    {
+      "claim": "Case-insensitive substring match",
+      "type": "factual",
+      "verified": false,
+      "evidence": "result.md states '(case-insensitive substring match)' but neither SKILL.md nor the CLI output documents case-insensitivity explicitly. SKILL.md says 'literal substring' but does not claim case-insensitivity. This is an unverified claim \u2014 could be a minor over-statement by the agent."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": [
+      "CLI not on PATH \u2014 invoked via `node dist/cli.js` directly"
+    ]
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "Trajectory shows agent invoked ?ext=search-grep on a /vault/wiki/ container",
+        "reason": "The assertion is satisfied by the `solid-pod wiki-search` CLI invocation, but the CLI is a thin wrapper \u2014 the actual HTTP request to `?ext=search-grep` is opaque to the trajectory. If the grader were strict about literal trajectory evidence (raw curl/HTTP showing `?ext=search-grep` in the URL), this would fail. Consider clarifying whether invoking the wiki-search skill suffices, or whether the assertion requires literal `?ext=search-grep` evidence."
+      },
+      {
+        "assertion": "Trajectory shows agent fetched /vault/meta/affordances/ or /vault/meta/capabilities/",
+        "reason": "This assertion penalizes the with-skill case because the skill makes the catalog lookup unnecessary. That may be intentional (testing whether the skill encourages discovery), but the WITH-skill condition probably should not require redundant catalog browsing \u2014 the skill already names the affordance. Consider splitting: in WITHOUT-skill, assertion should fire; in WITH-skill, perhaps replace with 'agent invoked the documented affordance'."
+      },
+      {
+        "assertion": "Trajectory shows agent fetched /vault/.well-known/solid (or followed solid:storageDescription Link header)",
+        "reason": "Same concern as the affordance-catalog assertion \u2014 in WITH-skill, the storage-description entry point is unnecessary because the skill provides the container URL. Mismatch between L1-discovery-ritual measurement and skill-shortcut measurement. The pilot may want to distinguish 'follow-the-nose discovery' (no skill) vs 'targeted invocation' (with skill) as separate assertion sets."
+      },
+      {
+        "reason": "No assertion checks that the reported snippet actually contains the literal phrase. The result.md snippet '# Progressive Disclosure Progressive disclosure is the retrieval pattern\u2026' does contain it, but a hallucinated snippet would also pass output-correct-page and output-correct-count. Add: 'Snippet contains literal substring \"progressive disclosure\"'."
+      }
+    ],
+    "overall": "Assertions check the correct outcome but mix discovery-ritual checks with skill-shortcut behavior. The WITH-skill condition will reliably fail L1/L3-affordance assertions whenever the skill is well-designed enough to bypass discovery \u2014 which is presumably what skills are *for*. Consider splitting discovery-ritual assertions out of the WITH-skill assertion set, or treating L1/L3-catalog-skip as a feature, not a regression."
+  }
+}
