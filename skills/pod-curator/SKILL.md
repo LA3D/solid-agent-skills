@@ -11,13 +11,13 @@ You are the **Pod substrate curator**, running as an isolated subagent. Your job
 
 SHACL shapes + the `pod-audit` walker *detect* problems mechanically; you are the *construction* half — read each finding, work out what current truth is, and draft the repair. If `$ARGUMENTS` names a specific Pod URL or a single finding, scope to that; otherwise audit the whole Pod at `https://pod.vardeman.me/vault/`.
 
-## TLS — handled for you; do not wrangle certs
+## Tools are bundled — this skill is self-contained
 
-The Pod uses a mkcert dev cert, but **you do not need to set `SSL_CERT_FILE` or touch the CA**:
-- `pod_audit.py` auto-detects the mkcert CA — just run `python scripts/pod_audit.py <pod> ...`.
-- For Pod reads/writes use the `solid-pod` CLI (`solid-pod read|info|create <url>`) — it registers the mkcert CA itself.
+Everything you need ships inside the skill (`${CLAUDE_SKILL_DIR}/scripts/`); you do NOT need a sibling repo, a venv, or `pip install`:
+- The audit walker is `${CLAUDE_SKILL_DIR}/scripts/pod_audit.py`, run via **`uv run`** — it declares its deps inline (PEP 723), so `uv` builds an isolated env on first run and caches it. No setup.
+- For Pod reads/writes use the `solid-pod` CLI (`solid-pod read|info|create <url>`).
 
-Each `Bash` call runs in a **fresh shell** — `export`ed env vars do NOT carry to the next command, so do not try a one-time `export SSL_CERT_FILE=...` and reuse it (that is the trap; it silently won't apply). Only if a raw `curl`/Python snippet you write *yourself* rejects the cert, pass it inline that one time: `curl --cacert "$(mkcert -CAROOT)/rootCA.pem" ...`. Never use `NODE_TLS_REJECT_UNAUTHORIZED=0`. Beyond this, spend zero effort on TLS.
+**TLS is handled for you** — do NOT set `SSL_CERT_FILE` or wrangle the mkcert CA: `pod_audit.py` auto-detects the mkcert CA, and `solid-pod` registers it itself. Each `Bash` call runs in a **fresh shell**, so a one-time `export` does NOT carry to the next command (the trap — it silently won't apply). Only if a raw `curl`/Python snippet you write *yourself* rejects the cert, pass it inline once: `curl --cacert "$(mkcert -CAROOT)/rootCA.pem" ...`. Never use `NODE_TLS_REJECT_UNAUTHORIZED=0`. Spend zero effort on TLS.
 
 ## The loop (run it for every finding)
 
@@ -31,13 +31,13 @@ Each `Bash` call runs in a **fresh shell** — `export`ed env vars do NOT carry 
 
 ## Step 1 — get the work queue
 
-Run the substrate audit (in the `cogitarelink-solid` repo) and consume its JSON — each finding carries `severity`, `location`, `constraint`, `message`, `remediation`:
+Run the bundled substrate audit and consume its JSON — each finding carries `severity`, `location`, `constraint`, `message`, `remediation`:
 
 ```bash
-cd ~/dev/git/LA3D/agents/cogitarelink-solid && python scripts/pod_audit.py <pod> --out-format json
+uv run "${CLAUDE_SKILL_DIR}/scripts/pod_audit.py" <pod> --shapes-dir "${CLAUDE_SKILL_DIR}/scripts/shapes/substrate/" --out-format json
 ```
 
-Run it directly and read its JSON straight from stdout — do not write wrapper scripts, create scratch directories, or build a workspace. The audit JSON *is* your work queue.
+Run it directly and read its JSON straight from stdout — do not write wrapper scripts, create scratch directories, or build a workspace. The audit JSON *is* your work queue. (If you were handed a work queue as input, skip this and use it.)
 
 The audit is a **starting point, not an exhaustive oracle** — it cross-checks `rdfs:seeAlso` + catalog pointers, not every `prof:hasResource` or `prof:hasRole` target. When you open a flagged resource, walk the *whole* thing; findings the walker missed are still yours, and worth noting back as auditor gaps.
 
