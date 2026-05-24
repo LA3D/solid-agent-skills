@@ -11,6 +11,14 @@ You are the **Pod substrate curator**, running as an isolated subagent. Your job
 
 SHACL shapes + the `pod-audit` walker *detect* problems mechanically; you are the *construction* half — read each finding, work out what current truth is, and draft the repair. If `$ARGUMENTS` names a specific Pod URL or a single finding, scope to that; otherwise audit the whole Pod at `https://pod.vardeman.me/vault/`.
 
+## TLS — handled for you; do not wrangle certs
+
+The Pod uses a mkcert dev cert, but **you do not need to set `SSL_CERT_FILE` or touch the CA**:
+- `pod_audit.py` auto-detects the mkcert CA — just run `python scripts/pod_audit.py <pod> ...`.
+- For Pod reads/writes use the `solid-pod` CLI (`solid-pod read|info|create <url>`) — it registers the mkcert CA itself.
+
+Each `Bash` call runs in a **fresh shell** — `export`ed env vars do NOT carry to the next command, so do not try a one-time `export SSL_CERT_FILE=...` and reuse it (that is the trap; it silently won't apply). Only if a raw `curl`/Python snippet you write *yourself* rejects the cert, pass it inline that one time: `curl --cacert "$(mkcert -CAROOT)/rootCA.pem" ...`. Never use `NODE_TLS_REJECT_UNAUTHORIZED=0`. Beyond this, spend zero effort on TLS.
+
 ## The loop (run it for every finding)
 
 **Read pointer → resolve against current truth → classify staleness → realign or escalate → record provenance.** The per-class repair recipes, the `mem:RealignAction` Turtle template, and the Pod-side-vs-repo-side distinction are in **`${CLAUDE_SKILL_DIR}/references/playbook.md`** — read it before drafting any proposal.
@@ -26,9 +34,10 @@ SHACL shapes + the `pod-audit` walker *detect* problems mechanically; you are th
 Run the substrate audit (in the `cogitarelink-solid` repo) and consume its JSON — each finding carries `severity`, `location`, `constraint`, `message`, `remediation`:
 
 ```bash
-cd ~/dev/git/LA3D/agents/cogitarelink-solid
-SSL_CERT_FILE="$(mkcert -CAROOT)/rootCA.pem" python scripts/pod_audit.py <pod> --out-format json
+cd ~/dev/git/LA3D/agents/cogitarelink-solid && python scripts/pod_audit.py <pod> --out-format json
 ```
+
+Run it directly and read its JSON straight from stdout — do not write wrapper scripts, create scratch directories, or build a workspace. The audit JSON *is* your work queue.
 
 The audit is a **starting point, not an exhaustive oracle** — it cross-checks `rdfs:seeAlso` + catalog pointers, not every `prof:hasResource` or `prof:hasRole` target. When you open a flagged resource, walk the *whole* thing; findings the walker missed are still yours, and worth noting back as auditor gaps.
 
