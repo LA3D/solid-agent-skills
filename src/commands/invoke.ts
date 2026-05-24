@@ -4,9 +4,11 @@ import { querySparql, queryQuads } from '../lib/comunica.js'
 import { output } from '../lib/jsonld.js'
 
 // Wiki vocabulary IRI matching the running Pod's ontology document
-// (overlays/wiki-memory/ontology/wiki.ttl). Affordance descriptors use this
+// (overlays/wiki-memory/vocabulary/wiki.ttl). Affordance descriptors use this
 // namespace for wiki:constructQuery / wiki:selectQuery / wiki:targetClass.
-const WIKI_NS = 'https://pod.vardeman.me:3000/vault/ontology/wiki#'
+// Port-less per D84 (URI conformance) — a baked-in :3000 here never matched the
+// deployed namespace, so every selectQuery/constructQuery lookup failed.
+const WIKI_NS = 'https://pod.vardeman.me/vault/ontology/wiki#'
 
 export interface InvokeOptions {
   source?: string[]
@@ -63,7 +65,7 @@ export async function invoke(
       // Default: discover .meta sidecars under each wiki/ container declared
       // by the affordance — but in v1 we keep it simple: caller passes
       // --source explicitly, otherwise we fall back to the Pod root.
-      const metaSources = await discoverMetaSources(root + 'wiki/pages/').catch(() => [])
+      const metaSources = await discoverMetaSources(root + 'wiki/concepts/').catch(() => [])
       sources = [root, ...metaSources]
       metaCount = metaSources.length
     }
