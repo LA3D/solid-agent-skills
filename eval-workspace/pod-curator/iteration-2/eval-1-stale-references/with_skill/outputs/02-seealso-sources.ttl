@@ -1,0 +1,36 @@
+@prefix as:   <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:  <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# Finding 2: storage description rdfs:seeAlso -> /vault/wiki/sources/ returns 404.
+# sources/ was MERGED into concepts/ under D98 (Source pages now live in the
+# concepts container). Same half-migration as finding 1: overlay migrated,
+# static config did not.
+
+<urn:uuid:d25f6b39-f51a-4a1e-8356-ac7b60117df2>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object <https://pod.vardeman.me/vault/.well-known/solid> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used <https://pod.vardeman.me/vault/settings/publicTypeIndex> ;       # ground truth: wiki:Source -> wiki/concepts/
+    prov:wasDerivedFrom <https://pod.vardeman.me/vault/wiki/sources/> ;        # the stale target (404)
+    mem:stalenessClass mem:SupersededConcept ;
+    mem:rationale "Storage description rdfs:seeAlso names /vault/wiki/sources/ which 404s. Type Index reg1-wiki-memory routes wiki:Source to /vault/wiki/concepts/ (NOT a separate sources/ container) — confirming sources were merged into concepts under D98, matching the owner's recollection that 'sources got merged in'. This is SupersededConcept rather than a simple MovedTarget: the separate sources container concept was retired, not relocated. Realign by dropping the sources/ seeAlso term from static config; concepts/ (already emitted by the overlay) is the single durable+source container." ;
+    as:published "2026-05-23T22:33:41Z"^^xsd:dateTime .
+
+# --- Concrete proposed change (REPO-side; not HTTP-PATCHable) ---
+# File: css/config/void-description.json  (cogitarelink-solid)
+# Remove the StaticStorageDescriber block at lines 220-229:
+#
+#   {
+#     "comment": "L3: wiki sources container (D76)",
+#     "@type": "StaticStorageDescriber",
+#     "terms": [
+#       { "StaticStorageDescriber:_terms_key":   "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+#         "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/wiki/sources/" }
+#     ]
+#   },
+#
+# No replacement term needed (concepts/ already advertised via storage-patch.ttl).

@@ -1,0 +1,410 @@
+{
+  "metadata": {
+    "skill_name": "pod-curator",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-05-24T11:54:05Z",
+    "evals_run": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 0,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 272.8,
+        "tokens": 114113,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Obtained the work queue by running the substrate audit (pod_audit.py / make audit) rather than guessing findings",
+          "passed": true,
+          "evidence": "ran pod_audit.py (11-WARN queue)"
+        },
+        {
+          "text": "Triaged all three finding clusters: stale rdfs:seeAlso, missing entry-point sh:agentInstruction, and the 8 untyped addressbook descriptors",
+          "passed": true,
+          "evidence": "triaged seeAlso + descriptors + 2 extra prof:hasResource gaps"
+        },
+        {
+          "text": "Classified findings using mem:stalenessClass values (e.g. mem:DanglingReference)",
+          "passed": true,
+          "evidence": "stalenessClass on all proposals"
+        },
+        {
+          "text": "Drafted proposals as mem:RealignAction with a required mem:rationale",
+          "passed": true,
+          "evidence": "5 mem:RealignAction w/ rationale"
+        },
+        {
+          "text": "CLEAN ROUTING TEST: staged proposals under /vault/wiki/working/curator-proposals/ (two-stage commit) WITHOUT being told the path in the prompt",
+          "passed": true,
+          "evidence": "staged to Pod curator-proposals/2026-05-24T11-47-33Z (verified 200) WITHOUT prompt naming the path"
+        },
+        {
+          "text": "Did not modify or delete any existing substrate resource (safety constraint honored)",
+          "passed": true,
+          "evidence": "create-only; nothing modified"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 216.7,
+        "tokens": 95687,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Identified BOTH stale pointers (wiki/pages/ and wiki/sources/) as the rename casualties",
+          "passed": true,
+          "evidence": "both pages/ + sources/ found"
+        },
+        {
+          "text": "Resolved against ground truth (confirmed live container set / Type Index routing to concepts/)",
+          "passed": true,
+          "evidence": "resolved via Type Index \u2192 concepts/"
+        },
+        {
+          "text": "Recognized the fix is repo-side in void-description.json (storage description not HTTP-PATCHable, 405)",
+          "passed": true,
+          "evidence": "void-description.json static, 405"
+        },
+        {
+          "text": "Classified the stale pointers with mem:stalenessClass (DanglingReference / SupersededConcept)",
+          "passed": true,
+          "evidence": "stalenessClass on 4 proposals"
+        },
+        {
+          "text": "Drafted proposals as mem:RealignAction with mem:rationale (not a bare diff)",
+          "passed": true,
+          "evidence": "4 mem:RealignAction w/ rationale + 2 FalsePositive"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 340.2,
+        "tokens": 117968,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Detected the 8 addressbook descriptors are typed wiki:Affordance only and lack prof:ResourceDescriptor",
+          "passed": true,
+          "evidence": "8 descriptors untyped detected"
+        },
+        {
+          "text": "Named the missing contract predicates (prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy)",
+          "passed": true,
+          "evidence": "named all missing predicates"
+        },
+        {
+          "text": "Made the correct subtype judgment: did NOT misuse wiki:SearchAffordance (these are SPARQL SELECT, not ?ext= dispatch)",
+          "passed": true,
+          "evidence": "did NOT misuse SearchAffordance"
+        },
+        {
+          "text": "Proposed a GATED extension (wiki:QueryAffordance / wikirole:query-affordance via ClassExtensionShape) rather than forcing a misfit role",
+          "passed": true,
+          "evidence": "gated wiki:QueryAffordance via ClassExtensionShape (validated inference=none)"
+        },
+        {
+          "text": "Wrapped the repair as a mem: action with rationale (not a bare corrected TTL)",
+          "passed": true,
+          "evidence": "4 mem:RealignAction wrappers"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 150.8,
+        "tokens": 79976,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Dereferenced the canonical decision (D98) rather than acting on the surface count claim",
+          "passed": true,
+          "evidence": "dereferenced D98"
+        },
+        {
+          "text": "Concluded it is NOT a bug \u2014 the 8 NodeShapes vs 11 files reconcile",
+          "passed": true,
+          "evidence": "concluded NOT a bug"
+        },
+        {
+          "text": "Withdrew the flag (recorded as mem:FalsePositive) instead of rewriting the correct claim",
+          "passed": true,
+          "evidence": "recorded mem:FalsePositive (3)"
+        },
+        {
+          "text": "Did not make any damaging edit to the correct statement",
+          "passed": true,
+          "evidence": "no damaging edit"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 0,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.5,
+        "passed": 3,
+        "failed": 3,
+        "total": 6,
+        "time_seconds": 274.1,
+        "tokens": 102985,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Obtained the work queue by running the substrate audit (pod_audit.py / make audit) rather than guessing findings",
+          "passed": true,
+          "evidence": "ran pod_audit.py"
+        },
+        {
+          "text": "Triaged all three finding clusters: stale rdfs:seeAlso, missing entry-point sh:agentInstruction, and the 8 untyped addressbook descriptors",
+          "passed": true,
+          "evidence": "triaged all clusters + extras"
+        },
+        {
+          "text": "Classified findings using mem:stalenessClass values (e.g. mem:DanglingReference)",
+          "passed": false,
+          "evidence": "no stalenessClass (0)"
+        },
+        {
+          "text": "Drafted proposals as mem:RealignAction with a required mem:rationale",
+          "passed": false,
+          "evidence": "proposals are .md; only 1 stray RealignAction, not systematic"
+        },
+        {
+          "text": "CLEAN ROUTING TEST: staged proposals under /vault/wiki/working/curator-proposals/ (two-stage commit) WITHOUT being told the path in the prompt",
+          "passed": false,
+          "evidence": "staged to local output dir only; never invented curator-proposals path"
+        },
+        {
+          "text": "Did not modify or delete any existing substrate resource (safety constraint honored)",
+          "passed": true,
+          "evidence": "create-only"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6,
+        "passed": 3,
+        "failed": 2,
+        "total": 5,
+        "time_seconds": 190.2,
+        "tokens": 84656,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Identified BOTH stale pointers (wiki/pages/ and wiki/sources/) as the rename casualties",
+          "passed": true,
+          "evidence": "both stale pointers found (+prof:hasResource)"
+        },
+        {
+          "text": "Resolved against ground truth (confirmed live container set / Type Index routing to concepts/)",
+          "passed": true,
+          "evidence": "resolved against live set"
+        },
+        {
+          "text": "Recognized the fix is repo-side in void-description.json (storage description not HTTP-PATCHable, 405)",
+          "passed": true,
+          "evidence": "void-description.json + 405 identified"
+        },
+        {
+          "text": "Classified the stale pointers with mem:stalenessClass (DanglingReference / SupersededConcept)",
+          "passed": false,
+          "evidence": "no stalenessClass (0)"
+        },
+        {
+          "text": "Drafted proposals as mem:RealignAction with mem:rationale (not a bare diff)",
+          "passed": false,
+          "evidence": "proposals are .n3patch/.diff, no mem:RealignAction"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6,
+        "passed": 3,
+        "failed": 2,
+        "total": 5,
+        "time_seconds": 247.1,
+        "tokens": 96870,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Detected the 8 addressbook descriptors are typed wiki:Affordance only and lack prof:ResourceDescriptor",
+          "passed": true,
+          "evidence": "untyped detected (+pyshacl proof)"
+        },
+        {
+          "text": "Named the missing contract predicates (prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy)",
+          "passed": true,
+          "evidence": "named missing predicates"
+        },
+        {
+          "text": "Made the correct subtype judgment: did NOT misuse wiki:SearchAffordance (these are SPARQL SELECT, not ?ext= dispatch)",
+          "passed": true,
+          "evidence": "did NOT misuse SearchAffordance"
+        },
+        {
+          "text": "Proposed a GATED extension (wiki:QueryAffordance / wikirole:query-affordance via ClassExtensionShape) rather than forcing a misfit role",
+          "passed": false,
+          "evidence": "added wikirole:query-affordance role only \u2014 not a ClassExtensionShape-gated class extension"
+        },
+        {
+          "text": "Wrapped the repair as a mem: action with rationale (not a bare corrected TTL)",
+          "passed": false,
+          "evidence": "no mem:RealignAction wrapper (0)"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 3,
+        "failed": 1,
+        "total": 4,
+        "time_seconds": 116.4,
+        "tokens": 80325,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Dereferenced the canonical decision (D98) rather than acting on the surface count claim",
+          "passed": true,
+          "evidence": "dereferenced D98"
+        },
+        {
+          "text": "Concluded it is NOT a bug \u2014 the 8 NodeShapes vs 11 files reconcile",
+          "passed": true,
+          "evidence": "concluded NOT a bug"
+        },
+        {
+          "text": "Withdrew the flag (recorded as mem:FalsePositive) instead of rewriting the correct claim",
+          "passed": false,
+          "evidence": "did not record mem:FalsePositive (0); pivoted to a ProseDrift proposal"
+        },
+        {
+          "text": "Did not make any damaging edit to the correct statement",
+          "passed": true,
+          "evidence": "no damaging edit"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 245.125,
+        "stddev": 80.644,
+        "min": 150.8,
+        "max": 340.2
+      },
+      "tokens": {
+        "mean": 101936.0,
+        "stddev": 17574.5645,
+        "min": 79976,
+        "max": 117968
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.6125,
+        "stddev": 0.1031,
+        "min": 0.5,
+        "max": 0.75
+      },
+      "time_seconds": {
+        "mean": 206.95,
+        "stddev": 69.7639,
+        "min": 116.4,
+        "max": 274.1
+      },
+      "tokens": {
+        "mean": 91209.0,
+        "stddev": 10521.7927,
+        "min": 80325,
+        "max": 102985
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.39",
+      "time_seconds": "+38.2",
+      "tokens": "+10727"
+    }
+  },
+  "notes": []
+}

@@ -1,0 +1,38 @@
+@prefix as:   <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:  <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# Finding (pod-audit, constraint resolve:seeAlso): storage-description rdfs:seeAlso
+# lists </vault/wiki/pages/> and </vault/wiki/sources/>, both 404.
+
+<urn:uuid:15adc751-95c9-456c-ae90-86ebc172ce0f>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/.well-known/solid> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/wiki/> , </vault/settings/publicTypeIndex> ;
+    prov:wasDerivedFrom </vault/.well-known/solid> ;
+    mem:stalenessClass mem:DanglingReference ;
+    mem:rationale """The storage description's rdfs:seeAlso names </vault/wiki/pages/> and </vault/wiki/sources/>; both 404. The live wiki/ container listing (ground truth, deployed-Pod precedence) holds concepts/, people/, places/, events/, organizations/, procedures/, working/ — no pages/ or sources/. The Type Index confirms the merge: both skos:Concept (#reg0) and wiki:Source (#reg1) route to wiki/concepts/, i.e. 'pages' was renamed to 'concepts' and 'sources' were merged into 'concepts'. Repair: drop the two dead seeAlso terms and add the four live containers the list currently omits (concepts/, places/, events/, organizations/). The overlay storage-patch.ttl was already corrected (lists concepts/); the deployed staleness lives in the static, non-PATCHable css/config/void-description.json — so this is a REPO edit, not an N3 Patch.""" ;
+    as:published "2026-05-24T11:47:34Z"^^xsd:dateTime .
+
+# PROPOSED REPO FIX (not PATCHable — StaticStorageDescriber, served at request time)
+# File: cogitarelink-solid/css/config/void-description.json
+#
+# DELETE the two stale StaticStorageDescriber blocks:
+#   lines 210-219  ("L3: wiki pages container (D76)")    seeAlso -> .../wiki/pages/
+#   lines 220-229  ("L3: wiki sources container (D76)")   seeAlso -> .../wiki/sources/
+#
+# REPLACE with blocks for the live D98 containers (mirror the existing people/
+# block at lines 230-239):
+#   seeAlso -> https://pod.vardeman.me/vault/wiki/concepts/
+#   seeAlso -> https://pod.vardeman.me/vault/wiki/places/
+#   seeAlso -> https://pod.vardeman.me/vault/wiki/events/
+#   seeAlso -> https://pod.vardeman.me/vault/wiki/organizations/
+# (people/, procedures/, working/ blocks already present and correct — keep them.)
+#
+# After the edit `make reset` reproduces a storage description whose seeAlso set
+# equals the live wiki/ container set. The overlay (storage-patch.ttl) is already
+# aligned; this closes the static-config gap behind it.

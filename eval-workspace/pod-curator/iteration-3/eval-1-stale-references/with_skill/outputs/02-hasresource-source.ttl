@@ -1,0 +1,27 @@
+@prefix as:   <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:  <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# Finding (curator-discovered; pod-audit MISSED — its cross-check covers seeAlso +
+# catalog pointers, not prof:hasResource targets): storage-description prof:hasResource
+# names </vault/meta/profiles/source>, which 404s.
+
+<urn:uuid:a33208c3-7024-4350-b669-3210f0838d6d>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/.well-known/solid> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/meta/profiles/> ;
+    prov:wasDerivedFrom </vault/.well-known/solid> ;
+    mem:stalenessClass mem:DanglingReference ;
+    mem:rationale """Walking the whole flagged resource (per the skill: a stale seeAlso often sits beside a stale hasResource), the prof:hasResource list names </vault/meta/profiles/source> — a 404. The meta/profiles/ container listing (ground truth) holds concept, working, page, organization, template, event, howto, thing, person, place — no 'source'. This is the same D98 sources->concepts merge as finding 01, surfacing in the PROF descriptor layer: the source profile was removed when wiki:Source folded into the concept profile (Type Index routes wiki:Source -> concepts/). Repair: drop the dead prof:hasResource -> profiles/source term. Same static-config home as finding 01, so a REPO edit, not an N3 Patch. NOTE for the auditor: pod_audit.py should extend its resolve check to prof:hasResource / prof:hasRole targets, not just rdfs:seeAlso — this finding and finding 03 both escaped it.""" ;
+    as:published "2026-05-24T11:47:34Z"^^xsd:dateTime .
+
+# PROPOSED REPO FIX (not PATCHable — StaticStorageDescriber)
+# File: cogitarelink-solid/css/config/void-description.json
+#   DELETE the block at lines 280-289 ("PROF: source profile descriptor (D86)"),
+#   prof:hasResource -> https://pod.vardeman.me/vault/meta/profiles/source
+# The concept profile (lines 270-278, profiles/concept, 200 OK) already covers
+# wiki:Source content post-merge; no replacement term is needed.

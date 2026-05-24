@@ -1,0 +1,82 @@
+@prefix as:       <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:      <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov:     <http://www.w3.org/ns/prov#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:      <http://www.w3.org/2002/07/owl#> .
+@prefix skos:     <http://www.w3.org/2004/02/skos/core#> .
+@prefix prof:     <http://www.w3.org/ns/dx/prof/> .
+@prefix wiki:     <https://pod.vardeman.me/vault/ontology/wiki#> .
+@prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+
+# ===========================================================================
+# Proposal 02 — GATED CONCEPTUAL-STRUCTURE EXTENSION (construction, not staleness).
+# Prerequisite for proposal 03. Adds the type + role that the 9 untyped
+# SPARQL-SELECT lookup affordances need but which DO NOT EXIST yet.
+#
+# This is a judgment call flagged explicitly for human review (playbook
+# §"No existing type or role fits"). Forcing the lookups under wiki:SearchAffordance
+# would be wrong and would fail SHACL; a clean gated extension grows the graph.
+# ===========================================================================
+
+<urn:uuid:7c1a0d20-5e44-4f3b-9a01-2026052302>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/ontology/wiki> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/ontology/wiki> ;
+    prov:wasDerivedFrom </vault/meta/affordances/contact-find-by-name.ttl> ;
+    mem:stalenessClass mem:ProseDrift ;
+    mem:rationale """Nine catalog descriptors (8 contact/org lookups + bridge-card-to-wiki) are flagged
+descriptor:untyped. Each is a CLIENT-RUN, PARAMETERIZED SPARQL-SELECT lookup: typed only wiki:Affordance,
+carrying sh:agentInstruction + wiki:selectQuery + a $param. To bring them under the descriptor contract
+(AffordanceDescriptorShape) they need a concrete wiki:*Affordance subtype AND a prof:hasRole from the
+wikirole scheme. I checked the existing options and NONE fit:
+  - wiki:SearchAffordance is for HTTP-DISPATCH query surfaces — its SHACL (SearchAffordanceShape)
+    REQUIRES wiki:dispatchPattern (^\\?ext=...) + wiki:targetContainer. The lookups have neither; they
+    are run in the agent's own Comunica engine (the Pod hosts no SPARQL endpoint). Typing them
+    SearchAffordance would FAIL validation. (playbook explicitly warns against this misfit.)
+  - wiki:DerivedNavigationAffordance carries wiki:selectQuery but its semantics are 'compute a derived
+    NAVIGATION view (breadcrumbs, MOC indexes)'. A by-key contact/org lookup derives no navigation
+    structure; it is a retrieval, not a view. Misfit.
+  - wiki:DerivedClassAffordance derives an rdf:type (wiki:constructQuery). Lookups derive no class. Misfit.
+  - wikirole scheme has affordance / write- / version- / derived-class- / derived-navigation- roles
+    plus synthesis roles (overview, operation-log, ...). There is NO query/lookup role.
+This is a genuine conceptual-structure GAP, not a misfiling. Per the class-extension contract (D100,
+wiki:ClassExtensionShape) the conceptual structure is extensible data; the correct repair is a GATED
+extension: a new rooted subclass + a new in-scheme role concept, landed in working/ for SHACL validation
+(inference='none') + higher-trust review before crystallizing. prov:used = the wiki vocab itself
+(authoritative for the type lattice).""" ;
+    as:published "2026-05-23T22:34:12Z"^^xsd:dateTime .
+
+# --- Proposed new class (satisfies wiki:ClassExtensionShape: subClassOf + label + comment) ----
+# REPO-SIDE: add to overlays/wiki-memory/vocabulary/wiki.ttl (so `make reset` reproduces it).
+wiki:QueryAffordance
+    a rdfs:Class, owl:Class ;
+    rdfs:subClassOf wiki:Affordance ;          # rooting: wiki:Affordance reaches wiki:Resource
+    rdfs:label "Query affordance" ;
+    rdfs:comment "Affordance descriptor for a parameterized, CLIENT-RUN SPARQL-SELECT lookup over Pod content (e.g. find a contact card by name/email/ORCID, find the wiki page bridging a card). Carries a wiki:selectQuery with a named parameter ($name, $email, $card, ...) the agent substitutes, and an sh:agentInstruction naming the source graph(s) and how to pass the parameter. Distinct from wiki:SearchAffordance (HTTP ?ext= dispatch surface, requires wiki:dispatchPattern) and from wiki:DerivedNavigationAffordance (computes a navigation view, not a by-key retrieval): a QueryAffordance neither dispatches over HTTP nor derives structure — it retrieves existing resources by key, executed in the agent's own SPARQL engine since the Pod hosts no endpoint." ;
+    rdfs:isDefinedBy <https://pod.vardeman.me/vault/ontology/wiki> ;
+    skos:scopeNote "Used as rdf:type (alongside prof:ResourceDescriptor) on the contact/org lookup and card-bridge descriptors served from the addressbook overlay. Payload predicate: wiki:selectQuery. Pairs with prof:hasRole wikirole:query-affordance." .
+
+# --- Proposed new role concept (in the wikirole SKOS scheme; broader :affordance) -------------
+# REPO-SIDE: add to overlays/<the file that ships wikirole> (same file as :write-affordance etc.).
+wikirole:query-affordance
+    a owl:NamedIndividual , skos:Concept , prof:ResourceRole ;
+    rdfs:isDefinedBy <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    skos:inScheme <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    skos:broader wikirole:affordance ;
+    skos:prefLabel "Query affordance" ;
+    skos:definition "An affordance that performs a parameterized client-run SPARQL-SELECT lookup over Pod content, retrieving existing resources by key. The agent substitutes the named parameter and runs the query in its own engine; the Pod hosts no SPARQL endpoint. Distinct from the HTTP-dispatch search role and from derived-view roles." .
+
+# --- Notes for the reviewer ---------------------------------------------------------------------
+# 1. ClassExtensionShape step (3) 'register class -> container in Type Index' is N/A here: affordance
+#    descriptor classes are META-LEVEL (served from /meta/affordances/), not content classes with an
+#    instance container. The existing wiki:*Affordance subtypes are likewise unregistered in the Type
+#    Index. Steps (1) rooted subClassOf, (2) shaped by AffordanceDescriptorShape, (4) label+comment
+#    all hold. Confirm this meta-vs-content distinction is acceptable.
+# 2. Validate this proposal's wiki:QueryAffordance node against wiki:ClassExtensionShape with
+#    inference="none" (RDFS entailment would trivially satisfy the rooting check — see the shape's
+#    own sh:agentInstruction).
+# 3. Once crystallized, proposal 03 retypes the 9 descriptors against this new type + role.

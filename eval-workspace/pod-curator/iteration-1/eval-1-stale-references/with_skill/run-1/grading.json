@@ -1,0 +1,37 @@
+{
+  "expectations": [
+    {
+      "text": "Identified BOTH stale pointers (wiki/pages/ and wiki/sources/) as the rename casualties",
+      "passed": true,
+      "evidence": "identified both wiki/pages/ and wiki/sources/ as 404 rename casualties"
+    },
+    {
+      "text": "Resolved against ground truth (confirmed live container set / Type Index routing to concepts/)",
+      "passed": true,
+      "evidence": "resolved via GET wiki/ + Type Index routing to concepts/"
+    },
+    {
+      "text": "Recognized the fix is repo-side in void-description.json (storage description not HTTP-PATCHable, 405) rather than proposing an N3 Patch to the Pod",
+      "passed": true,
+      "evidence": "flagged void-description.json (static, PATCH=405) as the repo-side source"
+    },
+    {
+      "text": "Classified the stale pointers (mem:DanglingReference / SupersededConcept)",
+      "passed": true,
+      "evidence": "classified mem:DanglingReference + mem:SupersededConcept (stalenessClass in 4 files)"
+    },
+    {
+      "text": "Drafted a repair proposal or recommendation with recorded reasoning",
+      "passed": true,
+      "evidence": "3 mem:RealignAction proposals with required mem:rationale"
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "summary": {
+    "pass_rate": 1.0,
+    "passed": 5,
+    "failed": 0,
+    "total": 5
+  }
+}

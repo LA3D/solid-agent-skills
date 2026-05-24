@@ -1,0 +1,34 @@
+# PROPOSAL — additive triples for /vault/ontology/wikirole (does NOT modify the
+# live scheme). Adds the query/search role concepts that affordance descriptors
+# reference via prof:hasRole.
+#
+# Two gaps motivate this:
+#   1. wiki-search-grep.ttl ALREADY references wikirole:search-affordance via
+#      prof:hasRole, but that concept is NOT defined in the wikirole scheme
+#      (only :affordance, :write-affordance, :version-affordance,
+#      :derived-class-affordance, :derived-navigation-affordance,
+#      :overview, :operation-vocabulary, :operation-log, :event-stream exist).
+#      So the reference dangles today — an unresolvable role IRI.
+#   2. The proposed wiki:QueryAffordance needs a matching role concept.
+
+@prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+@prefix prof:     <http://www.w3.org/ns/dx/prof/> .
+@prefix skos:     <http://www.w3.org/2004/02/skos/core#> .
+@prefix owl:      <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+
+wikirole:search-affordance
+    a owl:NamedIndividual , skos:Concept , prof:ResourceRole ;
+    rdfs:isDefinedBy <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    skos:inScheme <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    skos:broader wikirole:affordance ;
+    skos:prefLabel "Search affordance" ;
+    skos:definition "An affordance exposing an HTTP query surface (e.g., recursive substring grep) invoked via a dispatchPattern URL suffix and executed server-side. Referenced by wiki-search-grep." .
+
+wikirole:query-affordance
+    a owl:NamedIndividual , skos:Concept , prof:ResourceRole ;
+    rdfs:isDefinedBy <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    skos:inScheme <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    skos:broader wikirole:affordance ;
+    skos:prefLabel "Query affordance" ;
+    skos:definition "An affordance exposing a parameterized SPARQL-SELECT lookup the agent runs client-side against a declared source graph. Referenced by the AddressBook contact/org lookups." .

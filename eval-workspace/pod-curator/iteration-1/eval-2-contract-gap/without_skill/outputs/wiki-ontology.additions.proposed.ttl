@@ -1,0 +1,30 @@
+# PROPOSAL — additive triples for /vault/ontology/wiki (does NOT modify the live
+# ontology). Adds a concrete wiki:QueryAffordance subclass so SPARQL-SELECT
+# affordances (the contact/org lookups) have a class as specific as
+# wiki:SearchAffordance is for the grep surface.
+#
+# Rationale: the existing subclasses (WriteAffordance, DerivedClassAffordance,
+# DerivedNavigationAffordance, VersionAffordance, SearchAffordance) do not cover a
+# parameterized SPARQL-SELECT lookup over a fixed source graph. The contact/org
+# affordances currently fall back to the ABSTRACT wiki:Affordance, which the
+# ontology's own scopeNote says to avoid ("Use a concrete subclass"). This is the
+# missing concrete subclass.
+
+@prefix wiki: <https://pod.vardeman.me/vault/ontology/wiki#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+wiki:QueryAffordance
+    a rdfs:Class ;
+    rdfs:subClassOf wiki:Affordance ;
+    rdfs:isDefinedBy <> ;
+    rdfs:label "Query affordance" ;
+    rdfs:comment "Affordance descriptor for a parameterized SPARQL-SELECT lookup over a declared source graph (e.g., AddressBook contact lookups). Carries a wiki:selectQuery with named parameters, wiki:queryParameter blank nodes describing each parameter, and wiki:targetContainer naming the source graph(s)." ;
+    skos:scopeNote "Distinct from wiki:SearchAffordance (an HTTP query SURFACE with a dispatchPattern URL suffix executed server-side) and from wiki:DerivedNavigationAffordance (a substrate-computed view, not user-parameterized). A wiki:QueryAffordance is a client-run SELECT the agent fills in by substituting the declared $parameters, then executes in its own Comunica engine against wiki:targetContainer." ;
+    skos:example """
+        <> a wiki:QueryAffordance ;
+           wiki:targetContainer </vault/contacts/> ;
+           wiki:queryParameter [ wiki:parameter "name" ; wiki:required true ] ;
+           wiki:selectQuery \"\"\"SELECT ?person WHERE { ?person vcard:fn ?fn . FILTER(CONTAINS(LCASE(?fn), LCASE($name))) }\"\"\" ;
+           wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> .
+    """ .

@@ -1,0 +1,85 @@
+# PROPOSAL — gated conceptual-structure extension (playbook: "No existing type or role fits")
+#
+# Intended deploy location:
+#   /vault/wiki/working/curator-proposals/2026-05-23T223401Z/00-extension-query-affordance.ttl
+#
+# WHY THIS IS AN EXTENSION, NOT A REUSE
+# -------------------------------------
+# The 8 contact/org affordances are parameterized, CLIENT-RUN SPARQL-SELECT read
+# queries (they carry wiki:selectQuery + a $param the caller binds). None of the
+# five existing wiki:Affordance subtypes honestly fits:
+#   - wiki:SearchAffordance       -> ?ext= HTTP dispatch (server-side grep). These
+#                                    are NOT HTTP-dispatched; SearchAffordanceShape
+#                                    would (correctly) demand wiki:dispatchPattern +
+#                                    wiki:targetContainer they do not have.
+#   - wiki:DerivedClassAffordance -> materializes a derived rdf:type (wiki:Hub). No.
+#   - wiki:DerivedNavigationAffordance -> computes a view (breadcrumb/MOC) over wiki
+#                                    containers; not a parameterized entity lookup
+#                                    over the contacts graph.
+#   - wiki:WriteAffordance        -> write-time listener. These are read-only.
+#   - wiki:VersionAffordance      -> Memento time-travel. No.
+# And the wikirole scheme has no role for "client-run parameterized SELECT" — only
+# search/write/version/derived-class/derived-navigation. Forcing a misfit would
+# pollute the conceptual graph (playbook §"Don't force a misfit"), so the correct
+# repair is a clean, gated extension: a new class + a new role, both rooted, shaped,
+# documented, recorded. wiki:ClassExtensionShape validates the class with
+# inference="none"; a higher-trust reviewer approves before crystallize.
+#
+# HUMAN-REVIEW FLAG: this introduces a new substrate class and a new role concept.
+# It is a judgment call (per playbook) and is surfaced explicitly for review.
+
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:      <http://www.w3.org/2002/07/owl#> .
+@prefix skos:     <http://www.w3.org/2004/02/skos/core#> .
+@prefix prof:     <http://www.w3.org/ns/dx/prof/> .
+@prefix wiki:     <https://pod.vardeman.me/vault/ontology/wiki#> .
+@prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+
+##############################################################################
+# 1. New class — satisfies wiki:ClassExtensionShape (rdfs:subClassOf + label + comment)
+#    Repo home: overlays/wiki-memory/ontology/wiki.ttl (alongside the other
+#    wiki:*Affordance subclass declarations) so `make reset` reproduces it.
+##############################################################################
+
+wiki:QueryAffordance
+    a rdfs:Class ;
+    rdfs:subClassOf wiki:Affordance ;          # rooting -> wiki:Affordance -> wiki:Resource
+    rdfs:label "Query affordance" ;
+    rdfs:comment "Affordance descriptor for a parameterized, client-run SPARQL SELECT over a named substrate graph (e.g. the AddressBook contacts index). Distinct from wiki:SearchAffordance (server-side ?ext= HTTP dispatch) and wiki:DerivedNavigationAffordance (computes a navigation view over wiki containers): a query affordance is an entity-lookup contract — it binds one or more $parameters supplied by the caller and runs in the agent's own SPARQL engine (the Pod hosts no endpoint, D3/D29). Carries wiki:selectQuery, declares its $parameter(s) via wiki:queryParameter, and names the data graph via wiki:querySource (the --default-graph-uri an agent passes, RQ-Pod-4 workaround)." ;
+    skos:scopeNote "Used as rdf:type on the contact-find-by-* and org-find-by-* descriptors. The SELECT is run client-side with wiki:querySource as the data source. NOT for HTTP-dispatched search (wiki:SearchAffordance) or derived views (wiki:DerivedNavigationAffordance)." ;
+    rdfs:isDefinedBy <https://pod.vardeman.me/vault/ontology/wiki> ;
+    rdfs:seeAlso </vault/meta/affordances/contact-find-by-name> .
+
+##############################################################################
+# 2. New role concept — additive to the wikirole SKOS scheme, broader :affordance.
+#    Repo home: overlays/wiki-memory/ontology/wikirole.ttl
+#    (Note: contact/org descriptors are shipped by the addressbook overlay, but the
+#    role belongs to the wiki-memory wikirole scheme that all overlays draw from —
+#    same pattern as wikirole:search-affordance used by the wiki-search-grep descriptor.)
+##############################################################################
+
+wikirole:query-affordance
+    a owl:NamedIndividual , skos:Concept , prof:ResourceRole ;
+    rdfs:isDefinedBy <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    skos:inScheme <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    skos:broader wikirole:affordance ;
+    skos:prefLabel "Query affordance" ;
+    skos:definition "An affordance invoked as a parameterized, client-run SPARQL SELECT against a named substrate graph. The caller binds $parameter(s) and runs the query in its own engine; the descriptor names the data graph (wiki:querySource). Distinct from the search role (server-side ?ext= dispatch)." .
+
+##############################################################################
+# 3. Dangling-role repair (DanglingReference, discovered while resolving §2).
+#    wiki-search-grep.ttl asserts `prof:hasRole wikirole:search-affordance`, but
+#    that concept is ABSENT from the deployed wikirole scheme (verified: 0 hits).
+#    So the canonical "good" reference descriptor itself cites an undefined role —
+#    an auditor gap (prof:hasRole targets are not cross-checked against the scheme).
+#    Add the missing concept so the reference is consistent and the new
+#    query-affordance role sits beside its sibling.
+##############################################################################
+
+wikirole:search-affordance
+    a owl:NamedIndividual , skos:Concept , prof:ResourceRole ;
+    rdfs:isDefinedBy <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    skos:inScheme <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    skos:broader wikirole:affordance ;
+    skos:prefLabel "Search affordance" ;
+    skos:definition "An affordance invoked as a server-side full-text/grep search dispatched via a ?ext= query-string handler (OSLC Query 3.0 response). The substrate runs the search; the caller builds a URL. Distinct from the query role (client-run parameterized SPARQL SELECT)." .

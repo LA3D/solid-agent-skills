@@ -1,0 +1,76 @@
+--- a/css/config/void-description.json
++++ b/css/config/void-description.json
+@@ seeAlso entries (pages→concepts; drop sources; add missing places/events/organizations)
+-          {
+-            "comment": "L3: wiki pages container (D76)",
++          {
++            "comment": "L3: wiki concepts container (D76; renamed from pages, D98)",
+             "@type": "StaticStorageDescriber",
+             "terms": [
+               {
+                 "StaticStorageDescriber:_terms_key": "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+-                "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/wiki/pages/"
++                "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/wiki/concepts/"
+               }
+             ]
+           },
+-          {
+-            "comment": "L3: wiki sources container (D76)",
+-            "@type": "StaticStorageDescriber",
+-            "terms": [
+-              {
+-                "StaticStorageDescriber:_terms_key": "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+-                "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/wiki/sources/"
+-              }
+-            ]
+-          },
++          {
++            "comment": "L3: sources merged into concepts (D98) — entry removed.",
++            "@type": "StaticStorageDescriber",
++            "terms": [
++              { "StaticStorageDescriber:_terms_key": "http://www.w3.org/2000/01/rdf-schema#seeAlso",
++                "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/wiki/places/" }
++            ]
++          },
++          {
++            "comment": "L3: wiki events container (added — was missing from seeAlso).",
++            "@type": "StaticStorageDescriber",
++            "terms": [
++              { "StaticStorageDescriber:_terms_key": "http://www.w3.org/2000/01/rdf-schema#seeAlso",
++                "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/wiki/events/" }
++            ]
++          },
++          {
++            "comment": "L3: wiki organizations container (added — was missing from seeAlso).",
++            "@type": "StaticStorageDescriber",
++            "terms": [
++              { "StaticStorageDescriber:_terms_key": "http://www.w3.org/2000/01/rdf-schema#seeAlso",
++                "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/wiki/organizations/" }
++            ]
++          },
+@@ prof:hasResource entries (drop source; procedure→howto)
+-          {
+-            "comment": "PROF: source profile descriptor (D86)",
+-            "@type": "StaticStorageDescriber",
+-            "terms": [
+-              {
+-                "StaticStorageDescriber:_terms_key": "http://www.w3.org/ns/dx/prof/hasResource",
+-                "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/meta/profiles/source"
+-              }
+-            ]
+-          },
++          { "comment": "PROF: source profile merged into concept (D98) — entry removed." },
+@@
+-          {
+-            "comment": "PROF: procedure profile descriptor (D86)",
++          {
++            "comment": "PROF: howto profile descriptor (D86; resource is named 'howto', not 'procedure')",
+             "@type": "StaticStorageDescriber",
+             "terms": [
+               {
+                 "StaticStorageDescriber:_terms_key": "http://www.w3.org/ns/dx/prof/hasResource",
+-                "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/meta/profiles/procedure"
++                "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/meta/profiles/howto"
+               }
+             ]
+           },

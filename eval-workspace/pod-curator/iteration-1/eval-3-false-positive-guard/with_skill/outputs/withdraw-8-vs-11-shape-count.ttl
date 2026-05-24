@@ -1,0 +1,60 @@
+@prefix as:   <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:  <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# FALSE-POSITIVE WITHDRAWAL
+# Claim under review: "the Pod has an 8-shape catalog but I count 11 shape files — that's a bug."
+# Resolution: NOT a bug. The two numbers measure different things and both are correct.
+# Recorded as mem:FalsePositive so the false-positive guard is itself auditable
+# (per mem:FalsePositive rdfs:comment, and the worked example in the pod-curator skill's guard).
+
+<urn:uuid:783AD2FD-7508-4FB3-BB5C-1A7738C7C2CC>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object "claim: '8-shape catalog' contradicts 11 shape files" ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used
+        </vault/meta/shapes/> ,                 # deployed Pod (operational truth — highest precedence)
+        </vault/ontology/mem> ,                  # mem vocab scopeNote naming this exact false positive
+        <https://pod.vardeman.me/vault/ontology/mem#FalsePositive> ;
+    mem:stalenessClass mem:FalsePositive ;
+    mem:rationale """The flag is withdrawn — there is no bug. '8-shape catalog' and '11 shape files' are
+correct at different granularities and D98 reconciles them explicitly.
+
+GROUND TRUTH (precedence order: deployed Pod > decisions log > prose summary):
+
+1. Decisions log (D98, decisions.md:662): 'The wiki-memory L3 shape catalog comprises
+   8 SHACL NodeShapes (11 shape files total).' The number 8 counts NodeShapes; 11 counts files.
+   D98 enumerates the 8 NodeShapes (Page, Thing, Concept, Person, Place, Event, Organization, HowTo)
+   plus 3 additional files (WorkingNoteShape, resource.shacl.ttl D38 guard, template.shacl.ttl D100)
+   = 11 files. The '8-shape catalog' phrasing in MEMORY.md is shorthand for the 8 NodeShapes; it was
+   never a claim about file count.
+
+2. mem vocabulary (deployed, /vault/ontology/mem): the mem:StalenessDetected scopeNote literally names
+   this case as a CAUTION — 'before flagging a scalar/count claim, dereference the canonical decision —
+   the reconciliation may already be written there (the 8-vs-11 false positive of 2026-05-23).' The
+   substrate anticipated this exact flag.
+
+3. Deployed Pod (/vault/meta/shapes/, operational truth): the live catalog now holds 18 .shacl.ttl
+   files, not 11. The extras beyond D98's 11 are NOT drift — they are additive overlay shapes shipped
+   after D98:
+     - wiki-memory overlay also ships source.shacl.ttl + class-extension.shacl.ttl (wiki:Source
+       re-introduced 2026-05-23 VIA the class-extension contract — a worked example, not a D77 relic);
+     - addressbook overlay (D87/D88): contact-card, organization-card, membership, group;
+     - owner-identity overlay (D89/D90): webid-profile, pod-owner-preferences.
+   These belong to different overlays/profiles and are correctly outside the wiki-memory L3 NodeShape
+   count. The '8-shape catalog' figure is scoped to wiki-memory L3 and remains accurate.
+
+CONCLUSION: NodeShapes != files != deployed files-across-all-overlays. The claim conflated a
+NodeShape count with a file count. No substrate change is warranted. If anything is stale it is the
+NOTE that read '8 shapes = 11 files' as if they should match — but D98 already states both numbers
+together, so even the prose is correct at source. Withdrawn.
+
+A genuinely useful follow-up (NOT a bug, optional): the MEMORY.md shorthand '8-shape catalog' could
+carry the parenthetical '(11 files; 18 deployed across overlays)' to pre-empt re-triggering this guard.
+That is a prose-clarity SHOULD, proposed only, not applied.""" ;
+    as:published "2026-05-23T22:16:53Z"^^xsd:dateTime ;
+    rdfs:comment "Withdrawn flag. No N3 Patch and no repo edit proposed — the substrate is correct as deployed." .

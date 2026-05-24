@@ -1,0 +1,38 @@
+@prefix as:   <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:  <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# Finding 3 (AUDITOR GAP — pod_audit did not flag this; cross-check found it):
+# storage description prof:hasResource -> /vault/meta/profiles/source returns 404.
+# The source PROF profile descriptor was removed when sources merged into concepts
+# (the profiles/ container holds concept, page, person, place, event, organization,
+# howto, working, thing, template — but NO source). The static config still
+# advertises it.
+
+<urn:uuid:ff3c4c98-6a22-421e-8924-ffc53edd60ff>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object <https://pod.vardeman.me/vault/.well-known/solid> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used <https://pod.vardeman.me/vault/meta/profiles/> ;                  # ground truth: profiles container listing has no 'source'
+    prov:wasDerivedFrom <https://pod.vardeman.me/vault/meta/profiles/source> ;  # stale target (404)
+    mem:stalenessClass mem:SupersededConcept ;
+    mem:rationale "prof:hasResource names /vault/meta/profiles/source which 404s. The profiles/ container listing contains concept, page, person, place, event, organization, howto, working, thing, template but no source resource — the source profile descriptor was retired when sources merged into concepts (D98). profiles/concept (200) is the surviving descriptor for the merged content type and is already advertised. Realign by dropping the source hasResource term. Not auto-detected by pod_audit (it cross-checks seeAlso + catalog pointers, not prof:hasResource targets) — recommend extending the walker to dereference prof:hasResource." ;
+    as:published "2026-05-23T22:33:41Z"^^xsd:dateTime .
+
+# --- Concrete proposed change (REPO-side) ---
+# File: css/config/void-description.json
+# Remove the StaticStorageDescriber block at lines 280-289:
+#
+#   {
+#     "comment": "PROF: source profile descriptor (D86)",
+#     "@type": "StaticStorageDescriber",
+#     "terms": [
+#       { "StaticStorageDescriber:_terms_key":   "http://www.w3.org/ns/dx/prof/hasResource",
+#         "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/meta/profiles/source" }
+#     ]
+#   },
+#
+# profiles/concept (line 270-279) stays — it is the live descriptor for the merged type.

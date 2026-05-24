@@ -1,0 +1,107 @@
+@prefix as:       <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:      <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov:     <http://www.w3.org/ns/prov#> .
+@prefix dct:      <http://purl.org/dc/terms/> .
+@prefix prof:     <http://www.w3.org/ns/dx/prof/> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:      <http://www.w3.org/2002/07/owl#> .
+@prefix skos:     <http://www.w3.org/2004/02/skos/core#> .
+@prefix sh:       <http://www.w3.org/ns/shacl#> .
+@prefix wiki:     <https://pod.vardeman.me/vault/ontology/wiki#> .
+@prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+
+# Proposal 03 — contract gap (construction). One proposal for a coherent cluster:
+# all 8 addressbook query affordances share the identical defect, the identical
+# fix, and the identical installing overlay (overlay#addressbook).
+#
+# pod-audit findings (descriptor:untyped):
+#   contact-find-by-name, contact-find-by-group, contact-find-by-email,
+#   contact-find-by-affiliation, contact-find-by-orcid,
+#   org-find-by-ror, org-find-by-name, bridge-card-to-wiki
+#
+# All are typed only `a wiki:Affordance` with sh:agentInstruction + wiki:selectQuery.
+# They lack: prof:ResourceDescriptor, prof:hasRole, rdfs:label, dct:conformsTo,
+# wiki:installedBy — the AffordanceDescriptorShape contract (shapes/substrate/
+# affordance-descriptor.shacl.ttl). They WORK (solid-pod invoke runs the query)
+# but escape governance.
+
+<urn:uuid:ca1f272a-4b3d-4965-a86d-13a62aa85320>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/meta/affordances/contact-find-by-name.ttl> ,
+              </vault/meta/affordances/contact-find-by-group.ttl> ,
+              </vault/meta/affordances/contact-find-by-email.ttl> ,
+              </vault/meta/affordances/contact-find-by-affiliation.ttl> ,
+              </vault/meta/affordances/contact-find-by-orcid.ttl> ,
+              </vault/meta/affordances/org-find-by-ror.ttl> ,
+              </vault/meta/affordances/org-find-by-name.ttl> ,
+              </vault/meta/affordances/bridge-card-to-wiki.ttl> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/meta/affordances/markdown-projection.ttl> ,
+              <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    prov:wasDerivedFrom </vault/meta/affordances/contact-find-by-name.ttl> ;
+    mem:stalenessClass mem:ProseDrift ;
+    mem:rationale """The 8 addressbook query affordances are typed only
+`a wiki:Affordance` and carry no PROF contract (prof:ResourceDescriptor,
+prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy), so they fail
+AffordanceDescriptorShape and escape governance. Reconstructed the missing
+contract from a conformant sibling (markdown-projection.ttl: a wiki:*Affordance
++ prof:ResourceDescriptor; prof:hasRole wikirole:*; dct:conformsTo
+<http://www.w3.org/TR/dx-prof/>; rdfs:label; wiki:installedBy overlay IRI).
+installedBy resolves to overlay#addressbook (these ship from the addressbook
+overlay, confirmed in overlays/addressbook/affordances/). Classed ProseDrift /
+contract-gap, repair direction text->reality: add the contract these descriptors
+should always have carried. ESCALATION POINT (not a blocker): the wikirole scheme
+has no read/query role — existing concepts are write-/version-/derived-class-/
+derived-navigation-affordance, none of which fit a read-only SPARQL lookup.
+Proposing a new wikirole:query-affordance concept (additive, skos:broader
+:affordance) rather than mis-assigning an existing role. Label per affordance is
+composed from what each query does.""" ;
+    as:published "2026-05-23T14:30:00Z"^^xsd:dateTime .
+
+# ---------------------------------------------------------------------------
+# CONCRETE FIX — repo-side (these descriptors ship from the addressbook overlay;
+# fold the corrected TTL back into overlays/addressbook/affordances/*.ttl so
+# `make reset` reproduces it). The deployed copies at /vault/meta/affordances/
+# are served from the overlay, so a pod-side N3 PATCH would be overwritten by the
+# next reset — repo edit is the durable fix.
+#
+# STEP 1 — new role concept. File: overlays/wiki-memory/ ... /wikirole.ttl
+# (the wikirole ontology). Add, additively:
+#
+#   wikirole:query-affordance
+#       a owl:NamedIndividual , skos:Concept , prof:ResourceRole ;
+#       rdfs:isDefinedBy <https://pod.vardeman.me/vault/ontology/wikirole> ;
+#       skos:broader wikirole:affordance ;
+#       skos:prefLabel "Query affordance" ;
+#       skos:definition "A read-only lookup affordance: a SPARQL SELECT the
+#         agent runs in its own engine (the Pod hosts no endpoint) against named
+#         .meta / index sources, to resolve an identifier or fragment to local
+#         resource IRIs." .
+#
+# STEP 2 — per descriptor, add the 5 missing contract predicates. Pattern shown
+# for contact-find-by-name.ttl; apply the analogous label to each:
+#
+#   <>  a wiki:Affordance , prof:ResourceDescriptor ;          # ADD prof:ResourceDescriptor
+#       prof:hasRole wikirole:query-affordance ;               # ADD
+#       rdfs:label "Find contact by full name (substring)" ;   # ADD (per-affordance, below)
+#       dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;       # ADD
+#       wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ; # ADD
+#       sh:agentInstruction "...unchanged..." ;
+#       wiki:selectQuery   "...unchanged..." .
+#
+# Per-affordance rdfs:label:
+#   contact-find-by-name        -> "Find contact by full name (substring)"
+#   contact-find-by-group       -> "Find contacts by group membership"
+#   contact-find-by-email       -> "Find contact by email address"
+#   contact-find-by-affiliation -> "Find contacts by organizational affiliation"
+#   contact-find-by-orcid       -> "Find contact by ORCID iD"
+#   org-find-by-ror             -> "Find organization by ROR identifier"
+#   org-find-by-name            -> "Find organization by name (substring)"
+#   bridge-card-to-wiki         -> "Find the wiki page whose primaryTopic is a given card"
+#
+# After STEP 1+2, all 8 satisfy AffordanceDescriptorShape (none are
+# wiki:SearchAffordance, so the stricter dispatch sub-shape does not apply).
+# Validate with inference="none" per the shape's header note.

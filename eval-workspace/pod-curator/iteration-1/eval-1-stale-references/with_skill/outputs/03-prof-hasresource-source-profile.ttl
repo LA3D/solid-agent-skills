@@ -1,0 +1,31 @@
+@prefix as:   <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:  <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# Stale reference 3 — storage-description prof:hasResource points at the
+# meta/profiles/source PROF descriptor, which 404s. This is a SECOND-ORDER
+# consequence of the same source->concept merge that pod_audit did NOT flag
+# (the auditor only checks rdfs:seeAlso / catalog pointers, not the
+# prof:hasResource profile set), found by manually walking the storage
+# description during this curation pass.
+<urn:uuid:919ef3f8-4908-4aec-9cd4-9c30c2a81e54>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/.well-known/solid> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/meta/profiles/concept> ;   # the surviving profile for concept/source content
+    prov:wasDerivedFrom </vault/.well-known/solid> ;
+    mem:stalenessClass mem:DanglingReference ;
+    mem:rationale "Storage description prof:hasResource lists <../meta/profiles/source>, which returns 404 — the per-kind PROF profile descriptor for the merged-away source kind. The sibling <../meta/profiles/concept> resolves 200 and is the profile for concept-class content; since sources are now concepts, the source profile entry is dangling and redundant. GUARD CHECK performed: <../meta/profiles/page> in the same prof:hasResource list also looked suspicious (pages renamed) but it resolves 200 and is the ROOT profile that concept/person/howto/working/place/event all profile from (rdfs:label 'Wiki-Memory L3 — Page profile') — it is current, NOT stale; left untouched. Only profiles/source is stale. Resolved against the live profile set. Repair direction: pointer -> reality. Lives in STATIC css/config/void-description.json -> repo edit." ;
+    as:published "2026-05-23T22:16:31Z"^^xsd:dateTime .
+
+# Proposed repo-side fix (NOT applied — review-gated):
+#   File: css/config/void-description.json  (lines ~280-288)
+#   Remove the StaticStorageDescriber block whose prof:hasResource value is
+#     "https://pod.vardeman.me/vault/meta/profiles/source"
+#   (comment "PROF: source profile descriptor (D86)").
+#   Leave meta/profiles/page (root profile, resolves 200) and
+#   meta/profiles/concept untouched.
+#   Then `make reset` reproduces the corrected storage description.

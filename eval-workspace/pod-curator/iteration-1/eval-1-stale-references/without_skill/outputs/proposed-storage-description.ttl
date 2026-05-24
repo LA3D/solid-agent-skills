@@ -1,0 +1,12 @@
+# Target state for /vault/.well-known/solid after repair.
+# rdfs:seeAlso — stale pages/sources removed; concepts + missing places/events/orgs added.
+<../>
+    rdfs:seeAlso <../wiki/concepts/>, <../wiki/people/>, <../wiki/places/>,
+                 <../wiki/events/>, <../wiki/organizations/>,
+                 <../wiki/procedures/>, <../wiki/working/> ;
+# prof:hasResource — stale 'source' dropped (merged into concept); 'procedure' -> 'howto'.
+    prof:hasResource <../meta/profiles/page>, <../meta/profiles/concept>,
+                     <../meta/profiles/person>, <../meta/profiles/howto>,
+                     <../meta/profiles/working> .
+# NOTE: live triples are static (StaticStorageDescriber) and return 405 on PATCH.
+# Apply via css/config/void-description.json edit + `make reset`, not a runtime N3 Patch.

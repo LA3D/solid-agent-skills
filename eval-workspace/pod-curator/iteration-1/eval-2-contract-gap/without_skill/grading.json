@@ -1,0 +1,37 @@
+{
+  "expectations": [
+    {
+      "text": "Detected the 8 addressbook descriptors are typed wiki:Affordance only and lack prof:ResourceDescriptor",
+      "passed": true,
+      "evidence": "detected the untyped descriptors escape the contract"
+    },
+    {
+      "text": "Named the missing contract predicates (prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy)",
+      "passed": true,
+      "evidence": "named the missing predicates vs wiki-search-grep standard"
+    },
+    {
+      "text": "Constructed a fix adding the missing predicates, composed from what each descriptor already does",
+      "passed": true,
+      "evidence": "constructed fixes (2 full worked examples + ontology/role additions; rest mechanical)"
+    },
+    {
+      "text": "Preserved the existing working sh:agentInstruction + wiki:selectQuery",
+      "passed": true,
+      "evidence": "preserved existing instruction + query"
+    },
+    {
+      "text": "Made the correct subtype judgment: did NOT add wiki:SearchAffordance/dispatchPattern (these are SPARQL SELECT, not HTTP ?ext= dispatch)",
+      "passed": true,
+      "evidence": "correct subtype judgment: minted wiki:QueryAffordance rather than misusing SearchAffordance; flagged dangling search-affordance role"
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "summary": {
+    "pass_rate": 1.0,
+    "passed": 5,
+    "failed": 0,
+    "total": 5
+  }
+}

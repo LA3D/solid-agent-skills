@@ -1,0 +1,53 @@
+# PROPOSAL 2 — Add wikirole:query-affordance role concept (DO NOT APPLY; review)
+#
+# Target vocab (live, MUST NOT be modified by this exercise):
+#   https://pod.vardeman.me/vault/ontology/wikirole
+#   source: overlays/wiki-memory/vocabulary/wikirole.ttl
+#
+# WHY this is a prerequisite for Proposal 3:
+#   The 8 addressbook affordances are SPARQL query SURFACES — each carries a
+#   wiki:selectQuery a consumer runs client-side (Comunica) with
+#   --default-graph-uri pointing at /vault/contacts/people.ttl etc. They are
+#   NOT HTTP ?ext= dispatch surfaces, so they are NOT wiki:SearchAffordance
+#   (the SearchAffordanceShape requires wiki:dispatchPattern + wiki:targetContainer,
+#   which these lack). They need their own role.
+#
+#   The wikirole scheme has roles for write / version / derived-class /
+#   derived-navigation affordances but none for a query/lookup surface. So
+#   introduce wikirole:query-affordance.
+#
+# SIDE FINDING (latent, not in the audit output but uncovered while triaging):
+#   The shipped wiki-search-grep.ttl descriptor declares
+#   prof:hasRole wikirole:search-affordance, but wikirole:search-affordance does
+#   NOT exist in the scheme (absent from both the live doc and
+#   overlays/wiki-memory/vocabulary/wikirole.ttl). That is a dangling prof:hasRole
+#   target. The audit's prof:hasRole nodeKind check only requires an IRI, so it
+#   passes — but the role is undefined. This proposal adds BOTH the new
+#   query-affordance role AND the missing search-affordance role to close the gap.
+
+@prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+@prefix skos:     <http://www.w3.org/2004/02/skos/core#> .
+@prefix prof:     <http://www.w3.org/ns/dx/prof/> .
+@prefix owl:      <http://www.w3.org/2002/07/owl#> .
+@prefix dct:      <http://purl.org/dc/terms/> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+
+# NEW: query-affordance — a SPARQL query/lookup surface run client-side.
+wikirole:query-affordance
+    a owl:NamedIndividual , skos:Concept , prof:ResourceRole ;
+    skos:inScheme <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    skos:broader wikirole:affordance ;
+    skos:prefLabel "Query affordance" ;
+    skos:definition "An affordance whose payload is a wiki:selectQuery (or wiki:constructQuery) a consumer executes in its own SPARQL engine against named data sources. Distinct from wikirole:search-affordance: a query affordance is dereferenced and run client-side, not dispatched as an HTTP ?ext= request to the Pod." ;
+    dct:created "2026-05-23"^^xsd:date ;
+    dct:creator <https://orcid.org/0000-0003-4091-6059> .
+
+# MISSING (referenced by wiki-search-grep.ttl but undefined): search-affordance.
+wikirole:search-affordance
+    a owl:NamedIndividual , skos:Concept , prof:ResourceRole ;
+    skos:inScheme <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    skos:broader wikirole:affordance ;
+    skos:prefLabel "Search affordance" ;
+    skos:definition "An affordance dispatched as an HTTP query-string request to the Pod (e.g. ?ext=search-grep), governed by wiki:SearchAffordanceShape (requires wiki:dispatchPattern + wiki:targetContainer). The Pod executes the search server-side and returns OSLC Query results." ;
+    dct:created "2026-05-23"^^xsd:date ;
+    dct:creator <https://orcid.org/0000-0003-4091-6059> .

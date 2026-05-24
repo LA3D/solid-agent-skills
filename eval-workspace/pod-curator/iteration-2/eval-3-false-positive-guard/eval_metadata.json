@@ -1,0 +1,19 @@
+{
+  "eval_id": 3,
+  "eval_name": "false-positive-guard",
+  "prompt": "My notes say the Pod has an '8-shape catalog' but I count 11 shape files \u2014 that's a bug, clean it up.",
+  "assertions": [
+    {
+      "text": "Dereferenced the canonical decision (D98) rather than acting on the surface count claim"
+    },
+    {
+      "text": "Concluded it is NOT a bug \u2014 the 8 NodeShapes vs 11 files reconcile"
+    },
+    {
+      "text": "Withdrew the flag (recorded as mem:FalsePositive) instead of rewriting the correct claim"
+    },
+    {
+      "text": "Did not make any damaging edit to the correct statement"
+    }
+  ]
+}

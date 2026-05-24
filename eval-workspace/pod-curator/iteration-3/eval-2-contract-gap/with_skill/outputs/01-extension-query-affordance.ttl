@@ -1,0 +1,113 @@
+@prefix as:       <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:      <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov:     <http://www.w3.org/ns/prov#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:     <http://www.w3.org/2004/02/skos/core#> .
+@prefix owl:      <http://www.w3.org/2002/07/owl#> .
+@prefix prof:     <http://www.w3.org/ns/dx/prof/> .
+@prefix sh:       <http://www.w3.org/ns/shacl#> .
+@prefix wiki:     <https://pod.vardeman.me/vault/ontology/wiki#> .
+@prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+
+# ===========================================================================
+# PROPOSAL 01 — gated conceptual-structure extension (CONSTRUCTION, judgment
+# call, REQUIRES HUMAN REVIEW). Prerequisite for proposal 02.
+#
+# Why this is needed (playbook "No existing type or role fits"):
+# The 8 addressbook affordances (contact-find-by-*, org-find-by-*) and
+# bridge-card-to-wiki are CLIENT-RUN PARAMETERIZED SPARQL SELECT lookups
+# ($name/$email/$orcid/$org/$group/$ror/$card injected into wiki:selectQuery,
+# executed in the agent's own Comunica per D3/D29). None of the five existing
+# wiki:Affordance subclasses fits:
+#   - wiki:SearchAffordance       — requires ?ext= HTTP server-side dispatch
+#                                    (wiki:dispatchPattern). These have none;
+#                                    they are NOT ?ext=search-grep-style.
+#   - wiki:DerivedNavigationAffordance — semantics are "compute a navigation
+#                                    VIEW" (breadcrumbs/MOCs), not "look up an
+#                                    entity by a caller-supplied parameter";
+#                                    and it models no parameter contract.
+#   - wiki:DerivedClassAffordance — materializes rdf:type triples; not a lookup.
+#   - wiki:WriteAffordance        — write-time MonitoringStore listener.
+#   - wiki:VersionAffordance      — Memento.
+# Forcing the misfit (jamming them under SearchAffordance) would lie: the
+# SearchAffordanceShape would then (correctly) require a wiki:dispatchPattern
+# they cannot have. The honest repair is a new rooted, shaped, routed subtype.
+#
+# This is the D100 / wiki:ClassExtensionShape contract generalized to an
+# affordance subclass + a role concept: rdfs:subClassOf an existing rooted
+# class, with rdfs:label + rdfs:comment; the role is skos:inScheme the wikirole
+# scheme with skos:broader the parent role. Validate with inference="none"
+# against wiki:ClassExtensionShape before a higher-trust reviewer crystallizes.
+#
+# Apply target (repo-side, so `make reset` reproduces it):
+#   - overlays/wiki-memory/vocabulary/wiki.ttl   (add wiki:QueryAffordance)
+#   - overlays/wiki-memory/vocabulary/wikirole.ttl (add :query-affordance)
+#   - shapes/substrate/affordance-descriptor.shacl.ttl (add QueryAffordanceShape)
+# ===========================================================================
+
+<urn:uuid:b2e1d4a0-1c2f-4e7a-9b30-6d1a4c8e0101>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object <https://pod.vardeman.me/vault/ontology/wiki#> ,
+              <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/meta/affordances/contact-find-by-name.ttl> ,
+              </vault/ontology/wiki> ,
+              </vault/ontology/wikirole> ;
+    prov:wasDerivedFrom </vault/ontology/wikirole> ;
+    mem:stalenessClass mem:FalsePositive ;   # not a staleness — a construction gap; see rationale
+    mem:rationale "Conceptual-structure gap, not staleness: the addressbook lookup affordances are client-run parameterized SPARQL SELECT queries with no honest existing subtype/role (SearchAffordance needs ?ext= dispatch; DerivedNavigationAffordance is for views, not parameterized entity lookup). Per the playbook 'no existing type or role fits' recipe and the D100 class-extension contract, proposing a gated extension — wiki:QueryAffordance (rdfs:subClassOf wiki:Affordance) + wikirole:query-affordance (skos:broader wikirole:affordance) — rather than forcing a misfit. JUDGMENT CALL: explicitly flagged for human review. mem:stalenessClass left as FalsePositive only because the mem scheme has no 'construction-gap' member; the real classification is conceptual-structure extension." ;
+    as:published "2026-05-24T11:47:53Z"^^xsd:dateTime .
+
+# --------------------------------------------------------------------------
+# PROPOSED ADDITION A — new affordance subclass (-> overlays/wiki-memory/vocabulary/wiki.ttl)
+# --------------------------------------------------------------------------
+wiki:QueryAffordance
+    a owl:Class ;
+    rdfs:subClassOf wiki:Affordance ;
+    rdfs:label "Query affordance" ;
+    rdfs:comment "Affordance descriptor for a client-run, parameterized SPARQL SELECT lookup over substrate content. The agent substitutes caller-supplied parameters (declared via wiki:queryParameter) into wiki:selectQuery and executes it in its own SPARQL engine (Comunica) against the Pod's containers/.meta — the Pod hosts no SPARQL endpoint (D3/D29). Distinct from wiki:SearchAffordance (server-side ?ext= dispatch) and wiki:DerivedNavigationAffordance (computes a navigation view, not an entity lookup)." ;
+    skos:scopeNote "Used as rdf:type on the addressbook lookup affordances (contact-find-by-name/-email/-orcid/-affiliation/-group, org-find-by-name/-ror, bridge-card-to-wiki). Carries wiki:selectQuery plus one or more wiki:queryParameter blank nodes naming each $-parameter; the source graph(s) are named in sh:agentInstruction (typically passed as --default-graph-uri per the RQ-Pod-4 workaround)." ;
+    rdfs:isDefinedBy <https://pod.vardeman.me/vault/ontology/wiki> .
+
+# --------------------------------------------------------------------------
+# PROPOSED ADDITION B — new role concept (-> overlays/wiki-memory/vocabulary/wikirole.ttl)
+# Mirrors the existing role pattern (owl:NamedIndividual + skos:Concept +
+# prof:ResourceRole, skos:broader :affordance, skos:inScheme the scheme).
+# --------------------------------------------------------------------------
+wikirole:query-affordance
+    a owl:NamedIndividual , skos:Concept , prof:ResourceRole ;
+    rdfs:isDefinedBy <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    skos:inScheme <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    skos:broader wikirole:affordance ;
+    skos:prefLabel "Query affordance" ;
+    skos:definition "An affordance that exposes a client-run parameterized SPARQL SELECT lookup over substrate content. The descriptor carries the query body and a parameter contract; execution is client-side (Comunica)." .
+
+# --------------------------------------------------------------------------
+# PROPOSED ADDITION C — sub-shape so QueryAffordance descriptors are governed
+# (-> shapes/substrate/affordance-descriptor.shacl.ttl, mirroring SearchAffordanceShape).
+# Requires the parameter contract + a substantive agentInstruction. It does NOT
+# require wiki:dispatchPattern/targetContainer (those are SearchAffordance-only),
+# which is exactly why the existing SearchAffordanceShape cannot be reused here.
+# --------------------------------------------------------------------------
+wiki:QueryAffordanceShape
+    a <http://www.w3.org/ns/shacl#NodeShape> ;
+    rdfs:label "Query affordance contract" ;
+    rdfs:comment "Extends the affordance descriptor contract for client-run parameterized SPARQL SELECT lookups: requires a wiki:selectQuery, at least one wiki:queryParameter, and a substantive sh:agentInstruction. Targets wiki:QueryAffordance." ;
+    rdfs:isDefinedBy <https://pod.vardeman.me/vault/ontology/wiki> ;
+    <http://www.w3.org/ns/shacl#targetClass> wiki:QueryAffordance ;
+    <http://www.w3.org/ns/shacl#property> [
+        <http://www.w3.org/ns/shacl#path> wiki:selectQuery ;
+        <http://www.w3.org/ns/shacl#minCount> 1 ;
+        <http://www.w3.org/ns/shacl#datatype> xsd:string ;
+        <http://www.w3.org/ns/shacl#message> "A query affordance must carry a wiki:selectQuery (client-run SPARQL SELECT)."
+    ] ;
+    <http://www.w3.org/ns/shacl#property> [
+        <http://www.w3.org/ns/shacl#path> sh:agentInstruction ;
+        <http://www.w3.org/ns/shacl#minCount> 1 ;
+        <http://www.w3.org/ns/shacl#datatype> xsd:string ;
+        <http://www.w3.org/ns/shacl#minLength> 100 ;
+        <http://www.w3.org/ns/shacl#message> "A query affordance's sh:agentInstruction must give a substantive (>=100 char) spec: parameter, source graph(s), invocation."
+    ] .

@@ -1,0 +1,37 @@
+{
+  "expectations": [
+    {
+      "text": "Detected the 8 addressbook descriptors are typed wiki:Affordance only and lack prof:ResourceDescriptor",
+      "passed": true,
+      "evidence": "untyped detected (+pyshacl proof)"
+    },
+    {
+      "text": "Named the missing contract predicates (prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy)",
+      "passed": true,
+      "evidence": "named missing predicates"
+    },
+    {
+      "text": "Made the correct subtype judgment: did NOT misuse wiki:SearchAffordance (these are SPARQL SELECT, not ?ext= dispatch)",
+      "passed": true,
+      "evidence": "did NOT misuse SearchAffordance"
+    },
+    {
+      "text": "Proposed a GATED extension (wiki:QueryAffordance / wikirole:query-affordance via ClassExtensionShape) rather than forcing a misfit role",
+      "passed": false,
+      "evidence": "added wikirole:query-affordance role only \u2014 not a ClassExtensionShape-gated class extension"
+    },
+    {
+      "text": "Wrapped the repair as a mem: action with rationale (not a bare corrected TTL)",
+      "passed": false,
+      "evidence": "no mem:RealignAction wrapper (0)"
+    }
+  ],
+  "passed": 3,
+  "total": 5,
+  "summary": {
+    "pass_rate": 0.6,
+    "passed": 3,
+    "failed": 2,
+    "total": 5
+  }
+}

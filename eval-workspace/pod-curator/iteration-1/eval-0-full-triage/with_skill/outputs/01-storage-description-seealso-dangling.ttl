@@ -1,0 +1,56 @@
+@prefix as:   <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:  <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# Proposal 01 — DanglingReference
+# pod-audit findings: resolve:seeAlso @ /vault/wiki/pages/ (404), /vault/wiki/sources/ (404)
+# Covers both pointers as one coherent cluster (single subject, the storage description).
+
+<urn:uuid:0898d0f1-1d43-4fa5-988c-7a1d2a647349>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/.well-known/solid> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/settings/publicTypeIndex>, </vault/wiki/concepts/> ;
+    prov:wasDerivedFrom </vault/.well-known/solid> ;
+    mem:stalenessClass mem:DanglingReference ;
+    mem:rationale """The storage description (.well-known/solid) carries
+rdfs:seeAlso </wiki/pages/> and </wiki/sources/>; both return 404 on the live
+Pod. D98 renamed pages/+sources/ -> concepts/ (verified: GET wiki/concepts/ = 200;
+the Type Index routes both skos:Concept (reg0) and wiki:Source (reg1) to
+wiki/concepts/). Ground-truth precedence: deployed Pod (live container set + Type
+Index) over the storage description's own pointer. Resolution: drop both dead
+pointers; add </wiki/concepts/> so the seeAlso list matches the live containers
+the Type Index routes to. NOTE: the 2026-05-23 D77->D98 exemplar
+(overlays/wiki-memory/examples/realign-2026-05-23.ttl, entry #2) already recorded
+this exact realignment but it was never crystallized into the deployed config —
+this re-flags the same drift, confirming the fix landed in the exemplar trace
+only, not in css/config/void-description.json.""" ;
+    as:published "2026-05-23T14:30:00Z"^^xsd:dateTime .
+
+# ---------------------------------------------------------------------------
+# CONCRETE FIX — repo-side (NOT HTTP-PATCHable).
+# The .well-known/solid storage description is assembled by CSS from the static
+# config; rdfs:seeAlso is emitted there, not via a runtime overlay patch. A
+# stale seeAlso that survives a correct overlay lives in the static config.
+#
+# File: css/config/void-description.json (cogitarelink-solid)
+#   In the rdfs:seeAlso array for <../>:
+#     REMOVE:  "../wiki/pages/"
+#     REMOVE:  "../wiki/sources/"
+#     ADD:     "../wiki/concepts/"
+#
+# Result (live containers, per Type Index):
+#     rdfs:seeAlso ../wiki/concepts/, ../wiki/people/, ../wiki/procedures/,
+#                  ../wiki/working/ .
+#
+# OPTIONAL (out of audit scope, but the Type Index also routes these and the
+# seeAlso omits them — recommend adding for completeness):
+#     ../wiki/places/, ../wiki/events/, ../wiki/organizations/
+#
+# After edit: `make reset` reproduces the corrected storage description.
+# Do NOT attempt an N3 Patch — storage description PATCH returns 405 (static
+# via Components.js void-description.json).

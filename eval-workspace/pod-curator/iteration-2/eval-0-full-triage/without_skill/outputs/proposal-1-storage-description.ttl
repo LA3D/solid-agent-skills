@@ -1,0 +1,51 @@
+# PROPOSAL 1 — Storage description fixes (DO NOT APPLY; review only)
+#
+# Target resource (live, MUST NOT be modified by this exercise):
+#   https://pod.vardeman.me/vault/.well-known/solid
+#
+# Addresses two audit findings:
+#   (A) WARN StorageDescriptionShape:agentInstruction — the storage description
+#       carries no entry-point sh:agentInstruction (D104 sweep item).
+#   (B) WARN resolve:seeAlso x2 — rdfs:seeAlso points at /vault/wiki/pages/ and
+#       /vault/wiki/sources/, both 404. These are pre-D98 container names; the
+#       D98 source->concept migration renamed them. The live wiki containers are
+#       concepts/, people/, places/, events/, organizations/, procedures/,
+#       working/. The current seeAlso set lists only {pages, sources, people,
+#       procedures, working} — so beyond the two dead links it is ALSO missing
+#       concepts/, places/, events/, organizations/.
+#
+# The storage description is generated statically via Components.js
+# (StaticStorageDescriber / void-description.json) — PATCH returns 405 (see
+# MEMORY: "Storage description PATCH returns 405 ... fully static"). So the real
+# fix lands in css/config (void-description.json), NOT an N3 patch to the live
+# resource. This file documents the desired end-state triples for review.
+#
+# Recommended edit in css/config (the static describer source):
+#   1. ADD an sh:agentInstruction literal to the pim:Storage subject (text below).
+#   2. REPLACE the rdfs:seeAlso object list to drop the two 404 targets and add
+#      the four missing live containers, so seeAlso mirrors the live wiki/ layout.
+
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+
+# --- (A) entry-point agentInstruction to add to <../> (the pim:Storage node) ---
+<../>
+    sh:agentInstruction """This Pod's storage description is its front door (D44). Arriving cold, GET <.well-known/solid> with Accept: text/turtle, then follow the catalog pointers: wiki:affordanceCatalog enumerates capabilities; wiki:typeIndex routes rdf:type -> container; wiki:contextDocument resolves prefixes to IRIs; wiki:shapeCatalog supplies the SHACL governing content; wiki:profileDocument narrates the wiki-memory L3 profile. Each pointer resolves (pod-audit HEAD-checks them). rdfs:seeAlso lists the wiki content containers for browsing. To extend the substrate with a new catalog, add its pointer here so agents discover it.""" .
+
+# --- (B) corrected rdfs:seeAlso set (replaces the current 5-target list) ---
+# Drop: <../wiki/pages/> (404), <../wiki/sources/> (404)
+# Keep: <../wiki/people/>, <../wiki/procedures/>, <../wiki/working/>
+# Add:  <../wiki/concepts/>, <../wiki/places/>, <../wiki/events/>, <../wiki/organizations/>
+<../>
+    rdfs:seeAlso <../wiki/concepts/>,
+                 <../wiki/people/>,
+                 <../wiki/places/>,
+                 <../wiki/events/>,
+                 <../wiki/organizations/>,
+                 <../wiki/procedures/>,
+                 <../wiki/working/> .
+
+# Note: Type Index (wiki:typeIndex) already routes class -> container, so
+# rdfs:seeAlso is a browsing convenience, not the authoritative router. The
+# audit scores stale seeAlso as WARN (not ERROR) for that reason. Aligning it
+# with the live layout removes agent confusion at the entry point.

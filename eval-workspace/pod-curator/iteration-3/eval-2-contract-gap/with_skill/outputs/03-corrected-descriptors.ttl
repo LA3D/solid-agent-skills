@@ -1,0 +1,322 @@
+# ===========================================================================
+# Corrected source TTLs for the 9 addressbook affordance descriptors.
+# These are the proposed replacement bodies for the files under
+#   overlays/addressbook/affordances/<name>.ttl
+# (apply, then `make reset`). Each block is a complete file. Changes vs the
+# deployed form: added the 5 contract predicates + the wiki:QueryAffordance
+# subtype + wikirole:query-affordance role (from proposal 01) + a
+# wiki:queryParameter contract (mirrors wiki-search-grep). sh:agentInstruction
+# and wiki:selectQuery are unchanged (elided here as "<<unchanged>>" only where
+# long; in the real edit keep the existing prose/query verbatim).
+#
+# Shared prefix header for every file:
+# ---------------------------------------------------------------------------
+#   @prefix wiki:     <https://pod.vardeman.me/vault/ontology/wiki#> .
+#   @prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+#   @prefix prof:     <http://www.w3.org/ns/dx/prof/> .
+#   @prefix dct:      <http://purl.org/dc/terms/> .
+#   @prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+#   @prefix sh:       <http://www.w3.org/ns/shacl#> .
+# ===========================================================================
+
+@prefix wiki:     <https://pod.vardeman.me/vault/ontology/wiki#> .
+@prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+@prefix prof:     <http://www.w3.org/ns/dx/prof/> .
+@prefix dct:      <http://purl.org/dc/terms/> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:       <http://www.w3.org/ns/shacl#> .
+
+# ===== contact-find-by-name.ttl =====
+</vault/meta/affordances/contact-find-by-name.ttl>
+    a wiki:Affordance , wiki:QueryAffordance , prof:ResourceDescriptor ;
+    prof:hasRole wikirole:query-affordance ;
+    rdfs:label "Find contact by name" ;
+    dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+    wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+    sh:agentInstruction """
+      Case-insensitive full-name lookup across all Person and Individual cards.
+
+      Parameter: $name — a string fragment to match (e.g., "Wang Wei", "Smith").
+      Returns all ?person IRIs whose vcard:fn contains the fragment (case-insensitive).
+      Multiple matches are expected for common names; use orcid lookup
+      (contact-find-by-orcid) or affiliation (contact-find-by-affiliation) to
+      disambiguate when the result set is larger than 1.
+
+      Source: the aggregated contacts index at </vault/contacts/people.ttl>.
+      Pass this URL as --default-graph-uri when invoking via solid-pod sparql
+      (RQ-Pod-4 workaround for non-RDF resource traversal).
+    """ ;
+    wiki:queryParameter [
+        wiki:parameter "$name" ;
+        rdfs:comment "String fragment matched case-insensitively against vcard:fn. Plain string. Required." ;
+        wiki:required true
+    ] ;
+    wiki:selectQuery """
+PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+
+SELECT ?person ?fn WHERE {
+  ?person vcard:fn ?fn .
+  FILTER(CONTAINS(LCASE(STR(?fn)), LCASE(STR($name))))
+}
+    """ .
+
+# ===== contact-find-by-email.ttl =====
+</vault/meta/affordances/contact-find-by-email.ttl>
+    a wiki:Affordance , wiki:QueryAffordance , prof:ResourceDescriptor ;
+    prof:hasRole wikirole:query-affordance ;
+    rdfs:label "Find contact by email" ;
+    dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+    wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+    sh:agentInstruction """
+      Email-based contact lookup. Useful when processing inbound messages: given
+      the sender's email address, find the corresponding Person card in the
+      AddressBook to retrieve identity metadata, affiliations, and wiki links.
+
+      Parameter: $email — the email IRI in mailto: form, e.g.,
+      <mailto:user@example.org>. Must be passed as an IRI, not a plain string.
+
+      Sources: </vault/contacts/people.ttl> (aggregated index) plus individual
+      Person card files at /vault/contacts/Person/*/index.ttl. Start with the
+      aggregated index; fall back to per-card traversal if not found.
+
+      Returns 0..1 ?person IRIs. Multiple results indicate duplicate cards for
+      the same email address — surface this to the user as a data quality issue.
+    """ ;
+    wiki:queryParameter [
+        wiki:parameter "$email" ;
+        rdfs:comment "Email IRI in mailto: form, e.g. <mailto:user@example.org>. Substituted as an IRI. Required." ;
+        wiki:required true
+    ] ;
+    wiki:selectQuery """
+PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+
+SELECT ?person WHERE {
+  ?person vcard:hasEmail $email .
+}
+    """ .
+
+# ===== contact-find-by-orcid.ttl =====
+</vault/meta/affordances/contact-find-by-orcid.ttl>
+    a wiki:Affordance , wiki:QueryAffordance , prof:ResourceDescriptor ;
+    prof:hasRole wikirole:query-affordance ;
+    rdfs:label "Find contact by ORCID" ;
+    dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+    wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+    sh:agentInstruction """
+      Canonical identity reconciliation: given an ORCID IRI, find the matching
+      Person card. Useful for cross-pod identity resolution when an agent receives
+      a WebID or ORCID from an external source and needs to locate the local card.
+
+      Parameter: $orcid — the full ORCID IRI as a named node, e.g.,
+      <https://orcid.org/0000-0003-4091-6059>. Pass the angle-bracketed form
+      in SPARQL; the affordance engine substitutes it as an IRI, not a string.
+
+      Sources: all /vault/contacts/Person/*/index.ttl files (cross-resource query).
+      The agent may need to enumerate cards via LDP listing of
+      </vault/contacts/Person/> and issue the query per card, or use Comunica
+      link-traversal with the Person container as entry point.
+
+      Returns 0..1 ?person IRIs. Zero means no card has been created for this
+      ORCID yet; the agent should prompt the user or create a stub card.
+    """ ;
+    wiki:queryParameter [
+        wiki:parameter "$orcid" ;
+        rdfs:comment "Full ORCID IRI as a named node, e.g. <https://orcid.org/...>. Substituted as an IRI. Required." ;
+        wiki:required true
+    ] ;
+    wiki:selectQuery """
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+
+SELECT ?person WHERE {
+  ?person owl:sameAs $orcid .
+}
+    """ .
+
+# ===== contact-find-by-affiliation.ttl =====
+</vault/meta/affordances/contact-find-by-affiliation.ttl>
+    a wiki:Affordance , wiki:QueryAffordance , prof:ResourceDescriptor ;
+    prof:hasRole wikirole:query-affordance ;
+    rdfs:label "Find contacts by affiliation" ;
+    dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+    wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+    sh:agentInstruction """
+      List all Person cards affiliated with a given organization, using the
+      W3C Organization Ontology membership model. Returns both current and
+      historical memberships unless the caller filters by date.
+
+      Parameter: $org — the Organization card IRI, e.g.,
+      </vault/contacts/Organization/notre-dame/index.ttl#this>.
+
+      Sources: Person card files (for org:hasMembership triples) and Membership
+      card files (for org:organization triples). Both are needed because the
+      membership triple may be split across card boundaries. Use Comunica
+      link-traversal over the /vault/contacts/ container, or enumerate Person
+      and Membership cards explicitly via LDP listing.
+
+      Returns ?person (the Person card IRI) and ?membership (the Membership
+      node IRI, which carries role/period metadata). To filter to current
+      members, add: FILTER NOT EXISTS { ?membership org:memberDuring/time:hasEnd ?end }
+      using the W3C Time Ontology.
+    """ ;
+    wiki:queryParameter [
+        wiki:parameter "$org" ;
+        rdfs:comment "Organization card IRI, e.g. </vault/contacts/Organization/.../index.ttl#this>. Substituted as an IRI. Required." ;
+        wiki:required true
+    ] ;
+    wiki:selectQuery """
+PREFIX org: <http://www.w3.org/ns/org#>
+
+SELECT ?person ?membership WHERE {
+  ?person org:hasMembership ?membership .
+  ?membership org:organization $org .
+}
+    """ .
+
+# ===== contact-find-by-group.ttl =====
+</vault/meta/affordances/contact-find-by-group.ttl>
+    a wiki:Affordance , wiki:QueryAffordance , prof:ResourceDescriptor ;
+    prof:hasRole wikirole:query-affordance ;
+    rdfs:label "Find contacts by group" ;
+    dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+    wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+    sh:agentInstruction """
+      Enumerate all Person cards that are members of a specific vCard Group.
+      Groups collect ad-hoc sets of contacts (e.g., "nd-collaborators",
+      "ci-compass-team") for targeted communication or task routing.
+
+      Parameter: $group — the Group IRI, e.g.,
+      </vault/contacts/Group/nd-collaborators.ttl#this>.
+
+      Source: the Group file itself (e.g., /vault/contacts/Group/nd-collaborators.ttl).
+      Pass this URL as --default-graph-uri. The vcard:hasMember triples are
+      stored in the group file, pointing to Person card IRIs.
+
+      Returns ?person IRIs (Person card fragment identifiers). Dereference each
+      IRI to retrieve full contact metadata.
+    """ ;
+    wiki:queryParameter [
+        wiki:parameter "$group" ;
+        rdfs:comment "Group IRI, e.g. </vault/contacts/Group/...ttl#this>. Substituted as an IRI. Required." ;
+        wiki:required true
+    ] ;
+    wiki:selectQuery """
+PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+
+SELECT ?person WHERE {
+  $group vcard:hasMember ?person .
+}
+    """ .
+
+# ===== org-find-by-name.ttl =====
+</vault/meta/affordances/org-find-by-name.ttl>
+    a wiki:Affordance , wiki:QueryAffordance , prof:ResourceDescriptor ;
+    prof:hasRole wikirole:query-affordance ;
+    rdfs:label "Find organization by name" ;
+    dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+    wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+    sh:agentInstruction """
+      Case-insensitive organization name lookup across all Organization cards
+      and the aggregated contacts index (where orgs are co-listed per SolidOS
+      convention).
+
+      Parameter: $name — a string fragment to match against vcard:fn (e.g.,
+      "Notre Dame", "NSF"). Returns all ?org IRIs whose vcard:fn contains the
+      fragment (case-insensitive). Disambiguate using org-find-by-ror when the
+      result set is larger than 1.
+
+      Sources: Organization cards at /vault/contacts/Organization/*/index.ttl
+      plus </vault/contacts/people.ttl>. Pass both as --default-graph-uri
+      sources when invoking via solid-pod sparql.
+
+      The query filters on rdf:type vcard:Organization to exclude Person cards
+      from the result set.
+    """ ;
+    wiki:queryParameter [
+        wiki:parameter "$name" ;
+        rdfs:comment "String fragment matched case-insensitively against vcard:fn. Plain string. Required." ;
+        wiki:required true
+    ] ;
+    wiki:selectQuery """
+PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+
+SELECT ?org ?fn WHERE {
+  ?org a vcard:Organization ;
+       vcard:fn ?fn .
+  FILTER(CONTAINS(LCASE(STR(?fn)), LCASE(STR($name))))
+}
+    """ .
+
+# ===== org-find-by-ror.ttl =====
+</vault/meta/affordances/org-find-by-ror.ttl>
+    a wiki:Affordance , wiki:QueryAffordance , prof:ResourceDescriptor ;
+    prof:hasRole wikirole:query-affordance ;
+    rdfs:label "Find organization by ROR" ;
+    dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+    wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+    sh:agentInstruction """
+      Canonical institutional identity lookup via ROR (Research Organization
+      Registry) IRI. Use this when an external source provides a ROR identifier
+      (e.g., from a funding record or ORCID affiliation) and you need the local
+      Organization card.
+
+      Parameter: $ror — the full ROR IRI as a named node, e.g.,
+      <https://ror.org/00mkhxb43> (University of Notre Dame).
+      Pass the angle-bracketed form in SPARQL; the affordance engine substitutes
+      it as an IRI.
+
+      Sources: Organization cards at /vault/contacts/Organization/*/index.ttl.
+      Enumerate via LDP listing of </vault/contacts/Organization/> or use
+      Comunica link-traversal with the Organization container as entry point.
+
+      Returns 0..1 ?org IRIs. Zero means no Organization card exists for this
+      ROR; the agent should prompt to create a stub card via the addressbook
+      overlay templates.
+    """ ;
+    wiki:queryParameter [
+        wiki:parameter "$ror" ;
+        rdfs:comment "Full ROR IRI as a named node, e.g. <https://ror.org/...>. Substituted as an IRI. Required." ;
+        wiki:required true
+    ] ;
+    wiki:selectQuery """
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+
+SELECT ?org WHERE {
+  ?org owl:sameAs $ror .
+}
+    """ .
+
+# ===== bridge-card-to-wiki.ttl =====
+</vault/meta/affordances/bridge-card-to-wiki.ttl>
+    a wiki:Affordance , wiki:QueryAffordance , prof:ResourceDescriptor ;
+    prof:hasRole wikirole:query-affordance ;
+    rdfs:label "Bridge card to wiki page" ;
+    dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+    wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+    sh:agentInstruction """
+      Given a Person or Organization card IRI, find the wiki page that has
+      this card as its foaf:primaryTopic. The wiki side declares the bridge;
+      this query inverts it.
+
+      Returns 0..1 wiki page URLs. Most cards have either zero (no narrative
+      page yet) or one (the typical case). Multiple wiki pages targeting one
+      card would be unusual but valid.
+
+      Parameter: $card — the card IRI with hash fragment (e.g.,
+      </vault/contacts/Person/c4e5.../index.ttl#this>).
+
+      Sources required: the /vault/wiki/people/ container's .meta resources.
+      Use solid-pod sparql with --default-graph-uri pointing at each relevant
+      .meta (RQ-Pod-4 workaround).
+    """ ;
+    wiki:queryParameter [
+        wiki:parameter "$card" ;
+        rdfs:comment "Card IRI with hash fragment, e.g. </vault/contacts/Person/.../index.ttl#this>. Substituted as an IRI. Required." ;
+        wiki:required true
+    ] ;
+    wiki:selectQuery """
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT ?wikiPage WHERE {
+  ?wikiPage foaf:primaryTopic $card .
+}
+    """ .

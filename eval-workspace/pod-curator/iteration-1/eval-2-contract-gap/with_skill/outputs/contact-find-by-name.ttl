@@ -1,0 +1,79 @@
+@prefix as:       <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:      <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov:     <http://www.w3.org/ns/prov#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix wiki:     <https://pod.vardeman.me/vault/ontology/wiki#> .
+@prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+@prefix prof:     <http://www.w3.org/ns/dx/prof/> .
+@prefix sh:       <http://www.w3.org/ns/shacl#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dct:      <http://purl.org/dc/terms/> .
+
+# ===========================================================================
+# CURATOR PROPOSAL (audit-and-propose only — NOT applied)
+# Finding:    descriptor:untyped @ /vault/meta/affordances/contact-find-by-name.ttl
+# Class:      contract gap (construction, not staleness) — playbook §"descriptor:untyped"
+# ===========================================================================
+
+<urn:uuid:a99c0d35-e7e0-45e6-a76f-ac4c68eea7d5>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/meta/affordances/contact-find-by-name.ttl> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/ontology/wiki> ;          # the AffordanceDescriptorShape contract (ground truth)
+    prov:wasDerivedFrom </vault/meta/affordances/contact-find-by-name.ttl> ;
+    mem:stalenessClass mem:ProseDrift ;          # closest mem: class; this is a contract gap, see rationale
+    mem:rationale "The descriptor is typed only wiki:Affordance (the abstract root), never prof:ResourceDescriptor, so it escapes wiki:AffordanceDescriptorShape entirely (the shape sh:targetClass is prof:ResourceDescriptor). Consequence: none of the base-shape contract predicates — prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy — are enforced or present, unlike wiki-search-grep.ttl which carries the full PROF contract. Resolved against the deployed contract at /vault/ontology/wiki (AffordanceDescriptorShape) and the wikirole scheme at /vault/ontology/wikirole. Repair: add the prof:ResourceDescriptor type plus the four base-contract predicates; reuse the existing sh:agentInstruction + wiki:selectQuery untouched. Role chosen = wikirole:affordance (the parent concept, which IS defined in the scheme). NOTE: this is a SPARQL-SELECT read affordance dispatched via `solid-pod invoke` (wiki:selectQuery), not an HTTP ?ext= surface — so it must NOT carry wiki:SearchAffordance / wiki:dispatchPattern / wiki:targetContainer (those belong to wiki-search-grep). The ontology has no narrower subclass for select-query read affordances; see report.md follow-up #1." ;
+    as:published "2026-05-23T22:17:06Z"^^xsd:dateTime .
+
+# --- PROPOSED CORRECTED DESCRIPTOR (full replacement body) -----------------
+# Brings the entry under wiki:AffordanceDescriptorShape governance. Existing
+# sh:agentInstruction + wiki:selectQuery preserved verbatim.
+
+</vault/meta/affordances/contact-find-by-name.ttl>
+    a wiki:Affordance , prof:ResourceDescriptor ;
+    prof:hasRole wikirole:affordance ;
+    rdfs:label "Contact Find by Name" ;
+    dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+    wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+    sh:agentInstruction """
+      Case-insensitive full-name lookup across all Person and Individual cards.
+
+      Parameter: $name — a string fragment to match (e.g., "Wang Wei", "Smith").
+      Returns all ?person IRIs whose vcard:fn contains the fragment (case-insensitive).
+      Multiple matches are expected for common names; use orcid lookup
+      (contact-find-by-orcid) or affiliation (contact-find-by-affiliation) to
+      disambiguate when the result set is larger than 1.
+
+      Source: the aggregated contacts index at </vault/contacts/people.ttl>.
+      Pass this URL as --default-graph-uri when invoking via solid-pod sparql
+      (RQ-Pod-4 workaround for non-RDF resource traversal).
+    """ ;
+    wiki:selectQuery """
+PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+
+SELECT ?person ?fn WHERE {
+  ?person vcard:fn ?fn .
+  FILTER(CONTAINS(LCASE(STR(?fn)), LCASE(STR($name))))
+}
+    """ .
+
+# --- HOW TO APPLY (gated on review; do NOT run as part of this proposal) ----
+# Pod-side .meta is not the right home — these descriptors are served from the
+# addressbook overlay source and reproduced by `make reset`. The DURABLE fix is
+# REPO-SIDE so it survives a rebuild:
+#
+#   File: cogitarelink-solid/overlays/addressbook/affordances/contact-find-by-name.ttl
+#   Edit: replace the body with the corrected descriptor above (add the two
+#         prefixes wikirole:/prof:/rdfs:/dct:, the prof:ResourceDescriptor type,
+#         and the four contract predicates).
+#
+# A direct Pod PATCH would be overwritten on the next `make reset`. If an
+# immediate live fix is also wanted, the equivalent N3 Patch against
+# </vault/meta/affordances/contact-find-by-name.ttl> would solid:inserts:
+#   <> a prof:ResourceDescriptor ;
+#      prof:hasRole wikirole:affordance ;
+#      rdfs:label "Contact Find by Name" ;
+#      dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+#      wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> .

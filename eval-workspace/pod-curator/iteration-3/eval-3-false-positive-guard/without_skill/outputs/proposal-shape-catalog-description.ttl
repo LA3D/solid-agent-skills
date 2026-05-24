@@ -1,0 +1,24 @@
+# PROPOSAL ONLY — not applied (audit-and-propose safety constraint).
+# Target: https://pod.vardeman.me/vault/meta/shapes/.meta
+#
+# Rationale: the live shape-catalog container's dc:description is stale. It reads
+#   "wiki-memory L3 SHACL shapes (D77). Five shapes: page, source, person, procedure, working."
+# which describes the RETIRED D77 five-shape catalog (and names source/procedure,
+# renamed to concept/howto by D98). D98 (ratified 2026-05-19, supersedes D77) defines
+# the catalog as 8 NodeShapes across 11 named files. Ground-truth precedence: realign
+# the description to the deployed shapes.
+#
+# This is the realignment patch a curator/owner would apply after review. Prefer folding
+# the corrected text into the overlay catalog metadata / void-description.json so that
+# `make reset` reproduces it (single source of truth), rather than a one-off live PATCH.
+
+@prefix solid: <http://www.w3.org/ns/solid/terms#> .
+@prefix dc:    <http://purl.org/dc/terms/> .
+
+<> a solid:InsertDeletePatch ;
+  solid:deletes {
+    <> dc:description "wiki-memory L3 SHACL shapes (D77). Five shapes: page, source, person, procedure, working." .
+  } ;
+  solid:inserts {
+    <> dc:description "wiki-memory L3 SHACL shape catalog (D98, supersedes D77): 8 NodeShapes across 11 named files — PageShape, ThingShape, ConceptShape, PersonShape, PlaceShape, EventShape, OrganizationShape, HowToShape, plus preserved WorkingNoteShape (D73), resource.shacl.ttl (D38 LDP guard), and template.shacl.ttl (L4 exemplar, D100). Additional shape files in this catalog belong to other Type-Index-registered overlays (addressbook D87, owner-identity D89/D90) and the class-extension contract example wiki:Source, per the URI-independent substrate (D100)." .
+  } .

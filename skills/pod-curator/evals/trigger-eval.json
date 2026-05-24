@@ -1,0 +1,82 @@
+[
+  {
+    "query": "run the substrate audit against my pod and go through whatever it flags \u2014 for each finding work out the fix and draft proposals i can review",
+    "should_trigger": true
+  },
+  {
+    "query": "i renamed some wiki containers a while back (pages became concepts, sources got merged in) and i'm pretty sure something on the pod still points at the old paths. find what's stale and draft repairs",
+    "should_trigger": true
+  },
+  {
+    "query": "the addressbook contact affordances on my pod look half-finished next to wiki-search-grep \u2014 check whether they're properly described as affordance descriptors and propose fixes if not",
+    "should_trigger": true
+  },
+  {
+    "query": "my pod's self-description has drifted \u2014 the storage doc still has rdfs:seeAlso pointers that 404 now. clean up the dangling ones and let me review before anything's applied",
+    "should_trigger": true
+  },
+  {
+    "query": "a mem:StalenessDetected flag just landed in my events inbox pointing at /vault/.well-known/solid \u2014 deal with it",
+    "should_trigger": true
+  },
+  {
+    "query": "the descriptions on my solid pod skills still say '5-shape catalog (D77)' but we moved to D98 with 8 shapes ages ago. realign the current-state claims to D98 and keep the history",
+    "should_trigger": true
+  },
+  {
+    "query": "lint the metadata on my solid pod and propose corrections \u2014 don't change anything directly, i want to approve the proposals first",
+    "should_trigger": true
+  },
+  {
+    "query": "some of my affordance catalog entries are missing their prof:ResourceDescriptor typing so they escape governance. audit and propose repairs into the working container",
+    "should_trigger": true
+  },
+  {
+    "query": "can you curate my pod's self-description? i think there's accumulated drift between what the storage description advertises and what's actually deployed",
+    "should_trigger": true
+  },
+  {
+    "query": "pod-audit came back with 11 warnings on pod.vardeman.me \u2014 triage them, classify each, and draft realign proposals",
+    "should_trigger": true
+  },
+  {
+    "query": "create a new wiki-memory concept note about progressive disclosure and crystallize it to durable storage",
+    "should_trigger": false
+  },
+  {
+    "query": "search my wiki pages for the exact phrase 'context graph' and the citekey @karpathy-2025",
+    "should_trigger": false
+  },
+  {
+    "query": "write a new SHACL shape for a 'dataset' content type i want to add to my pod",
+    "should_trigger": false
+  },
+  {
+    "query": "i just arrived at an unfamiliar solid pod \u2014 walk me through discovering what resources and vocabularies it holds",
+    "should_trigger": false
+  },
+  {
+    "query": "my python importer has a stale import that references a module we renamed last month \u2014 find it and fix the import path",
+    "should_trigger": false
+  },
+  {
+    "query": "audit my AWS S3 bucket policies for public-read misconfigurations and overly broad IAM grants",
+    "should_trigger": false
+  },
+  {
+    "query": "the README in my repo is out of date \u2014 it documents the old CLI flags. update it to match the current argparse setup",
+    "should_trigger": false
+  },
+  {
+    "query": "promote this working note to durable storage now that it's mature",
+    "should_trigger": false
+  },
+  {
+    "query": "query the contacts in my addressbook for everyone affiliated with Notre Dame",
+    "should_trigger": false
+  },
+  {
+    "query": "set up a fresh Community Solid Server pod with mkcert TLS and dev-allow-all auth",
+    "should_trigger": false
+  }
+]

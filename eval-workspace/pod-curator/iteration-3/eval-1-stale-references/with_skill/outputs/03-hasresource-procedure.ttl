@@ -1,0 +1,28 @@
+@prefix as:   <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:  <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# Finding (curator-discovered; pod-audit MISSED): storage-description prof:hasResource
+# names </vault/meta/profiles/procedure>, which 404s. Not part of the pages/sources
+# rename, but a genuine dangling pointer found while walking the resource.
+
+<urn:uuid:6bf6bcf6-d413-4645-998e-3bfdf2521070>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/.well-known/solid> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/meta/profiles/> , </vault/settings/publicTypeIndex> ;
+    prov:wasDerivedFrom </vault/.well-known/solid> ;
+    mem:stalenessClass mem:DanglingReference ;
+    mem:rationale """prof:hasResource names </vault/meta/profiles/procedure> (404). The meta/profiles/ container has no 'procedure' member but does have 'howto'. The Type Index routes schema:HowTo -> wiki/procedures/ (#reg6), and the profile descriptor for that content kind ships as profiles/howto (200 OK). So the descriptor was renamed procedure->howto (aligning the profile filename to the schema:HowTo class) but the storage-description hasResource pointer was not updated alongside it. MovedTarget shading into DanglingReference: the referent exists under a new name (howto), so realign the pointer to it rather than dropping it. Repair: profiles/procedure -> profiles/howto. Same static-config home, REPO edit.""" ;
+    as:published "2026-05-24T11:47:34Z"^^xsd:dateTime .
+
+# PROPOSED REPO FIX (not PATCHable — StaticStorageDescriber)
+# File: cogitarelink-solid/css/config/void-description.json
+#   EDIT the block at lines 300-308 ("PROF: procedure profile descriptor (D86)"):
+#     line 306  _terms_value
+#       FROM: https://pod.vardeman.me/vault/meta/profiles/procedure
+#       TO:   https://pod.vardeman.me/vault/meta/profiles/howto
+#   (Consider updating the block's "comment" to "PROF: howto profile descriptor".)

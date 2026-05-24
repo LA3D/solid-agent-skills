@@ -1,0 +1,63 @@
+# mem:RealignAction provenance wrapper for this curator session.
+# Intended deploy location:
+#   /vault/wiki/working/curator-proposals/2026-05-23T223401Z/realign-contact-affordances.ttl
+# Records the repair as an auditable activity per the .operations/ exemplar shape
+# (overlays/wiki-memory/examples/realign-2026-05-23.ttl). PROPOSAL ONLY — the
+# concrete corrected TTLs are the sibling files; nothing is PATCHed until a
+# higher-trust reviewer approves (two-stage commit, D73).
+
+@prefix as:       <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:      <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov:     <http://www.w3.org/ns/prov#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+
+# 1. Contract gap — 8 query affordances escaped the descriptor contract.
+<urn:uuid:7b3e1c40-4d2a-4f18-9a6e-2c1f0e8a7b01>
+    a as:Announce , mem:RealignAction , prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/meta/affordances/contact-find-by-name.ttl> ,
+              </vault/meta/affordances/contact-find-by-email.ttl> ,
+              </vault/meta/affordances/contact-find-by-orcid.ttl> ,
+              </vault/meta/affordances/contact-find-by-affiliation.ttl> ,
+              </vault/meta/affordances/contact-find-by-group.ttl> ,
+              </vault/meta/affordances/org-find-by-name.ttl> ,
+              </vault/meta/affordances/org-find-by-ror.ttl> ,
+              </vault/meta/affordances/bridge-card-to-wiki.ttl> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used <https://pod.vardeman.me/vault/ontology/wiki> ,                      # ground truth: ontology + scopeNotes
+              </vault/meta/affordances/wiki-search-grep.ttl> ;                     # exemplar: a fully-typed descriptor
+    prov:wasDerivedFrom </vault/meta/affordances/contact-find-by-name.ttl> ;
+    mem:stalenessClass mem:ProseDrift ;   # contract gap: predicates that should be present never were
+    mem:rationale "All 8 addressbook query affordances were typed only `a wiki:Affordance` (the abstract root — the ontology's own skos:scopeNote says 'Use a concrete subclass') and omitted prof:ResourceDescriptor plus the five contract predicates AffordanceDescriptorShape requires (prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy, intent prose). They carried sh:agentInstruction + wiki:selectQuery only, so pod-audit fired descriptor:untyped on each. By contrast the sibling wiki-search-grep descriptor is fully typed. Repaired by typing each `wiki:QueryAffordance, prof:ResourceDescriptor` and adding the five predicates + wiki:querySource (the --default-graph-uri the prose already names). Corrected TTLs validate against AffordanceDescriptorShape with inference=none. Repo-side: fold back into overlays/addressbook/affordances/*.ttl so `make reset` reproduces them." ;
+    as:published "2026-05-23T22:34:01Z"^^xsd:dateTime .
+
+# 2. Conceptual-structure gap — no honest type/role existed for client-run SELECT.
+<urn:uuid:7b3e1c40-4d2a-4f18-9a6e-2c1f0e8a7b02>
+    a as:Announce , mem:RealignAction , prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object <https://pod.vardeman.me/vault/ontology/wiki#QueryAffordance> ,
+              <https://pod.vardeman.me/vault/ontology/wikirole#query-affordance> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used <https://pod.vardeman.me/vault/ontology/wiki> ,
+              <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    prov:wasDerivedFrom </vault/meta/affordances/> ;
+    mem:stalenessClass mem:SupersededConcept ;   # closest mem class for "structure gap"; flagged for human review
+    mem:rationale "The 8 affordances are parameterized, client-run SPARQL SELECTs. None of the five existing wiki:Affordance subtypes fits: wiki:SearchAffordance is ?ext= HTTP dispatch (and SearchAffordanceShape would wrongly demand dispatchPattern/targetContainer); DerivedClass/DerivedNavigation compute views/classes over wiki containers, not entity lookups over the contacts graph; Write/Version are unrelated. The wikirole scheme has no role for client-run SELECT either. Per the playbook's 'no existing type or role fits' recipe, proposed a GATED extension rather than forcing a misfit: wiki:QueryAffordance (rdfs:subClassOf wiki:Affordance) + wikirole:query-affordance (skos:inScheme wikirole, skos:broader :affordance). The class validates against wiki:ClassExtensionShape with inference=none. HUMAN-REVIEW judgment call: introduces a new substrate class + role." ;
+    as:published "2026-05-23T22:34:01Z"^^xsd:dateTime .
+
+# 3. Dangling-role — wiki-search-grep cites a role absent from the scheme.
+<urn:uuid:7b3e1c40-4d2a-4f18-9a6e-2c1f0e8a7b03>
+    a as:Announce , mem:RealignAction , prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object <https://pod.vardeman.me/vault/ontology/wikirole#search-affordance> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/meta/affordances/wiki-search-grep.ttl> ,
+              <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    prov:wasDerivedFrom </vault/ontology/wikirole> ;
+    mem:stalenessClass mem:DanglingReference ;
+    mem:rationale "wiki-search-grep.ttl asserts `prof:hasRole wikirole:search-affordance`, but that concept is absent from the deployed wikirole scheme (verified: 0 occurrences). The reference descriptor every other one is measured against itself cites an undefined role. pod-audit did not catch this because its cross-checks do not verify prof:hasRole targets against the scheme (auditor gap, noted in report). Proposed adding wikirole:search-affordance (skos:inScheme wikirole, skos:broader :affordance) alongside the new query-affordance role, in 00-extension-query-affordance.ttl." ;
+    as:published "2026-05-23T22:34:01Z"^^xsd:dateTime .

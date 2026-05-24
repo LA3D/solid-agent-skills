@@ -1,0 +1,20 @@
+@prefix as:   <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:  <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# FALSE POSITIVE — the "8-shape catalog vs 11 shape files" claim is correct at its granularity.
+# Recorded so the false-positive guard is itself auditable (skill §2).
+
+<urn:uuid:0e15e47c-d052-4b5d-9bf0-32ceb945a790>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object <urn:claim:8-shape-catalog-vs-11-files> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used <https://pod.vardeman.me/vault/ontology/mem> ;          # vocabulary
+    prov:used </vault/.claude/skills/decision-lookup#D98> ;           # ground truth: decisions log D98
+    prov:used <https://pod.vardeman.me/vault/meta/shapes/> ;          # operational truth: live container listing
+    mem:stalenessClass mem:FalsePositive ;
+    mem:rationale "The reported 'bug' (8-shape catalog contradicts 11 shape files) is NOT a contradiction. D98 (decisions log, ratified 2026-05-19, supersedes D77) states verbatim: '8 SHACL NodeShapes (11 shape files total)'. The 8 NodeShapes are the wiki-memory L3 abstract+concrete catalog (Page, Thing, Concept, Person, Place, Event, Organization, HowTo); the 11 files add WorkingNoteShape (D73), resource.shacl.ttl (D38 LDP guard), and template.shacl.ttl (D100 L4 exemplar). 8 and 11 measure different things (NodeShapes vs files) and are jointly correct at their granularities. No realignment of the '8-shape' prose is warranted — rewriting it toward 11 (or 18) would corrupt a correct-at-its-granularity statement. Flag withdrawn. NOTE: investigating this flag surfaced a genuine adjacent finding (ProseDrift on the catalog container description) — see proposal-prose-drift-catalog-description.ttl." ;
+    as:published "2026-05-23T22:33:36Z"^^xsd:dateTime .

@@ -1,0 +1,27 @@
+@prefix as:   <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:  <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# Stale reference 1 — storage-description rdfs:seeAlso points at the retired
+# wiki/pages/ container (renamed to wiki/concepts/ by D98).
+<urn:uuid:9673f9ba-1fdd-4837-83bc-fcd001748864>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/.well-known/solid> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/wiki/concepts/> ;          # operational ground truth: live container
+    prov:wasDerivedFrom </vault/.well-known/solid> ;
+    mem:stalenessClass mem:DanglingReference ;
+    mem:rationale "Storage description (.well-known/solid) rdfs:seeAlso lists <../wiki/pages/>, which returns 404. The live wiki/ container set is concepts, people, places, events, organizations, procedures, working (GET wiki/ ldp:contains). The Type Index routes skos:Concept -> wiki/concepts/. D98 renamed the pages container to concepts; this seeAlso entry was not updated. Resolved against the deployed container set (operational truth, top of the ground-truth precedence). Repair direction: prose/pointer -> reality. The seeAlso is emitted by the STATIC StaticStorageDescriber config in css/config/void-description.json (storage description PATCH returns 405 / not HTTP-PATCHable) -> repo edit, not an N3 Patch." ;
+    as:published "2026-05-23T22:16:31Z"^^xsd:dateTime .
+
+# Proposed repo-side fix (NOT applied — review-gated, two-stage commit D73):
+#   File: css/config/void-description.json  (lines ~210-218)
+#   Replace the value of the StaticStorageDescriber seeAlso term:
+#     - "https://pod.vardeman.me/vault/wiki/pages/"
+#     + "https://pod.vardeman.me/vault/wiki/concepts/"
+#   and update the adjacent "comment" from "L3: wiki pages container (D76)"
+#   to "L3: wiki concepts container (D98, renamed from pages)".
+#   Then `make reset` reproduces the corrected storage description.

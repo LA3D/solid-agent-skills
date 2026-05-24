@@ -1,0 +1,35 @@
+@prefix as:   <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:  <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# Finding 4 (AUDITOR GAP — pod_audit did not flag this; cross-check found it):
+# storage description prof:hasResource -> /vault/meta/profiles/procedure returns 404.
+# The procedure profile descriptor was renamed to profiles/howto. The overlay
+# manifest installs profiles/howto (manifest.ttl line 101); the deployed Pod
+# serves profiles/howto (200). The static void-description.json still advertises
+# the old profiles/procedure name. (A stale procedure.ttl whose subject is
+# profiles/procedure also lingers in the overlay but is NOT installed by the
+# manifest — a repo-hygiene leftover.)
+
+<urn:uuid:16f7d127-f445-4750-9fa7-fd22fbfade09>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object <https://pod.vardeman.me/vault/.well-known/solid> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used <https://pod.vardeman.me/vault/meta/profiles/howto> ;             # ground truth: live descriptor (200)
+    prov:wasDerivedFrom <https://pod.vardeman.me/vault/meta/profiles/procedure> ; # stale target (404)
+    mem:stalenessClass mem:MovedTarget ;
+    mem:rationale "prof:hasResource names /vault/meta/profiles/procedure which 404s. The live descriptor for schema:HowTo procedure pages is /vault/meta/profiles/howto (200), installed by manifest.ttl line 101. The procedure profile was renamed to howto; static config was not updated. Realign by renaming the hasResource value procedure->howto. Secondary repo-hygiene note: overlays/wiki-memory/profiles/procedure.ttl is an uninstalled leftover (subject profiles/procedure) and should be removed so the overlay has a single source of truth. Not auto-detected by pod_audit (prof:hasResource targets not cross-checked)." ;
+    as:published "2026-05-23T22:33:41Z"^^xsd:dateTime .
+
+# --- Concrete proposed change (REPO-side) ---
+# File: css/config/void-description.json
+# In the StaticStorageDescriber block at lines 300-309, change the term value:
+#   FROM: "https://pod.vardeman.me/vault/meta/profiles/procedure"
+#   TO:   "https://pod.vardeman.me/vault/meta/profiles/howto"
+# (and update its "comment" from "procedure profile descriptor" to "howto profile descriptor")
+#
+# Secondary (repo hygiene, optional): delete overlays/wiki-memory/profiles/procedure.ttl
+# — it is not referenced by manifest.ttl (which installs profiles/howto).

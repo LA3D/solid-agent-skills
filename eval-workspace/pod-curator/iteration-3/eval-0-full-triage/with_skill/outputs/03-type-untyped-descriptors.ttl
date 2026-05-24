@@ -1,0 +1,94 @@
+@prefix as:       <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:      <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov:     <http://www.w3.org/ns/prov#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+
+# Proposal 03 — bring the 9 untyped affordance descriptors under the
+# prof:ResourceDescriptor contract (descriptor:untyped x9).
+# GATED ON proposal 02 (wiki:QueryAffordance + wikirole:query-affordance must be
+# approved first — the typing below references them).
+# Class: contract gap (construction, not staleness).
+
+<urn:uuid:5b1a2c00-0020-4a10-9f00-type-descriptors>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object
+        </vault/meta/affordances/contact-find-by-name.ttl> ,
+        </vault/meta/affordances/contact-find-by-group.ttl> ,
+        </vault/meta/affordances/contact-find-by-email.ttl> ,
+        </vault/meta/affordances/contact-find-by-affiliation.ttl> ,
+        </vault/meta/affordances/contact-find-by-orcid.ttl> ,
+        </vault/meta/affordances/org-find-by-ror.ttl> ,
+        </vault/meta/affordances/org-find-by-name.ttl> ,
+        </vault/meta/affordances/bridge-card-to-wiki.ttl> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/meta/affordances/markdown-projection.ttl> ,
+              </vault/meta/affordances/wiki-search-grep.ttl> ,
+              </vault/ontology/wikirole> ;
+    prov:wasDerivedFrom </vault/meta/affordances/> ;
+    mem:stalenessClass mem:ProseDrift ;
+    mem:rationale """9 catalog entries (8 contact/org SPARQL-SELECT lookups + the
+card->wiki bridge) are typed only 'a wiki:Affordance', so they escape the descriptor
+contract: no prof:ResourceDescriptor, no prof:hasRole, rdfs:label, dct:conformsTo, or
+wiki:installedBy. Resolved the missing contract against two well-formed siblings:
+markdown-projection.ttl and wiki-search-grep.ttl (both carry the full contract). Each is a
+client-run parameterized SELECT, so each is typed wiki:QueryAffordance + prof:ResourceDescriptor
+with prof:hasRole wikirole:query-affordance (per proposal 02). Labels/installedBy composed
+from what each descriptor already does; dct:conformsTo -> the PROF spec; installedBy ->
+the addressbook overlay for the contact/org affordances and the wiki-memory overlay for the
+bridge. Existing sh:agentInstruction + wiki:selectQuery preserved verbatim — this ADDS the
+contract predicates only, changes no behavior. Repo-side: fold the corrected TTLs back into
+the addressbook + wiki-memory overlays so `make reset` reproduces them (these descriptors
+are served from overlay TTLs, not agent-PATCHable content). PATCH-to-.meta is NOT the right
+channel; the descriptor body itself is the artifact.""" ;
+    as:published "2026-05-24T11:47:33Z"^^xsd:dateTime .
+
+# ============================================================================
+# CONCRETE PROPOSED CHANGE — corrected descriptor bodies. Each is the EXISTING
+# body with a contract head added; the sh:agentInstruction + wiki:selectQuery
+# blocks (omitted here for brevity, marked <<unchanged>>) are kept verbatim.
+# Apply by replacing each descriptor's type/contract head; refold into the
+# owning overlay (addressbook for contact/org; wiki-memory for bridge).
+#
+# Shared added head for the 7 contact/org lookups (installedBy = addressbook overlay):
+#
+#   @prefix dct:      <http://purl.org/dc/terms/> .
+#   @prefix prof:     <http://www.w3.org/ns/dx/prof/> .
+#   @prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+#   @prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+#   @prefix wiki:     <https://pod.vardeman.me/vault/ontology/wiki#> .
+#
+#   <>  a wiki:QueryAffordance , prof:ResourceDescriptor ;
+#       dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+#       prof:hasRole wikirole:query-affordance ;
+#       rdfs:label "<per-descriptor label below>" ;
+#       wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+#       sh:agentInstruction <<unchanged>> ;
+#       wiki:selectQuery <<unchanged>> .
+#
+# Per-descriptor rdfs:label:
+#   contact-find-by-name.ttl         "Contact lookup by full name (substring)"
+#   contact-find-by-group.ttl        "Contact lookup by group membership"
+#   contact-find-by-email.ttl        "Contact lookup by email"
+#   contact-find-by-affiliation.ttl  "Contact lookup by organizational affiliation"
+#   contact-find-by-orcid.ttl        "Contact lookup by ORCID"
+#   org-find-by-ror.ttl              "Organization lookup by ROR"
+#   org-find-by-name.ttl             "Organization lookup by name (substring)"
+#
+# bridge-card-to-wiki.ttl — same head, installedBy = wiki-memory overlay
+# (it joins contacts -> wiki/people/), label "Bridge: contact card to wiki page":
+#
+#   <>  a wiki:QueryAffordance , prof:ResourceDescriptor ;
+#       dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+#       prof:hasRole wikirole:query-affordance ;
+#       rdfs:label "Bridge: contact card to wiki page" ;
+#       wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#wiki-memory> ;
+#       sh:agentInstruction <<unchanged>> ;
+#       wiki:selectQuery <<unchanged>> .
+#
+# VERIFY before crystallizing: wikirole:query-affordance must exist and be
+# skos:inScheme </vault/ontology/wikirole> (proposal 02). Validate the corrected
+# descriptors against the substrate affordance-descriptor SHACL shape AND
+# wiki:ClassExtensionShape with inference="none".
+# ============================================================================

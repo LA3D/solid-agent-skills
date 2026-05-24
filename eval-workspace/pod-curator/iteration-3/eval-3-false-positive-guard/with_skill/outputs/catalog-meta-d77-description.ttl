@@ -1,0 +1,61 @@
+@prefix as:   <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:  <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dc:   <http://purl.org/dc/terms/> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# pod-curator proposal — REALIGNMENT, not yet applied (two-stage commit, D73).
+# Intended landing spot on the Pod:
+#   /vault/wiki/working/curator-proposals/2026-05-24T11-47-31Z/catalog-meta-d77-description.ttl
+# The curator PROPOSES; a human / higher-trust agent crystallizes.
+
+<urn:uuid:2d6bcbbe-f4f8-484f-b21c-80c8a16733ee>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    # what gets corrected: the shape-catalog container metadata
+    as:object </vault/meta/shapes/.meta> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    # ground-truth precedence: deployed Pod (the live 8 NodeShapes) + the decision that
+    # superseded D77.
+    prov:used </vault/meta/shapes/> ,
+              <https://pod.vardeman.me/vault/ontology/mem> ;  # vocab
+    # the stale prior: a D77-era five-shape description string.
+    prov:wasDerivedFrom </vault/meta/shapes/.meta> ;
+    mem:stalenessClass mem:SupersededConcept ;
+    mem:rationale """The shape-catalog container .meta carries
+dc:description "wiki-memory L3 SHACL shapes (D77). Five shapes: page, source, person,
+procedure, working." — a retired D77-era statement. D98 (decisions.md:658) supersedes D77,
+retiring the five-shape catalog: ProcedureShape -> wiki:HowToShape, SourceShape merged into
+wiki:ConceptShape (source re-introduced 2026-05-23 only as a class-extension example, not a
+core shape). The live catalog (GET /vault/meta/shapes/) holds the 8 D98 NodeShapes
+(page, thing, concept, person, place, event, organization, howto) plus working/resource/
+template and the addressbook + owner-identity overlay shapes (18 files total). The container
+dc:modified is 2026-05-23 but the description text was never realigned. Repair direction is
+prose -> reality. NOTE: the separate '8 vs 11 files' concern that triggered this audit is a
+mem:FalsePositive — D98 says verbatim '8 SHACL NodeShapes (11 shape files total)', correct at
+its granularity; no repair made to that count claim.""" ;
+    as:published "2026-05-24T11:47:31Z"^^xsd:dateTime .
+
+#####################################################################
+# CONCRETE PROPOSED CHANGE
+#
+# (A) Pod-side fix — N3 Patch against /vault/meta/shapes/.meta
+#     (PATCHable, but see (B): the durable fix is repo-side so make reset reproduces it).
+#
+#   @prefix solid: <http://www.w3.org/ns/solid/terms#> .
+#   @prefix dc:    <http://purl.org/dc/terms/> .
+#   <> a solid:InsertDeletePatch ;
+#     solid:deletes {
+#       <./> dc:description "wiki-memory L3 SHACL shapes (D77). Five shapes: page, source, person, procedure, working." .
+#     } ;
+#     solid:inserts {
+#       <./> dc:description "SHACL shape catalog. 8 wiki-memory L3 NodeShapes (D98, supersedes D77): page, thing, concept, person, place, event, organization, howto. Also carries working/resource/template plus addressbook (D87/D88) and owner-identity (D89/D90) overlay shapes (18 files total)." .
+#     } .
+#
+# (B) Repo-side fix (durable; survives `make reset`) — RECOMMENDATION, not a patch:
+#     File: cogitarelink-solid overlays/wiki-memory/ (the overlay step that seeds the
+#     /vault/meta/shapes/ container's dc:description). Replace the D77 five-shape string
+#     with the D98 text above. Locate via:
+#       grep -rn "Five shapes" overlays/  (and grep for "wiki-memory L3 SHACL shapes (D77)")
+#####################################################################

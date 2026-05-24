@@ -1,0 +1,85 @@
+@prefix as:   <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:  <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# Proposal 01 — storage-description dangling pointers (DanglingReference)
+# Finding source: pod_audit constraint=resolve:seeAlso (x2) + curator walk-the-whole-resource
+# (2 prof:hasResource targets the auditor did NOT flag — see auditor-gap note below).
+
+<urn:uuid:5b1a2c00-0001-4a10-9f00-storage-seealso>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/.well-known/solid> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/settings/publicTypeIndex> , </vault/wiki/concepts/> ;
+    prov:wasDerivedFrom </vault/.well-known/solid> ;
+    mem:stalenessClass mem:DanglingReference ;
+    mem:rationale """The storage description (.well-known/solid) lists rdfs:seeAlso
+</vault/wiki/pages/> and </vault/wiki/sources/>. Both 404 (verified by GET). D98
+renamed the page/source containers: wiki:Concept and wiki:Source now both route to
+</vault/wiki/concepts/> (confirmed in the Type Index, reg0+reg1 both ->
+solid:instanceContainer </vault/wiki/concepts/>). The live container set that DOES
+resolve is concepts/, people/, places/, events/, organizations/, procedures/, working/.
+Repair direction: prose/pointer -> deployed reality. These two pointers live in the
+STATIC css/config/void-description.json (the storage-patch.ttl overlay already emits the
+correct concepts/ seeAlso, so the static config is the lagging source). Repo edit, not an
+N3 Patch — the storage description is assembled statically via StaticStorageDescriber and
+is not HTTP-PATCHable.""" ;
+    as:published "2026-05-24T11:47:33Z"^^xsd:dateTime .
+
+<urn:uuid:5b1a2c00-0002-4a10-9f00-storage-hasresource>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/.well-known/solid> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/settings/publicTypeIndex> , </vault/meta/profiles/concept> ;
+    prov:wasDerivedFrom </vault/.well-known/solid> ;
+    mem:stalenessClass mem:DanglingReference ;
+    mem:rationale """AUDITOR GAP — these two were NOT flagged by pod_audit (it cross-checks
+rdfs:seeAlso + catalog pointers, not prof:hasResource targets). Walking the whole storage
+description per the skill: prof:hasResource lists </vault/meta/profiles/source> and
+</vault/meta/profiles/procedure>; both 404 (verified by GET). The live profile set is
+page (root), concept, person, working (all 200). D98 retired the standalone source profile
+(wiki:Source now profiles via the concept profile / is registered to concepts/); the
+procedure profile resource was never deployed even though the procedures/ container and the
+schema:HowTo Type Index registration both still resolve. Resolved against: the live profile
+set + Type Index. False-positive guard applied: confirmed profiles/page IS load-bearing
+(the root every other profile prof:isProfileOf inherits from) and resolves 200 — left
+untouched. Repair: remove the source + procedure prof:hasResource entries from the static
+config (or, if a procedure profile is desired, deploy meta/profiles/procedure as a sibling
+of meta/profiles/concept and keep the pointer). Recommend removal pending owner intent on a
+procedure profile.""" ;
+    as:published "2026-05-24T11:47:33Z"^^xsd:dateTime .
+
+# ============================================================================
+# CONCRETE PROPOSED CHANGE — repo-side edit (NOT HTTP-PATCHable).
+# File: cogitarelink-solid/css/config/void-description.json
+#
+# (a) seeAlso pages/ — DELETE the StaticStorageDescriber block at lines 210-219:
+#       "comment": "L3: wiki pages container (D76)"  ... value ".../wiki/pages/"
+#     REPLACE-OR-DROP: a concepts/ seeAlso is already emitted by
+#     overlays/wiki-memory/storage-patch.ttl (line 17), so DELETE this block to
+#     avoid duplication.
+#
+# (b) seeAlso sources/ — DELETE the StaticStorageDescriber block at lines 220-229:
+#       "comment": "L3: wiki sources container (D76)"  ... value ".../wiki/sources/"
+#     (wiki:Source routes to concepts/ per Type Index reg1; no separate container.)
+#
+# (c) prof:hasResource profiles/source — DELETE block at lines 280-289:
+#       "comment": "PROF: source profile descriptor (D86)" ... value ".../profiles/source"
+#
+# (d) prof:hasResource profiles/procedure — block at lines 300-309:
+#       "comment": "PROF: procedure profile descriptor (D86)" ... value ".../profiles/procedure"
+#     Either DELETE (the procedure profile resource is not deployed), OR keep the
+#     pointer AND deploy a meta/profiles/procedure resource modeled on
+#     meta/profiles/concept (schema:HowTo, prof:isProfileOf .../profiles/page).
+#     Recommend DELETE — escalate the "do we want a procedure profile?" question to
+#     the owner; the procedures/ container + HowTo Type Index reg work without it.
+#
+# After the edit, `make reset` reproduces a storage description whose every
+# rdfs:seeAlso and prof:hasResource resolves. Add a regression assertion to the
+# pod_audit walker covering prof:hasResource (see auditor-gap note in report.md).
+# ============================================================================

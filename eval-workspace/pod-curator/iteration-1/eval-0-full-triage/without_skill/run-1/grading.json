@@ -1,0 +1,42 @@
+{
+  "expectations": [
+    {
+      "text": "Obtained the work queue by running the substrate audit (pod_audit.py / make audit) rather than guessing findings",
+      "passed": true,
+      "evidence": "audit-findings.json: ran pod_audit.py"
+    },
+    {
+      "text": "Triaged all three finding clusters: stale rdfs:seeAlso, missing entry-point sh:agentInstruction, and the 8 untyped addressbook descriptors",
+      "passed": true,
+      "evidence": "triaged all 3 clusters (+ extra dangling-role side-finding)"
+    },
+    {
+      "text": "Classified findings using mem:stalenessClass values (e.g. mem:DanglingReference)",
+      "passed": false,
+      "evidence": "no mem:stalenessClass anywhere in outputs (0 files)"
+    },
+    {
+      "text": "Drafted proposals as mem:RealignAction with a required mem:rationale",
+      "passed": false,
+      "evidence": "proposals are plain TTL/diffs \u2014 no mem:RealignAction, no mem:rationale (0 files)"
+    },
+    {
+      "text": "Routed proposals to /vault/wiki/working/curator-proposals/ (two-stage commit) \u2014 did not edit affected resources directly",
+      "passed": false,
+      "evidence": "saved proposals to outputs only; no /working/curator-proposals/ two-stage routing"
+    },
+    {
+      "text": "Did not modify or delete any existing substrate resource (safety constraint honored)",
+      "passed": true,
+      "evidence": "read-only against the Pod; no substrate mutated"
+    }
+  ],
+  "passed": 3,
+  "total": 6,
+  "summary": {
+    "pass_rate": 0.5,
+    "passed": 3,
+    "failed": 3,
+    "total": 6
+  }
+}

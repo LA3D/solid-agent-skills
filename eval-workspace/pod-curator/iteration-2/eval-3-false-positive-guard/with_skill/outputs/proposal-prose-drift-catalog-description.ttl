@@ -1,0 +1,39 @@
+@prefix as:    <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:   <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov:  <http://www.w3.org/ns/prov#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix solid: <http://www.w3.org/ns/solid/terms#> .
+@prefix dc:    <http://purl.org/dc/terms/> .
+
+# REAL FINDING (adjacent to the withdrawn false positive).
+# The shape-catalog container's own dc:description still narrates the retired D77 design.
+
+<urn:uuid:1d475db3-a75c-4700-9891-83a6316fc21a>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/meta/shapes/.meta> ;                  # the stale description lives here
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/.claude/skills/decision-lookup#D98> ;  # intended truth (decision)
+    prov:used <https://pod.vardeman.me/vault/meta/shapes/> ; # operational truth (live listing: 18 files)
+    prov:wasDerivedFrom <urn:prior:catalog-description-D77> ;
+    mem:stalenessClass mem:ProseDrift ;
+    mem:rationale "The container dc:description reads 'wiki-memory L3 SHACL shapes (D77). Five shapes: page, source, person, procedure, working.' This is three supersessions stale: D77's five-shape catalog was retired by D98 (8 NodeShapes / 11 files); the live container now holds 18 shape files (the 11 D98 files + AddressBook overlay shapes contact-card/organization-card/membership/group per D87/D88 + owner-identity overlay shapes webid-profile/pod-owner-preferences per D89/D90 + the re-introduced source.shacl.ttl class-extension example, 2026-05-23). The named files 'source/procedure' no longer match (procedure->howto, source is now an extension example not a core shape). Repair direction: prose -> reality. The corrected description should cite D98 as the current catalog decision and not pin a hard shape count in prose (counts drift; let the listing be the source of truth)." ;
+    as:published "2026-05-23T22:33:36Z"^^xsd:dateTime .
+
+# PROPOSED FIX (Pod-side — the description is on container .meta, PATCHable).
+# Apply only after review (crystallize step). Curator does NOT PATCH directly.
+#
+# <#patch> a solid:InsertDeletePatch ;
+#   solid:deletes {
+#     </vault/meta/shapes/> dc:description
+#       "wiki-memory L3 SHACL shapes (D77). Five shapes: page, source, person, procedure, working." .
+#   } ;
+#   solid:inserts {
+#     </vault/meta/shapes/> dc:description
+#       "SHACL shape catalog. wiki-memory L3 core per D98 (8 NodeShapes); plus AddressBook (D87/D88) and owner-identity (D89/D90) overlay shapes, and the source.shacl.ttl class-extension example. See the container listing for the live shape set; do not pin a count in prose." .
+#   } .
+#
+# Repo-side note: if this description is seeded from an overlay TTL or static config at
+# `make reset` (rather than authored live), the durable fix belongs there too, so the
+# correction survives a fresh-volume rebuild. Confirm the seed source before crystallizing.

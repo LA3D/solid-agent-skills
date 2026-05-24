@@ -1,0 +1,31 @@
+# PROPOSAL — additive concept for the wikirole ConceptScheme.
+# Draft only; NOT applied to https://pod.vardeman.me/vault/ontology/wikirole.
+#
+# Rationale: the contact/org affordances are a distinct KIND from the existing roles.
+# - wikirole:search-affordance is HTTP dispatchPattern-based (wiki-search-grep: ?ext=search-grep)
+# - wikirole:write-affordance fires on MonitoringStore write events (link, crystallize)
+# - The contact/org affordances are PARAMETERIZED CLIENT-SIDE SPARQL lookups (wiki:selectQuery,
+#   the same execution family as hub-view's wiki:constructQuery but read-only point lookups).
+# None of the current roles fit. This adds a narrower role under :affordance.
+# The scheme is explicitly designed for additive extension via skos:broader (see its rdfs:comment).
+#
+# Pairs with a proposed wiki:QueryAffordance class in the wiki ontology
+# (overlays/wiki-memory/ontology/wiki.ttl) — sibling of wiki:SearchAffordance /
+# wiki:WriteAffordance / wiki:DerivedClassAffordance. That class addition is a separate
+# ontology-edit proposal (not drafted here since the ontology doc currently declares no
+# explicit Affordance subclasses; confirm minting policy via the solid-uri-conformance skill
+# before adding it).
+
+@prefix :        <https://pod.vardeman.me/vault/ontology/wikirole#> .
+@prefix prof:    <http://www.w3.org/ns/dx/prof/> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+
+:query-affordance
+    a owl:NamedIndividual , skos:Concept , prof:ResourceRole ;
+    rdfs:isDefinedBy <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    skos:inScheme <https://pod.vardeman.me/vault/ontology/wikirole> ;
+    skos:broader :affordance ;
+    skos:prefLabel "Query affordance" ;
+    skos:definition "An affordance that declares a parameterized, read-only client-side SPARQL lookup (wiki:selectQuery) over named data sources. Bindings are declared via wiki:queryParameter. Distinct from a search-affordance (HTTP dispatchPattern over text bodies) and from derived-class/navigation affordances (CONSTRUCT views). Used by the addressbook contact-find-by-* / org-find-by-* descriptors." .

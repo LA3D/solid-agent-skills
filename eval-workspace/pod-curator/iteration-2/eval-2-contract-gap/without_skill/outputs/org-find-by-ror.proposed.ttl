@@ -1,0 +1,51 @@
+# PROPOSAL — does NOT modify the live Pod. Draft replacement for
+# /vault/meta/affordances/org-find-by-ror.ttl
+#
+# Second worked example (an IRI-parameter, cross-resource-enumeration affordance)
+# showing the same uplift. The $ror parameter is declared as an IRI-typed parameter
+# so an agent knows to pass the angle-bracketed form, not a string.
+
+@prefix wiki:     <https://pod.vardeman.me/vault/ontology/wiki#> .
+@prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+@prefix sh:       <http://www.w3.org/ns/shacl#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dct:      <http://purl.org/dc/terms/> .
+@prefix prof:     <http://www.w3.org/ns/dx/prof/> .
+
+<>  a wiki:QueryAffordance ,
+       prof:ResourceDescriptor ;
+    dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+    prof:hasRole wikirole:query-affordance ;
+    rdfs:label "Find organization by ROR" ;
+    rdfs:comment "Canonical institutional identity lookup: given a ROR (Research Organization Registry) IRI, return the matching local Organization card via owl:sameAs." ;
+    wiki:targetContainer </vault/contacts/Organization/> ;
+    wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+    sh:agentInstruction """
+      Canonical institutional identity lookup via ROR (Research Organization
+      Registry) IRI. Use this when an external source provides a ROR identifier
+      (e.g., from a funding record or ORCID affiliation) and you need the local
+      Organization card.
+
+      Parameter: $ror — the full ROR IRI as a named node, e.g.,
+      <https://ror.org/00mkhxb43> (University of Notre Dame). Pass the
+      angle-bracketed form in SPARQL; substitute it as an IRI, not a string.
+
+      Sources: Organization cards at /vault/contacts/Organization/*/index.ttl.
+      Enumerate via LDP listing of </vault/contacts/Organization/> or use
+      Comunica link-traversal with the Organization container as entry point.
+
+      Returns 0..1 ?org IRIs. Zero means no Organization card exists for this
+      ROR; prompt to create a stub card via the addressbook overlay templates.
+    """ ;
+    wiki:queryParameter [
+        wiki:parameter "ror" ;
+        rdfs:comment "Full ROR IRI as a named node (angle-bracketed). Substituted as an IRI, not a string. Required." ;
+        wiki:required true
+    ] ;
+    wiki:selectQuery """
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+
+SELECT ?org WHERE {
+  ?org owl:sameAs $ror .
+}
+    """ .

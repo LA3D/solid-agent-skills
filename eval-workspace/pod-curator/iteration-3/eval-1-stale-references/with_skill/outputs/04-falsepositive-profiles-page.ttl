@@ -1,0 +1,20 @@
+@prefix as:   <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:  <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# Withdrawn flag (false-positive guard): </vault/meta/profiles/page> LOOKS like a
+# pages->concepts rename casualty, but it is load-bearing. Recorded so the guard is
+# auditable.
+
+<urn:uuid:f4a00512-615e-4ba0-a596-95462888a7c2>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/meta/profiles/page> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/meta/profiles/> ;
+    prov:wasDerivedFrom </vault/.well-known/solid> ;
+    mem:stalenessClass mem:FalsePositive ;
+    mem:rationale """The rename was pages-container -> concepts-container, so prof:hasResource -> </vault/meta/profiles/page> and rdfs:seeAlso patterns mentioning 'page' look suspect. Dereferenced before flagging (false-positive guard): profiles/page returns 200 and is present in the meta/profiles/ listing. Per the skill's own documented case, profiles/page is the ROOT profile that every other profile (concept, person, place, ...) inherits from via prof:isProfileOf — it governs the <> page-resource (D96 Page+Thing split: PageShape governs <>, Thing-shapes govern <#this>). It was never renamed; only the wiki CONTAINER pages/ was. Removing or 'realigning' this pointer would break the profile inheritance chain. No repair. Withdrawn.""" ;
+    as:published "2026-05-24T11:47:34Z"^^xsd:dateTime .

@@ -1,0 +1,65 @@
+@prefix as:       <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:      <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov:     <http://www.w3.org/ns/prov#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix wiki:     <https://pod.vardeman.me/vault/ontology/wiki#> .
+@prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+@prefix prof:     <http://www.w3.org/ns/dx/prof/> .
+@prefix sh:       <http://www.w3.org/ns/shacl#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dct:      <http://purl.org/dc/terms/> .
+
+# ===========================================================================
+# CURATOR PROPOSAL (audit-and-propose only — NOT applied)
+# Finding:    descriptor:untyped @ /vault/meta/affordances/org-find-by-ror.ttl
+# Class:      contract gap (construction) — playbook §"descriptor:untyped"
+# ===========================================================================
+
+<urn:uuid:160fbd90-95e1-4159-a2b6-0b31c6bdb662>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/meta/affordances/org-find-by-ror.ttl> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/ontology/wiki> ;
+    prov:wasDerivedFrom </vault/meta/affordances/org-find-by-ror.ttl> ;
+    mem:stalenessClass mem:ProseDrift ;
+    mem:rationale "Same contract gap: typed only wiki:Affordance, escapes the prof:ResourceDescriptor-targeted contract shape. Add PROF type + prof:hasRole/rdfs:label/dct:conformsTo/wiki:installedBy. Resolved against /vault/ontology/wiki + /vault/ontology/wikirole. SELECT read affordance — no dispatch predicates." ;
+    as:published "2026-05-23T22:17:06Z"^^xsd:dateTime .
+
+# --- PROPOSED CORRECTED DESCRIPTOR ------------------------------------------
+</vault/meta/affordances/org-find-by-ror.ttl>
+    a wiki:Affordance , prof:ResourceDescriptor ;
+    prof:hasRole wikirole:affordance ;
+    rdfs:label "Organization Find by ROR" ;
+    dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+    wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+    sh:agentInstruction """
+      Canonical institutional identity lookup via ROR (Research Organization
+      Registry) IRI. Use this when an external source provides a ROR identifier
+      (e.g., from a funding record or ORCID affiliation) and you need the local
+      Organization card.
+
+      Parameter: $ror — the full ROR IRI as a named node, e.g.,
+      <https://ror.org/00mkhxb43> (University of Notre Dame).
+      Pass the angle-bracketed form in SPARQL; the affordance engine substitutes
+      it as an IRI.
+
+      Sources: Organization cards at /vault/contacts/Organization/*/index.ttl.
+      Enumerate via LDP listing of </vault/contacts/Organization/> or use
+      Comunica link-traversal with the Organization container as entry point.
+
+      Returns 0..1 ?org IRIs. Zero means no Organization card exists for this
+      ROR; the agent should prompt to create a stub card via the addressbook
+      overlay templates.
+    """ ;
+    wiki:selectQuery """
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+
+SELECT ?org WHERE {
+  ?org owl:sameAs $ror .
+}
+    """ .
+
+# --- HOW TO APPLY (gated on review) -----------------------------------------
+#   Repo-side durable fix: cogitarelink-solid/overlays/addressbook/affordances/org-find-by-ror.ttl

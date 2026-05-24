@@ -1,0 +1,32 @@
+{
+  "expectations": [
+    {
+      "text": "Dereferenced the canonical decision (D98) rather than acting on the surface count claim",
+      "passed": true,
+      "evidence": "dereferenced D98"
+    },
+    {
+      "text": "Concluded it is NOT a bug \u2014 the 8 NodeShapes vs 11 files reconcile",
+      "passed": true,
+      "evidence": "concluded NOT a bug"
+    },
+    {
+      "text": "Withdrew the flag (recorded as mem:FalsePositive) instead of rewriting the correct claim",
+      "passed": false,
+      "evidence": "did not record mem:FalsePositive (0); pivoted to a ProseDrift proposal"
+    },
+    {
+      "text": "Did not make any damaging edit to the correct statement",
+      "passed": true,
+      "evidence": "no damaging edit"
+    }
+  ],
+  "passed": 3,
+  "total": 4,
+  "summary": {
+    "pass_rate": 0.75,
+    "passed": 3,
+    "failed": 1,
+    "total": 4
+  }
+}

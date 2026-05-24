@@ -1,0 +1,77 @@
+@prefix as:    <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:   <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov:  <http://www.w3.org/ns/prov#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+# ===========================================================================
+# Proposal 01 — DanglingReference: storage-description seeAlso → retired
+# containers wiki/pages/ + wiki/sources/ (both 404 after the D98 rename).
+# Covers pod-audit findings:
+#   - resolve:seeAlso @ https://pod.vardeman.me/vault/wiki/pages/
+#   - resolve:seeAlso @ https://pod.vardeman.me/vault/wiki/sources/
+# ===========================================================================
+
+<urn:uuid:7c1a0d20-5e44-4f3b-9a01-2026052301>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/.well-known/solid> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/settings/publicTypeIndex> ;
+    prov:wasDerivedFrom </vault/.well-known/solid> ;
+    mem:stalenessClass mem:DanglingReference ;
+    mem:rationale """The storage description (.well-known/solid) lists rdfs:seeAlso </wiki/pages/> and
+</wiki/sources/>. Both return 404. Probed the live container set: wiki/concepts/, wiki/people/,
+wiki/places/, wiki/events/, wiki/organizations/, wiki/procedures/, wiki/working/ all return 200;
+pages/ and sources/ are gone. The Type Index (prov:used, operational ground truth) confirms the
+D98 rename: skos:Concept AND wiki:Source both route to </wiki/concepts/> (reg0/reg1), i.e. the old
+pages+sources containers were merged into concepts/. Ground-truth precedence: deployed Pod (live
+containers + Type Index) over the static config that still names the retired pair.
+
+ROOT CAUSE (repo-side, NOT HTTP-PATCHable): the storage description is assembled from BOTH
+css/config/void-description.json (static StaticStorageDescriber terms) AND
+overlays/wiki-memory/storage-patch.ttl (runtime overlay). The overlay storage-patch already emits
+the correct D98 set (concepts/ + the five others). The static config still emits the stale
+pages/ + sources/ terms, and the merged result is the union — so the stale pair survives every
+`make reset`. Repair the static config toward the decision; do not PATCH .well-known/solid (405 /
+static). After the repair the merged seeAlso equals the overlay's correct set.""" ;
+    as:published "2026-05-23T22:34:12Z"^^xsd:dateTime .
+
+# --- Proposed change (REPO-SIDE, not an N3 Patch) -------------------------
+# File: cogitarelink-solid/css/config/void-description.json
+# Remove the two StaticStorageDescriber blocks that emit the retired containers:
+#
+#   - lines ~210-219  { "comment": "L3: wiki pages container (D76)",   ... seeAlso .../wiki/pages/ }
+#   - lines ~220-229  { "comment": "L3: wiki sources container (D76)", ... seeAlso .../wiki/sources/ }
+#
+# Rationale for delete-not-rename: the overlay storage-patch.ttl already supplies the full live
+# D98 seeAlso set (concepts/, people/, places/, events/, organizations/, procedures/, working/),
+# so the static config does not need to re-emit concepts/. Deleting the two stale blocks is
+# sufficient and avoids a duplicate concepts/ term.
+#
+# After edit + `make reset`, verify:
+#   curl -s https://pod.vardeman.me/vault/.well-known/solid | grep seeAlso
+#   → must NOT contain wiki/pages/ or wiki/sources/; must list concepts/ (from the overlay).
+#
+# SECONDARY (AUDITOR-GAP — pod-audit cross-checks rdfs:seeAlso but NOT prof:hasResource).
+# Walked the whole storage description per skill guidance. It carries six prof:hasResource targets;
+# probed each:
+#   meta/profiles/page      -> 200   (load-bearing ROOT profile — do NOT touch; false-positive guard)
+#   meta/profiles/concept   -> 200   OK
+#   meta/profiles/person    -> 200   OK
+#   meta/profiles/working   -> 200   OK
+#   meta/profiles/source    -> 404   DANGLING  (mirrors the D98 source→concept rename)
+#   meta/profiles/procedure -> 404   DANGLING  (procedure→howto rename; profile never re-emitted)
+#
+# These two 404s are the SAME class (mem:DanglingReference) the auditor caught on seeAlso, missed
+# here because its cross-check set does not yet include prof:hasResource. They live in the SAME
+# static config (css/config/void-description.json, the "PROF: ... profile descriptor (D86)" blocks).
+# RECOMMENDATION for human review:
+#   - profiles/source: the source profile folded into concept (D98). Either point hasResource at
+#     </vault/meta/profiles/concept> or drop the source profile term. Confirm against the concept
+#     profile's prof:isTransitiveProfileOf chain before choosing.
+#   - profiles/procedure: procedure→howto (D98). Verify whether </vault/meta/profiles/howto> exists
+#     and re-point, or drop the term.
+# Not auto-proposed as separate RealignActions because the correct target (re-point vs drop) needs
+# the profile-inheritance chain confirmed — a judgment call for the reviewer. Also: AUDITOR FIX —
+# extend pod_audit.py's resolve cross-check to dereference prof:hasResource targets, not just seeAlso.

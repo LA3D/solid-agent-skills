@@ -1,0 +1,30 @@
+@prefix as:   <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:  <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# Stale reference 2 — storage-description rdfs:seeAlso points at the retired
+# wiki/sources/ container. D98 merged sources INTO concepts (not a rename to a
+# sibling): the Type Index routes BOTH skos:Concept and wiki:Source to
+# wiki/concepts/. So this seeAlso entry has no distinct live replacement — it
+# is subsumed by the concepts/ entry and should be removed, not repointed.
+<urn:uuid:a4458e72-1dee-417c-8c16-f1a478b77849>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/.well-known/solid> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/settings/publicTypeIndex> ;   # ground truth: forClass wiki:Source -> wiki/concepts/
+    prov:wasDerivedFrom </vault/.well-known/solid> ;
+    mem:stalenessClass mem:SupersededConcept ;
+    mem:rationale "Storage description rdfs:seeAlso lists <../wiki/sources/>, which returns 404. Unlike pages (a 1:1 rename to concepts), D98 MERGED sources into concepts: the Type Index publicTypeIndex routes both skos:Concept and wiki:Source to instanceContainer <../wiki/concepts/>. There is no surviving wiki/sources/ container to repoint to. Classified SupersededConcept (a decision retired the named container by absorbing it) rather than a plain DanglingReference, because the correct repair is removal of the redundant pointer, with the concepts/ seeAlso (added in proposal 01) already covering both content kinds. wiki:Source itself is preserved as a class via the class-extension contract; only the separate container pointer is stale. Resolved against the Type Index (operational truth). Repair direction: pointer -> reality. Lives in the STATIC css/config/void-description.json -> repo edit." ;
+    as:published "2026-05-23T22:16:31Z"^^xsd:dateTime .
+
+# Proposed repo-side fix (NOT applied — review-gated):
+#   File: css/config/void-description.json  (lines ~220-228)
+#   Remove the entire StaticStorageDescriber block whose seeAlso value is
+#     "https://pod.vardeman.me/vault/wiki/sources/"
+#   (comment "L3: wiki sources container (D76)"). Do NOT repoint it to
+#   concepts/ — proposal 01 already adds the concepts/ seeAlso, and a second
+#   seeAlso to the same container would be redundant.
+#   Then `make reset` reproduces the corrected storage description.

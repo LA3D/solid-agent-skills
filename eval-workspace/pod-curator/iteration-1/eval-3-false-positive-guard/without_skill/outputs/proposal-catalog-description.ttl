@@ -1,0 +1,24 @@
+# PROPOSAL ONLY — audit-and-propose. Do NOT apply without owner review.
+# Target (existing substrate, NOT modified by this audit):
+#   https://pod.vardeman.me/vault/meta/shapes/  (.meta of the catalog container)
+#
+# Defect: the catalog container's dc:description cites the SUPERSEDED D77
+#   ("(D77). Five shapes: page, source, person, procedure, working.")
+#   while D98 (ratified 2026-05-19, supersedes D77) is the current authority and
+#   the container holds 18 shape files. The "Five shapes" / D77 text is the stale
+#   artifact — not the file count.
+#
+# Proposed replacement dc:description (apply via N3 Patch to the container .meta,
+# owner-gated). Counts reconciled against D98 + the 2026-05-23 source/class-extension
+# additions and the addressbook + owner-identity overlays.
+
+@prefix dc: <http://purl.org/dc/terms/>.
+
+<https://pod.vardeman.me/vault/meta/shapes/>
+    dc:description "SHACL shape catalog. wiki-memory L3 core: 8 NodeShapes (D98, supersedes D77) — Page, Thing, Concept, Person, Place, Event, Organization, HowTo — plus WorkingNote (D73), the resource.shacl.ttl LDP guard (D38), template (L4 exemplar, D100), and the re-introduced Source via class-extension contract (D104+). Additional overlays contribute their own shapes: addressbook (contact-card, group, membership, organization-card) and owner-identity (webid-profile, pod-owner-preferences)." .
+
+# NOTE — a SECOND, separate finding surfaced during this audit (report §3):
+# overlays/wiki-memory/shapes/class-extension.shacl.ttl exists in the repo source
+# but is NOT deployed to the live Pod (GET .../class-extension.shacl.ttl -> 404).
+# Either it should be deployed via `make reset`, or it is intentionally repo-only.
+# Resolve by owner — do NOT auto-deploy.

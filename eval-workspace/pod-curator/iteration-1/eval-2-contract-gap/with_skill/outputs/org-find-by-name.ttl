@@ -1,0 +1,65 @@
+@prefix as:       <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:      <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov:     <http://www.w3.org/ns/prov#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix wiki:     <https://pod.vardeman.me/vault/ontology/wiki#> .
+@prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+@prefix prof:     <http://www.w3.org/ns/dx/prof/> .
+@prefix sh:       <http://www.w3.org/ns/shacl#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dct:      <http://purl.org/dc/terms/> .
+
+# ===========================================================================
+# CURATOR PROPOSAL (audit-and-propose only — NOT applied)
+# Finding:    descriptor:untyped @ /vault/meta/affordances/org-find-by-name.ttl
+# Class:      contract gap (construction) — playbook §"descriptor:untyped"
+# ===========================================================================
+
+<urn:uuid:985014c1-f342-4bad-9192-22c9a079d009>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/meta/affordances/org-find-by-name.ttl> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/ontology/wiki> ;
+    prov:wasDerivedFrom </vault/meta/affordances/org-find-by-name.ttl> ;
+    mem:stalenessClass mem:ProseDrift ;
+    mem:rationale "Same contract gap as the contact-find-* findings (the two org-find-* descriptors ship from the same addressbook overlay): typed only wiki:Affordance, escapes the prof:ResourceDescriptor-targeted contract shape. Add PROF type + prof:hasRole/rdfs:label/dct:conformsTo/wiki:installedBy. Resolved against /vault/ontology/wiki + /vault/ontology/wikirole. SELECT read affordance — no dispatch predicates." ;
+    as:published "2026-05-23T22:17:06Z"^^xsd:dateTime .
+
+# --- PROPOSED CORRECTED DESCRIPTOR ------------------------------------------
+</vault/meta/affordances/org-find-by-name.ttl>
+    a wiki:Affordance , prof:ResourceDescriptor ;
+    prof:hasRole wikirole:affordance ;
+    rdfs:label "Organization Find by Name" ;
+    dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+    wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+    sh:agentInstruction """
+      Case-insensitive organization name lookup across all Organization cards
+      and the aggregated contacts index (where orgs are co-listed per SolidOS
+      convention).
+
+      Parameter: $name — a string fragment to match against vcard:fn (e.g.,
+      "Notre Dame", "NSF"). Returns all ?org IRIs whose vcard:fn contains the
+      fragment (case-insensitive). Disambiguate using org-find-by-ror when the
+      result set is larger than 1.
+
+      Sources: Organization cards at /vault/contacts/Organization/*/index.ttl
+      plus </vault/contacts/people.ttl>. Pass both as --default-graph-uri
+      sources when invoking via solid-pod sparql.
+
+      The query filters on rdf:type vcard:Organization to exclude Person cards
+      from the result set.
+    """ ;
+    wiki:selectQuery """
+PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+
+SELECT ?org ?fn WHERE {
+  ?org a vcard:Organization ;
+       vcard:fn ?fn .
+  FILTER(CONTAINS(LCASE(STR(?fn)), LCASE(STR($name))))
+}
+    """ .
+
+# --- HOW TO APPLY (gated on review) -----------------------------------------
+#   Repo-side durable fix: cogitarelink-solid/overlays/addressbook/affordances/org-find-by-name.ttl

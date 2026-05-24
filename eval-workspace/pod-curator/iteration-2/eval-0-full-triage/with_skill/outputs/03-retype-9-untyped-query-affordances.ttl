@@ -1,0 +1,132 @@
+@prefix as:       <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:      <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov:     <http://www.w3.org/ns/prov#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dct:      <http://purl.org/dc/terms/> .
+@prefix prof:     <http://www.w3.org/ns/dx/prof/> .
+@prefix sh:       <http://www.w3.org/ns/shacl#> .
+@prefix wiki:     <https://pod.vardeman.me/vault/ontology/wiki#> .
+@prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+
+# ===========================================================================
+# Proposal 03 — bring the 9 untyped affordance descriptors under the
+# AffordanceDescriptorShape contract by typing them prof:ResourceDescriptor +
+# wiki:QueryAffordance (from proposal 02) and adding the four required
+# contract predicates: prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy.
+#
+# Covers pod-audit findings descriptor:untyped @:
+#   contact-find-by-name, contact-find-by-group, contact-find-by-email,
+#   contact-find-by-affiliation, contact-find-by-orcid, org-find-by-ror,
+#   org-find-by-name, bridge-card-to-wiki   (+ contact-find-by-affiliation listed twice in queue)
+#
+# DEPENDS ON proposal 02 (wiki:QueryAffordance + wikirole:query-affordance must
+# crystallize first; this proposal cites both).
+# ===========================================================================
+
+<urn:uuid:7c1a0d20-5e44-4f3b-9a01-2026052303>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/meta/affordances/> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/meta/shapes/> ;
+    prov:wasDerivedFrom </vault/meta/affordances/contact-find-by-name.ttl> ;
+    mem:stalenessClass mem:ProseDrift ;
+    mem:rationale """Nine descriptors type only wiki:Affordance and so escape AffordanceDescriptorShape
+(which sh:targetClass prof:ResourceDescriptor): no role/label/conformsTo/installedBy is enforced on them,
+i.e. they work but are ungoverned. Resolved against the substrate shape (prov:used = /meta/shapes/,
+specifically AffordanceDescriptorShape in shapes/substrate/affordance-descriptor.shacl.ttl) which lists
+the four required predicates + the prose disjunction (sh:agentInstruction OR dct:description — all nine
+already carry sh:agentInstruction, so prose is satisfied). Repair: add the missing contract predicates.
+Each label/role is composed from what the descriptor already does (the selectQuery + its agentInstruction);
+the role is wikirole:query-affordance and the type wiki:QueryAffordance, both NEW in proposal 02 (no
+existing type/role fit — see that proposal's rationale). installedBy = the addressbook overlay (these
+descriptors ship from overlays/addressbook/affordances/, confirmed in repo). conformsTo = the PROF spec,
+matching every already-typed sibling (hub-view, breadcrumb-view, memento).
+
+Two follow-on notes recorded for the reviewer (do not block this proposal):
+ (a) FALSE-POSITIVE GUARD applied: I did NOT type these wiki:SearchAffordance even though that subtype
+     superficially says 'query surface', because SearchAffordanceShape requires wiki:dispatchPattern +
+     wiki:targetContainer which these client-run SELECTs lack — typing them so would FAIL SHACL. The
+     misfit is the reason proposal 02 exists.
+ (b) These descriptors use the absolute-URL subject form (</vault/meta/affordances/X.ttl>) rather than
+     the relative <> form the typed siblings use. Harmless for the contract but inconsistent; the
+     corrected overlay TTLs below keep the existing subject form to minimize the diff. Flag for a future
+     style sweep, not repaired here.""" ;
+    as:published "2026-05-23T22:34:12Z"^^xsd:dateTime .
+
+# ===========================================================================
+# Proposed change. PRIMARY repair is REPO-SIDE: edit the source TTLs under
+# overlays/addressbook/affordances/ so `make reset` reproduces the governed
+# form. (The deployed descriptor content could also be PATCHed, but the overlay
+# is the durable home — a PATCH alone would be lost on the next reset.)
+#
+# For EACH descriptor, ADD these predicates to the existing subject. Shown as the
+# block to insert; the existing `a wiki:Affordance`, sh:agentInstruction and
+# wiki:selectQuery are kept (extend the type list to include the two new types).
+# ===========================================================================
+
+# Shared additions pattern (apply per descriptor, varying only rdfs:label):
+#     a wiki:Affordance , wiki:QueryAffordance , prof:ResourceDescriptor ;
+#     prof:hasRole wikirole:query-affordance ;
+#     dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+#     wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+#     rdfs:label "<see per-descriptor label below>" ;
+#  (then the existing sh:agentInstruction + wiki:selectQuery unchanged)
+
+# Per-descriptor rdfs:label (composed from each descriptor's own agentInstruction):
+#   contact-find-by-name.ttl         "Contact lookup by full name"
+#   contact-find-by-email.ttl        "Contact lookup by email"
+#   contact-find-by-orcid.ttl        "Contact lookup by ORCID"
+#   contact-find-by-affiliation.ttl  "Contact lookup by affiliation"
+#   contact-find-by-group.ttl        "Contact lookup by group membership"
+#   org-find-by-ror.ttl              "Organization lookup by ROR"
+#   org-find-by-name.ttl             "Organization lookup by name"
+#   bridge-card-to-wiki.ttl          "Card-to-wiki-page bridge lookup"
+
+# --- Worked exemplar (the full corrected form of ONE descriptor, copy the
+#     pattern for the other eight) -----------------------------------------
+</vault/meta/affordances/contact-find-by-name.ttl>
+    a wiki:Affordance , wiki:QueryAffordance , prof:ResourceDescriptor ;
+    prof:hasRole wikirole:query-affordance ;
+    dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+    wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+    rdfs:label "Contact lookup by full name" ;
+    sh:agentInstruction """
+      Case-insensitive full-name lookup across all Person and Individual cards.
+      Parameter: $name — a string fragment to match (e.g., "Wang Wei", "Smith").
+      Returns all ?person IRIs whose vcard:fn contains the fragment (case-insensitive).
+      Source: the aggregated contacts index at </vault/contacts/people.ttl>.
+      Pass this URL as --default-graph-uri when invoking via solid-pod sparql
+      (RQ-Pod-4 workaround for non-RDF resource traversal).
+    """ ;
+    wiki:selectQuery """
+PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+SELECT ?person ?fn WHERE {
+  ?person vcard:fn ?fn .
+  FILTER(CONTAINS(LCASE(STR(?fn)), LCASE(STR($name))))
+}
+    """ .
+# (sh: prefix is <http://www.w3.org/ns/shacl#>, already declared in each source TTL's header.)
+
+# OPTIONAL pod-side preview (NON-DURABLE — lost on next `make reset`; use only to
+# validate the governed form against AffordanceDescriptorShape on the live Pod
+# before folding the change into the overlay). One N3 Patch per descriptor .meta-or-self:
+#
+#   @prefix solid: <http://www.w3.org/ns/solid/terms#> .
+#   @prefix prof:  <http://www.w3.org/ns/dx/prof/> .
+#   @prefix wiki:  <https://pod.vardeman.me/vault/ontology/wiki#> .
+#   @prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+#   @prefix dct:   <http://purl.org/dc/terms/> .
+#   @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+#   <> a solid:InsertDeletePatch ;
+#      solid:inserts {
+#        </vault/meta/affordances/contact-find-by-name.ttl>
+#          a wiki:QueryAffordance, prof:ResourceDescriptor ;
+#          prof:hasRole wikirole:query-affordance ;
+#          dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+#          wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+#          rdfs:label "Contact lookup by full name" .
+#      } .
+# Do NOT apply the patch as part of this proposal — crystallize step, gated on review.

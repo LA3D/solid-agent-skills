@@ -1,0 +1,83 @@
+@prefix as:       <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:      <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov:     <http://www.w3.org/ns/prov#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:      <http://www.w3.org/2002/07/owl#> .
+@prefix skos:     <http://www.w3.org/2004/02/skos/core#> .
+@prefix prof:     <http://www.w3.org/ns/dx/prof/> .
+@prefix wiki:     <https://pod.vardeman.me/vault/ontology/wiki#> .
+@prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+
+# Proposal 02 — gated conceptual-structure extension (CONSTRUCTION, not staleness).
+# Prereq for proposals 03-11: the 9 untyped descriptors are client-run SPARQL-SELECT
+# query affordances. NO existing affordance subtype or role honestly fits them:
+#   - wiki:SearchAffordance is for ?ext= HTTP-dispatch surfaces (carries
+#     wiki:dispatchPattern / wiki:targetContainer / oslc queryParameters); the
+#     contact/org/bridge affordances have NONE of that — they carry wiki:selectQuery
+#     the agent runs in its OWN engine (Comunica). The playbook explicitly warns:
+#     "the SPARQL-SELECT contact affordances are NOT wiki:SearchAffordance."
+#   - wiki:DerivedNavigationAffordance carries wiki:selectQuery too, BUT its semantics
+#     are "compute a derived navigation VIEW" (breadcrumbs, link maps) — a lookup by
+#     name/orcid/email is a parameterized RETRIEVAL, not a derived view.
+# Forcing a misfit pollutes the conceptual graph. Per the class-extension contract
+# (D100 / wiki:ClassExtensionShape) the correct repair is a clean GATED extension.
+# This proposal is a JUDGMENT CALL flagged explicitly for human review before any of
+# 03-11 crystallize.
+
+<urn:uuid:5b1a2c00-0010-4a10-9f00-query-affordance-ext>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/ontology/wiki> , </vault/ontology/wikirole> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/ontology/wiki> , </vault/ontology/wikirole> ,
+              </vault/meta/affordances/contact-find-by-name.ttl> ;
+    prov:wasDerivedFrom </vault/meta/affordances/> ;
+    mem:stalenessClass mem:ProseDrift ;
+    mem:rationale """9 affordance descriptors are untyped (escape the prof:ResourceDescriptor
+contract). To type them honestly they need a subtype + role that describes a client-run
+parameterized SPARQL-SELECT query — and that subtype/role does not exist in the wiki
+ontology or the wikirole scheme. Rather than jam them under the ill-fitting
+wiki:SearchAffordance (?ext= dispatch) or wiki:DerivedNavigationAffordance (derived views),
+propose a rooted, shaped, documented extension per D100: a new wiki:QueryAffordance subclass
+of wiki:Affordance and a new wikirole:query-affordance concept skos:broader wikirole:affordance.
+This grows the conceptual graph cleanly. Gated: lands in curator-proposals/, validated by
+wiki:ClassExtensionShape (inference=none), approved by a higher-trust reviewer before
+crystallizing into the overlay vocabulary. mem:stalenessClass is ProseDrift as the nearest
+fit; this is really a construction/contract-gap, flagged as a judgment call.""" ;
+    as:published "2026-05-24T11:47:33Z"^^xsd:dateTime .
+
+# ============================================================================
+# CONCRETE PROPOSED ADDITIONS (gated — apply to overlay vocab on approval).
+#
+# (A) Add to the wiki ontology (overlays/wiki-memory/ontology/wiki.ttl), as a
+#     sibling of wiki:SearchAffordance:
+# ----------------------------------------------------------------------------
+wiki:QueryAffordance
+    a owl:Class ;
+    rdfs:subClassOf wiki:Affordance ;
+    rdfs:label "Query affordance" ;
+    rdfs:comment "Affordance descriptor for a client-run, parameterized SPARQL-SELECT lookup. Carries a wiki:selectQuery with $-style query variables the agent binds before execution, and (in sh:agentInstruction) the source .meta/aggregate-index URLs to pass as --default-graph-uri. Distinct from wiki:SearchAffordance (server-side ?ext= HTTP dispatch over markdown bodies) and from wiki:DerivedNavigationAffordance (computes a navigation VIEW rather than retrieving by key)." ;
+    skos:scopeNote "Used as rdf:type on the contact/org lookup descriptors and the card->wiki bridge at /vault/meta/affordances/. The query runs client-side (Comunica or equivalent) — the Pod has no SPARQL endpoint. The descriptor names its source graph(s) in sh:agentInstruction (RQ-Pod-4 workaround: pass them as --default-graph-uri)." ;
+    rdfs:seeAlso </vault/meta/affordances/contact-find-by-name> .
+#
+# (B) Add to the wikirole scheme (overlays/wiki-memory/ontology/wikirole.ttl):
+# ----------------------------------------------------------------------------
+wikirole:query-affordance
+    a owl:NamedIndividual , skos:Concept , prof:ResourceRole ;
+    rdfs:isDefinedBy </vault/ontology/wikirole> ;
+    skos:inScheme </vault/ontology/wikirole> ;
+    skos:broader wikirole:affordance ;
+    skos:prefLabel "Query affordance" ;
+    skos:definition "An affordance invoked as a client-run parameterized SPARQL-SELECT query against named source graphs — keyed retrieval (find-by-name, find-by-orcid, card->wiki bridge), as opposed to server-side substring search (search-affordance) or derived-view computation." .
+#
+# NOTE the auditor flagged a SECOND latent gap to fix alongside this: the deployed
+# wiki-search-grep.ttl descriptor cites prof:hasRole wikirole:search-affordance, but
+# GET /vault/ontology/wikirole shows NO :search-affordance concept in the scheme
+# (only :affordance, :write-affordance, :version-affordance, :derived-class-affordance,
+# :derived-navigation-affordance, + the 4 synthesis roles). That is a dangling-role
+# finding. Propose ALSO adding wikirole:search-affordance (skos:broader wikirole:affordance)
+# so the existing typed descriptor's role resolves. (Out of scope for the SELECT
+# affordances but worth fixing in the same vocab edit.)
+# ============================================================================

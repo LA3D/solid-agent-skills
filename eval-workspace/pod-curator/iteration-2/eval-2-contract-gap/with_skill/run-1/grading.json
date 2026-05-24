@@ -1,0 +1,37 @@
+{
+  "expectations": [
+    {
+      "text": "Detected the 8 addressbook descriptors are typed wiki:Affordance only and lack prof:ResourceDescriptor",
+      "passed": true,
+      "evidence": "8 descriptors detected as wiki:Affordance-only, escaping the contract"
+    },
+    {
+      "text": "Named the missing contract predicates (prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy)",
+      "passed": true,
+      "evidence": "named all missing contract predicates"
+    },
+    {
+      "text": "Constructed a fix adding the missing predicates, composed from what each descriptor already does",
+      "passed": true,
+      "evidence": "constructed 8 conforming descriptors (pyshacl inference=none)"
+    },
+    {
+      "text": "Preserved the existing working sh:agentInstruction + wiki:selectQuery",
+      "passed": true,
+      "evidence": "preserved existing sh:agentInstruction + wiki:selectQuery verbatim"
+    },
+    {
+      "text": "Made the correct subtype judgment: did NOT add wiki:SearchAffordance/dispatchPattern (these are SPARQL SELECT, not HTTP ?ext= dispatch)",
+      "passed": true,
+      "evidence": "correct subtype judgment: proposed gated wiki:QueryAffordance extension instead of misusing SearchAffordance; caught dangling search-affordance role"
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "summary": {
+    "pass_rate": 1.0,
+    "passed": 5,
+    "failed": 0,
+    "total": 5
+  }
+}

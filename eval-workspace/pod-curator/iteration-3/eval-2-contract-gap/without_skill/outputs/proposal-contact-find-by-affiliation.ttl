@@ -1,0 +1,49 @@
+# PROPOSAL — corrected contact-find-by-affiliation affordance descriptor. Draft only; not applied.
+@prefix wiki:     <https://pod.vardeman.me/vault/ontology/wiki#> .
+@prefix sh:       <http://www.w3.org/ns/shacl#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dct:      <http://purl.org/dc/terms/> .
+@prefix prof:     <http://www.w3.org/ns/dx/prof/> .
+@prefix wikirole: <https://pod.vardeman.me/vault/ontology/wikirole#> .
+
+<>  a wiki:QueryAffordance , prof:ResourceDescriptor ;
+    dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;
+    prof:hasRole wikirole:query-affordance ;
+    rdfs:label "Contact: find by affiliation" ;
+    rdfs:comment "List Person cards affiliated with an Organization via the W3C Org Ontology membership model." ;
+    wiki:targetContainer </vault/contacts/> ;
+    wiki:requiresCapability </vault/meta/capabilities/contact-discovery.ttl> ;
+    wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+    sh:agentInstruction """
+      List all Person cards affiliated with a given organization, using the
+      W3C Organization Ontology membership model. Returns both current and
+      historical memberships unless the caller filters by date.
+
+      Parameter: $org — the Organization card IRI, e.g.,
+      </vault/contacts/Organization/notre-dame/index.ttl#this>.
+
+      Sources: Person card files (for org:hasMembership triples) and Membership
+      card files (for org:organization triples). Both are needed because the
+      membership triple may be split across card boundaries. Use Comunica
+      link-traversal over the /vault/contacts/ container, or enumerate Person
+      and Membership cards explicitly via LDP listing.
+
+      Returns ?person (the Person card IRI) and ?membership (the Membership
+      node IRI, which carries role/period metadata). To filter to current
+      members, add: FILTER NOT EXISTS { ?membership org:memberDuring/time:hasEnd ?end }
+      using the W3C Time Ontology.
+    """ ;
+    wiki:queryParameter [
+        wiki:parameter "org" ;
+        rdfs:comment "Organization card IRI bound as a named node, e.g. </vault/contacts/Organization/notre-dame/index.ttl#this>." ;
+        wiki:datatype "iri" ;
+        wiki:required true
+    ] ;
+    wiki:selectQuery """
+PREFIX org: <http://www.w3.org/ns/org#>
+
+SELECT ?person ?membership WHERE {
+  ?person org:hasMembership ?membership .
+  ?membership org:organization $org .
+}
+    """ .

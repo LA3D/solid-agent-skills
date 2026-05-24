@@ -1,0 +1,66 @@
+@prefix as:       <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:      <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov:     <http://www.w3.org/ns/prov#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+
+# ===========================================================================
+# PROPOSAL 02 — bring the 9 untyped addressbook affordance descriptors under
+# the descriptor contract. CONTRACT GAP (construction). DEPENDS ON proposal 01
+# (the wiki:QueryAffordance class + wikirole:query-affordance role + shape).
+#
+# pod-audit work queue (this finding): 9 x constraint=descriptor:untyped, all
+# WARN. Each descriptor is typed only `a wiki:Affordance`, omitting
+# `a prof:ResourceDescriptor`, so it escapes wiki:AffordanceDescriptorShape
+# (which sh:targetClass prof:ResourceDescriptor) entirely — no role, label,
+# conformsTo, or installedBy is enforced. Contrast wiki-search-grep.ttl and the
+# 6 wiki-memory write/derived affordances, which all carry the full contract.
+#
+# Resolution (ground-truth precedence): resolved against the deployed contract
+# shape shapes/substrate/affordance-descriptor.shacl.ttl (operational truth) and
+# the addressbook overlay manifest (overlay:installsAffordance lists all 8 +
+# bridge). The corrected form adds the five contract predicates to each:
+#   a prof:ResourceDescriptor ;
+#   prof:hasRole wikirole:query-affordance ;     (from proposal 01)
+#   rdfs:label "<human label composed from what it does>" ;
+#   dct:conformsTo <http://www.w3.org/TR/dx-prof/> ;   (PROF spec)
+#   wiki:installedBy <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;
+#   a wiki:QueryAffordance ;                       (subtype, from proposal 01)
+# The existing `a wiki:Affordance`, sh:agentInstruction, and wiki:selectQuery
+# are PRESERVED. Each already meets the QueryAffordanceShape (>=100-char
+# agentInstruction + selectQuery); proposal 01 additionally requires a
+# wiki:queryParameter contract — added below to match wiki-search-grep's
+# wiki:queryParameter pattern.
+#
+# APPLY (repo-side): edit each source TTL under
+#   overlays/addressbook/affordances/<name>.ttl
+# then `make reset` reproduces the typed descriptors. NOT an N3 Patch: these
+# are overlay-shipped; patching only the live .meta would drift from source.
+#
+# A reviewer should run pyshacl with inference="none" over the corrected
+# descriptors against AffordanceDescriptorShape + QueryAffordanceShape (and
+# wiki:ClassExtensionShape over proposal 01) before crystallizing.
+# ===========================================================================
+
+<urn:uuid:b2e1d4a0-1c2f-4e7a-9b30-6d1a4c8e0102>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/meta/affordances/contact-find-by-name.ttl> ,
+              </vault/meta/affordances/contact-find-by-email.ttl> ,
+              </vault/meta/affordances/contact-find-by-orcid.ttl> ,
+              </vault/meta/affordances/contact-find-by-affiliation.ttl> ,
+              </vault/meta/affordances/contact-find-by-group.ttl> ,
+              </vault/meta/affordances/org-find-by-name.ttl> ,
+              </vault/meta/affordances/org-find-by-ror.ttl> ,
+              </vault/meta/affordances/bridge-card-to-wiki.ttl> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/meta/shapes/> ,                                  # the contract shape (operational truth)
+              <https://pod.vardeman.me/vault/ontology/overlay#addressbook> ;  # installer provenance from manifest
+    prov:wasDerivedFrom </vault/meta/affordances/> ;
+    mem:stalenessClass mem:ProseDrift ;   # contract gap; closest mem class — see rationale
+    mem:rationale "All 8 addressbook lookup affordances plus bridge-card-to-wiki are typed only `a wiki:Affordance`, omitting `a prof:ResourceDescriptor`, so they escape wiki:AffordanceDescriptorShape (targetClass prof:ResourceDescriptor) and carry none of the required role/label/conformsTo/installedBy that wiki-search-grep and the 6 wiki-memory affordances all carry. This is a construction contract gap, not staleness; mem class set to ProseDrift as the nearest member (the mem scheme lacks a 'contract-gap' class). Resolved against the deployed contract shape (operational truth) and the addressbook manifest for installedBy. Repair adds the five contract predicates + the wiki:QueryAffordance subtype from proposal 01, preserving each descriptor's existing agentInstruction and selectQuery." ;
+    as:published "2026-05-24T11:47:53Z"^^xsd:dateTime .
+
+# NOTE on bridge-card-to-wiki: its query is unparameterized only in that $card
+# is its single parameter (foaf:primaryTopic $card) — it IS a parameterized
+# client-run SELECT, so wiki:QueryAffordance fits it too. Included in the cluster.

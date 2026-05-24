@@ -1,0 +1,79 @@
+PROPOSAL — DO NOT APPLY (audit-and-propose exercise; no substrate writes)
+
+THE REAL FIX. The storage description is served statically from Components.js
+config — runtime PATCH returns 405 (MEMORY.md / D44). So the authoritative repair
+is to edit the config source and rebuild (`make reset`), not to PATCH the live Pod.
+
+File: cogitarelink-solid/css/config/void-description.json
+
+Two classes of stale StaticStorageDescriber blocks, all left over from the
+wiki-container rename (pages -> concepts; sources merged into concepts):
+
+  rdfs:seeAlso  -> /wiki/pages/    (404)   [lines 210-219]
+  rdfs:seeAlso  -> /wiki/sources/  (404)   [lines 220-229]
+  prof:hasResource -> /meta/profiles/source     (404)   [lines 280-289]
+  prof:hasResource -> /meta/profiles/procedure  (404)   [lines 300-309]
+
+The seeAlso list has NO entry for the rename target /wiki/concepts/ — add one.
+The source profile has no replacement (sources are concepts) — drop it.
+The procedure profile pointer is wrong: the live profile token is 'howto'
+(/meta/profiles/howto = 200, /meta/profiles/procedure = 404) — correct it.
+
+--- a/css/config/void-description.json  (current, stale)
++++ b/css/config/void-description.json  (proposed)
+
+@@ seeAlso blocks @@
+   {
+-    "comment": "L3: wiki pages container (D76)",
++    "comment": "L3: wiki concepts container (D76; renamed from pages)",
+     "@type": "StaticStorageDescriber",
+     "terms": [
+       {
+         "StaticStorageDescriber:_terms_key": "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+-        "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/wiki/pages/"
++        "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/wiki/concepts/"
+       }
+     ]
+   },
+-  {
+-    "comment": "L3: wiki sources container (D76)",
+-    "@type": "StaticStorageDescriber",
+-    "terms": [
+-      {
+-        "StaticStorageDescriber:_terms_key": "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+-        "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/wiki/sources/"
+-      }
+-    ]
+-  },
+   { ... people / procedures / working seeAlso blocks unchanged ... }
+
+@@ prof:hasResource blocks @@
+-  {
+-    "comment": "PROF: source profile descriptor (D86)",
+-    "@type": "StaticStorageDescriber",
+-    "terms": [
+-      {
+-        "StaticStorageDescriber:_terms_key": "http://www.w3.org/ns/dx/prof/hasResource",
+-        "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/meta/profiles/source"
+-      }
+-    ]
+-  },
+   { ... person profile block unchanged ... }
+   {
+-    "comment": "PROF: procedure profile descriptor (D86)",
++    "comment": "PROF: howto (procedure) profile descriptor (D86)",
+     "@type": "StaticStorageDescriber",
+     "terms": [
+       {
+         "StaticStorageDescriber:_terms_key": "http://www.w3.org/ns/dx/prof/hasResource",
+-        "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/meta/profiles/procedure"
++        "StaticStorageDescriber:_terms_value": "https://pod.vardeman.me/vault/meta/profiles/howto"
+       }
+     ]
+   },
+
+VERIFY AFTER REBUILD:
+  make reset
+  curl -s -H "Accept: text/turtle" https://pod.vardeman.me/vault/.well-known/solid \
+    | grep -E "wiki/(pages|sources)|profiles/(source|procedure)"   # expect: empty
+  python scripts/pod_audit.py https://pod.vardeman.me/vault/        # expect: 0 resolve:seeAlso WARN

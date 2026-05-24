@@ -1,0 +1,29 @@
+# PROPOSAL — DO NOT APPLY (audit-and-propose exercise; no substrate writes)
+#
+# Target resource : https://pod.vardeman.me/vault/.well-known/solid  (storage description)
+# Predicate       : rdfs:seeAlso
+# Problem         : two seeAlso targets 404 — leftovers from the wiki container rename
+#                     /wiki/pages/   -> renamed to /wiki/concepts/   (404 now)
+#                     /wiki/sources/ -> merged into /wiki/concepts/   (404 now)
+# Live containers  : /wiki/{concepts,people,places,events,organizations,procedures,working}/
+#
+# NOTE: the storage description is documented as fully static via Components.js
+#       (void-description.json) — PATCH returns 405 (see MEMORY.md). This N3 Patch
+#       is the LOGICAL repair; the real fix is editing the static config source.
+#       See proposal 04 for the config-file edit. This patch is illustrative.
+#
+# Recommended new seeAlso set: drop the two dead paths; add /wiki/concepts/ (the
+# rename target, which currently has NO seeAlso entry at all). people/procedures/
+# working already listed; places/events/organizations are routed via Type Index and
+# were never in seeAlso, so leaving them out preserves existing scope.
+
+@prefix solid: <http://www.w3.org/ns/solid/terms#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+
+_:patch a solid:InsertDeletePatch ;
+  solid:deletes {
+    <../> rdfs:seeAlso <../wiki/pages/> , <../wiki/sources/> .
+  } ;
+  solid:inserts {
+    <../> rdfs:seeAlso <../wiki/concepts/> .
+  } .

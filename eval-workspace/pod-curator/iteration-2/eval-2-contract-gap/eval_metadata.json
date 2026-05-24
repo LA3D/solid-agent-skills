@@ -1,0 +1,22 @@
+{
+  "eval_id": 2,
+  "eval_name": "contract-gap",
+  "prompt": "Those addressbook contact affordances (contact-find-by-name etc.) look half-finished next to wiki-search-grep. Check whether they're properly described as affordance descriptors, and if not, propose fixes.",
+  "assertions": [
+    {
+      "text": "Detected the 8 addressbook descriptors are typed wiki:Affordance only and lack prof:ResourceDescriptor"
+    },
+    {
+      "text": "Named the missing contract predicates (prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy)"
+    },
+    {
+      "text": "Constructed a fix adding the missing predicates, composed from what each descriptor already does"
+    },
+    {
+      "text": "Preserved the existing working sh:agentInstruction + wiki:selectQuery"
+    },
+    {
+      "text": "Made the correct subtype judgment: did NOT add wiki:SearchAffordance/dispatchPattern (these are SPARQL SELECT, not HTTP ?ext= dispatch)"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+@prefix as:   <https://www.w3.org/ns/activitystreams#> .
+@prefix mem:  <https://pod.vardeman.me/vault/ontology/mem#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# Proposal 02 — contract gap (construction, not staleness)
+# pod-audit finding: StorageDescriptionShape:agentInstruction @ /vault/
+# The storage description has all the catalog pointers (affordanceCatalog,
+# typeIndex, contextDocument, shapeCatalog, profileDocument, capability catalog,
+# contactCatalog, templateCatalog, extensionGuide) but no entry-point prose
+# telling an arriving agent the ORDER to follow them. D104 sweep item.
+
+<urn:uuid:906ba737-9685-4419-a60d-ffeadc21892f>
+    a as:Announce, mem:RealignAction, prov:Activity ;
+    as:actor <urn:agent:claude-code> ;
+    as:target </vault/wiki/working/curator-proposals/> ;
+    as:object </vault/.well-known/solid> ;
+    prov:wasAssociatedWith <urn:agent:claude-code> ;
+    prov:used </vault/meta/affordances/markdown-projection.ttl> ;
+    prov:wasDerivedFrom </vault/.well-known/solid> ;
+    mem:stalenessClass mem:ProseDrift ;
+    mem:rationale """The storage description is the cold-start entry point (D44)
+but carries no sh:agentInstruction, so an arriving agent must infer the discovery
+order from the bare pointer set. Composed an entry-point instruction from the
+pointers the description already publishes (wiki:affordanceCatalog, wiki:typeIndex,
+wiki:contextDocument, wiki:shapeCatalog, wiki:profileDocument), mirroring the
+self-describing prose pattern that the affordance descriptors already use
+(e.g. markdown-projection.ttl's sh:agentInstruction). This is a contract gap
+(the prose never existed) rather than drift away from a prior form; classed
+ProseDrift because the repair direction is text->reality (make the description
+narrate the live discovery chain). Ground truth: the discovery chain documented
+in solid-agent-skills/CLAUDE.md and the live pointer set.""" ;
+    as:published "2026-05-23T14:30:00Z"^^xsd:dateTime .
+
+# ---------------------------------------------------------------------------
+# CONCRETE FIX — repo-side (storage description PATCH returns 405; static).
+# File: css/config/void-description.json (cogitarelink-solid) — add an
+# sh:agentInstruction literal on the <../> subject (or the storage-patch overlay
+# so it persists across `make reset`). Proposed prose:
+#
+#   sh:agentInstruction
+#     "You are at this Pod's storage description — the cold-start entry point.
+#      To use this Pod as a memory substrate, follow these pointers in order:
+#      (1) wiki:contextDocument for the prefix->IRI registry and short-form
+#      predicates; (2) wiki:typeIndex to route an rdf:type to its container;
+#      (3) wiki:affordanceCatalog to enumerate substrate capabilities (each
+#      entry is a prof:ResourceDescriptor whose sh:agentInstruction is its
+#      copy-pasteable invocation contract); (4) wiki:shapeCatalog for the SHACL
+#      contracts content must satisfy; (5) wiki:profileDocument for the
+#      wiki-memory L3 narrative. This Pod hosts NO SPARQL endpoint — run the
+#      queries quoted in affordance descriptors in your own engine (Comunica),
+#      passing the named .meta/index resources as explicit sources." .
+#
+# Satisfies StorageDescriptionShape:agentInstruction. After edit: `make reset`.

@@ -1,0 +1,75 @@
+{
+  "pod": "https://pod.vardeman.me/vault/",
+  "findings": [
+    {
+      "severity": "WARN",
+      "location": "https://pod.vardeman.me/vault/wiki/pages/",
+      "constraint": "resolve:seeAlso",
+      "message": "seeAlso target does not resolve (got 404).",
+      "remediation": "Stale pointer \u2014 update or remove it (Type Index already routes containers)."
+    },
+    {
+      "severity": "WARN",
+      "location": "https://pod.vardeman.me/vault/wiki/sources/",
+      "constraint": "resolve:seeAlso",
+      "message": "seeAlso target does not resolve (got 404).",
+      "remediation": "Stale pointer \u2014 update or remove it (Type Index already routes containers)."
+    },
+    {
+      "severity": "WARN",
+      "location": "https://pod.vardeman.me/vault/meta/affordances/contact-find-by-name.ttl",
+      "constraint": "descriptor:untyped",
+      "message": "Catalog entry is not typed prof:ResourceDescriptor, so it escapes the descriptor contract (no role/label/conformsTo/installedBy enforced).",
+      "remediation": "Add 'a prof:ResourceDescriptor' plus prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy to bring it under governance."
+    },
+    {
+      "severity": "WARN",
+      "location": "https://pod.vardeman.me/vault/meta/affordances/bridge-card-to-wiki.ttl",
+      "constraint": "descriptor:untyped",
+      "message": "Catalog entry is not typed prof:ResourceDescriptor, so it escapes the descriptor contract (no role/label/conformsTo/installedBy enforced).",
+      "remediation": "Add 'a prof:ResourceDescriptor' plus prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy to bring it under governance."
+    },
+    {
+      "severity": "WARN",
+      "location": "https://pod.vardeman.me/vault/meta/affordances/contact-find-by-group.ttl",
+      "constraint": "descriptor:untyped",
+      "message": "Catalog entry is not typed prof:ResourceDescriptor, so it escapes the descriptor contract (no role/label/conformsTo/installedBy enforced).",
+      "remediation": "Add 'a prof:ResourceDescriptor' plus prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy to bring it under governance."
+    },
+    {
+      "severity": "WARN",
+      "location": "https://pod.vardeman.me/vault/meta/affordances/contact-find-by-email.ttl",
+      "constraint": "descriptor:untyped",
+      "message": "Catalog entry is not typed prof:ResourceDescriptor, so it escapes the descriptor contract (no role/label/conformsTo/installedBy enforced).",
+      "remediation": "Add 'a prof:ResourceDescriptor' plus prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy to bring it under governance."
+    },
+    {
+      "severity": "WARN",
+      "location": "https://pod.vardeman.me/vault/meta/affordances/contact-find-by-affiliation.ttl",
+      "constraint": "descriptor:untyped",
+      "message": "Catalog entry is not typed prof:ResourceDescriptor, so it escapes the descriptor contract (no role/label/conformsTo/installedBy enforced).",
+      "remediation": "Add 'a prof:ResourceDescriptor' plus prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy to bring it under governance."
+    },
+    {
+      "severity": "WARN",
+      "location": "https://pod.vardeman.me/vault/meta/affordances/org-find-by-ror.ttl",
+      "constraint": "descriptor:untyped",
+      "message": "Catalog entry is not typed prof:ResourceDescriptor, so it escapes the descriptor contract (no role/label/conformsTo/installedBy enforced).",
+      "remediation": "Add 'a prof:ResourceDescriptor' plus prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy to bring it under governance."
+    },
+    {
+      "severity": "WARN",
+      "location": "https://pod.vardeman.me/vault/meta/affordances/contact-find-by-orcid.ttl",
+      "constraint": "descriptor:untyped",
+      "message": "Catalog entry is not typed prof:ResourceDescriptor, so it escapes the descriptor contract (no role/label/conformsTo/installedBy enforced).",
+      "remediation": "Add 'a prof:ResourceDescriptor' plus prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy to bring it under governance."
+    },
+    {
+      "severity": "WARN",
+      "location": "https://pod.vardeman.me/vault/meta/affordances/org-find-by-name.ttl",
+      "constraint": "descriptor:untyped",
+      "message": "Catalog entry is not typed prof:ResourceDescriptor, so it escapes the descriptor contract (no role/label/conformsTo/installedBy enforced).",
+      "remediation": "Add 'a prof:ResourceDescriptor' plus prof:hasRole, rdfs:label, dct:conformsTo, wiki:installedBy to bring it under governance."
+    }
+  ]
+}
