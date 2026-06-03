@@ -1,214 +1,279 @@
 ---
 name: pod-discover
-description: Cold-start discovery workflow for a Solid Pod running wiki-memory L3 — follow the storage description Link header from any URL to reach the affordance catalog, JSON-LD context, and typed wiki containers. Use this skill whenever you arrive on a Solid Pod and need to learn what kinds of resources it holds, what vocabularies it uses, what affordances the substrate offers, and where to read or write content. Triggers on any task involving Solid Pod navigation, discovering resource types, learning a Pod's capabilities, or first contact with an unknown Pod.
+description: Cold-start discovery workflow for a wiki-memory Solid Pod (a SKOS-backed agentic memory pod) — follow the storage-description Link header from any URL to reach the JSON-LD context, affordance catalog, SHACL shape catalog, Type Index, and typed wiki containers. Use this skill whenever you arrive on a Solid Pod and need to learn what kinds of resources it holds, what vocabularies it uses, what affordances the substrate offers, and where to read or write content. Triggers on any task involving Solid Pod navigation, discovering resource types, learning a Pod's capabilities, or first contact with an unknown Pod.
 ---
 
 # Pod Discovery — Cold-Start Arrival
 
-A Solid Pod running wiki-memory L3 describes itself through standard HTTP affordances. You do not need prior knowledge of its schema — every step is a `GET` against a URL discoverable from the previous step. This skill walks you through the discovery chain from any URL to the typed containers + substrate affordances.
+A wiki-memory Solid Pod describes itself through standard HTTP affordances. You do not need prior
+knowledge of its schema — every step is a `GET` against a URL discoverable from the previous step.
+This skill walks the discovery chain from any URL to the typed containers, the substrate affordances,
+and the Pod's own authoring guide.
+
+The Pod is an **agentic memory pod**: a SKOS concept backbone where concepts are the navigational
+spine and notes/pages attach to them via typed edges. Treat the URL path segments (`wiki`, `vault`)
+as **opaque** — meaning is defined by the RDF in each resource's `.meta`, not by the words in the path.
 
 ## Quick reference
 
-**Entry point**: Any resource's `Link` header carries `rel="http://www.w3.org/ns/solid/terms#storageDescription"` (the spec-mandated slot, per D44). Follow it.
+**Entry point**: Any resource's `Link` header carries `rel="http://www.w3.org/ns/solid/terms#storageDescription"`
+(the spec-mandated slot, per D44). Follow it.
+
+**Prefixes used below** (canonical IRIs confirmed from the live context document):
+```
+sub:      https://pod.vardeman.me/vault/ontology/substrate#   # substrate vocab: catalogs, routing, affordances, governance
+wiki:     https://pod.vardeman.me/vault/ontology/wiki#         # L3 content classes that lack a standard term (Source, WorkingNote)
+wikirole: https://pod.vardeman.me/vault/ontology/wikirole#     # PROF roles
+cap:      https://pod.vardeman.me/vault/ontology/capability#   # capability catalog
+solid:    http://www.w3.org/ns/solid/terms#
+prof:     http://www.w3.org/ns/dx/prof/
+skos:/dct:/prov:/cito:/foaf:/schema:                            # standard W3C + community vocabularies
+```
 
 **Reachable from the storage description**:
-| Pointer | Predicate | Purpose |
+| Pointer predicate | Target | Purpose |
 |---|---|---|
-| JSON-LD context | `wiki:contextDocument` | Canonical prefix→IRI registry; short-form predicate names |
-| Affordance catalog | `wiki:affordanceCatalog` | Per-content-type substrate behaviors (D52) |
-| Type Index | `wiki:typeIndex` | Standard Solid class → container routing (D8) |
-| Shape catalog | `wiki:shapeCatalog` | SHACL shape files (D77) |
-| Wiki containers | `rdfs:seeAlso` (×5) | `/wiki/{pages,sources,people,procedures,working}/` (D76) |
+| `sub:agentGuide` | `/vault/wiki/concepts/how-wiki-memory-works.md` | **Read this first** — the Pod's own write guide (SKOS model, label frames, 422 contract) |
+| `sub:contextDocument` | `/vault/meta/context.jsonld` | Canonical prefix→IRI registry + short-form predicate aliases |
+| `sub:affordanceCatalog` | `/vault/meta/affordances/` | Per-behavior substrate descriptors (D52) |
+| `sub:shapeCatalog` | `/vault/meta/shapes/` | SHACL shape files (the write contracts) |
+| `solid:publicTypeIndex` | `/vault/settings/publicTypeIndex` | Standard Solid class → container routing (works; D8/D107) |
+| `rdfs:seeAlso` (×7) | the 7 typed wiki containers | `/vault/wiki/{concepts,people,places,events,organizations,procedures,working}/` |
+| `prof:hasResource` (×5) | `/vault/meta/profiles/{page,concept,person,howto,working}` | PROF resource descriptors — per-kind profile hints (D86) |
+| `cap:catalog` | `/vault/meta/capabilities/` | Capability catalog (D83) |
+| `sub:templateCatalog` | `/vault/meta/templates/` | Authoring templates |
+| `sub:extensionGuide` | `/vault/meta/extending-l3.md` | How to extend the substrate at a new container (D100) |
+| `sub:contactCatalog` | `/vault/contacts/` | vCard AddressBook substrate (separate from `/wiki/people/`) |
+| `sub:profileDocument` | `/vault/wiki/index.md` | The Pod's human-facing landing page |
 
-**Two key vocabularies declared via `void:vocabulary`** (D49): standard W3C (SKOS, DCT, PROV, CITO, FOAF) + pod-local `wiki:` namespace.
+**Vocabularies declared via `void:vocabulary`**: standard W3C/community (`skos:`, `dct:`, `prov:`,
+`cito:`) + pod-local (`wiki:`, `sub:`, `wikirole:`). Aggressive standard reuse is deliberate (D107):
+content classes are mostly standard terms, not pod-local.
 
 ## Step 1: Find the storage description
 
-Hit any URL on the Pod with a `HEAD` (or `GET` and read headers) and look for the `solid:storageDescription` Link.
+Hit any URL on the Pod and read the `solid:storageDescription` Link.
 
 ```bash
-curl -sSI http://pod.vardeman.me:3000/vault/ | grep -i '^link:'
+curl -sSI https://pod.vardeman.me/vault/ | grep -i '^link:'
 ```
 
-You'll see several `Link:` headers. The one that matters:
+The one that matters:
 
 ```
-Link: <http://pod.vardeman.me:3000/vault/.well-known/solid>; rel="http://www.w3.org/ns/solid/terms#storageDescription"
+Link: <https://pod.vardeman.me/vault/.well-known/solid>; rel="http://www.w3.org/ns/solid/terms#storageDescription"
 ```
 
-This is the entry point. The Pod has told you where its self-description lives.
-
-Other useful Links you'll see in passing:
-- `describedby` → this resource's `.meta` sidecar (where metadata lives)
-- `timemap` → RFC 7089 TimeMap for time-travel queries (D61)
-- `type` → LDP/PIM types (`pim:Storage`, `ldp:Container`, etc.)
+This is the entry point. Other useful Links you'll see in passing:
+- `describedby` → this resource's `.meta` sidecar (where its RDF metadata lives)
+- `timemap` / `timegate` → RFC 7089 time-travel (D61)
+- `type` → LDP/PIM types (`pim:Storage`, `ldp:Container`, …)
+- `rel="profile"` → `fabric:CoreProfile`, `fabric:SolidPodProfile` (out-of-band profile hints, RFC 6906)
 
 ## Step 2: Read the storage description
 
 ```bash
-curl -sS -H "Accept: text/turtle" http://pod.vardeman.me:3000/vault/.well-known/solid
+curl -sS -H "Accept: text/turtle" https://pod.vardeman.me/vault/.well-known/solid
 ```
 
-You'll get Turtle that declares:
+The served Turtle uses full/relative IRIs; prefixed for readability it declares:
 
 ```turtle
 <../> a pim:Storage, void:Dataset, dcat:DataService ;
-    dct:conformsTo fabric:SolidPodProfile ;
-    void:vocabulary skos:, dct:, prov:, cito:, foaf:, wiki: ;
-    wiki:contextDocument     </vault/meta/context.jsonld> ;
-    wiki:affordanceCatalog   </vault/meta/affordances/> ;
-    wiki:typeIndex           </vault/settings/publicTypeIndex> ;
-    wiki:shapeCatalog        </vault/meta/shapes/> ;
-    rdfs:seeAlso </vault/wiki/pages/>, </vault/wiki/sources/>,
-                 </vault/wiki/people/>, </vault/wiki/procedures/>,
-                 </vault/wiki/working/> .
+    dct:conformsTo fabric:CoreProfile, fabric:SolidPodProfile ;
+    void:vocabulary skos:, dct:, prov:, cito:, wiki:, sub:, wikirole: ;
+    sub:agentGuide          </vault/wiki/concepts/how-wiki-memory-works.md> ;   # READ FIRST
+    sub:contextDocument     </vault/meta/context.jsonld> ;
+    sub:affordanceCatalog   </vault/meta/affordances/> ;
+    sub:shapeCatalog        </vault/meta/shapes/> ;
+    solid:publicTypeIndex   </vault/settings/publicTypeIndex> ;
+    cap:catalog             </vault/meta/capabilities/> ;
+    sub:templateCatalog     </vault/meta/templates/> ;
+    sub:extensionGuide      </vault/meta/extending-l3.md> ;
+    sub:contactCatalog      </vault/contacts/> ;
+    sub:profileDocument     </vault/wiki/index.md> ;
+    rdfs:seeAlso </vault/wiki/concepts/>, </vault/wiki/people/>, </vault/wiki/places/>,
+                 </vault/wiki/events/>, </vault/wiki/organizations/>,
+                 </vault/wiki/procedures/>, </vault/wiki/working/> ;
+    prof:hasResource </vault/meta/profiles/page>, </vault/meta/profiles/concept>,
+                     </vault/meta/profiles/person>, </vault/meta/profiles/howto>,
+                     </vault/meta/profiles/working> ;
+    sh:agentInstruction "This Pod's memory is a SKOS concept backbone. Every wiki page has TWO RDF
+      subjects with three frame roles: the page document <> (dct:title), the entity <#this>
+      (schema:name), and -- when the entity is a concept -- the SKOS unit <#this> (skos:prefLabel).
+      skos:broader/narrower/related is the navigation axis. Writes are validated by SHACL shapes; a
+      422 returns a sh:ValidationReport you correct against. Read sub:agentGuide before writing." .
 ```
 
-Five things to extract:
-1. The list of `void:vocabulary` IRIs — these are the namespaces the Pod uses
-2. `wiki:contextDocument` URL — fetch this next (Step 3) to get short-form names
-3. `wiki:affordanceCatalog` URL — substrate behaviors (Step 4)
-4. The five `rdfs:seeAlso` container URLs — the typed wiki containers (Step 5)
-5. Note that `wiki:typeIndex` and `wiki:shapeCatalog` exist but read the "Known substrate gaps" section below before relying on them
+What to extract:
+1. The storage-level `sh:agentInstruction` — the substrate's own one-paragraph orientation. Read it.
+2. `sub:agentGuide` — fetch `how-wiki-memory-works.md` next; it is the authoritative write guide.
+3. `void:vocabulary` — the namespaces in play.
+4. `sub:contextDocument` — the prefix/alias registry (Step 3).
+5. `sub:affordanceCatalog` — substrate behaviors (Step 4).
+6. The 7 `rdfs:seeAlso` containers + the `solid:publicTypeIndex` (Steps 5–6).
 
 ## Step 3: Read the JSON-LD context (vocabulary registry)
 
 ```bash
-curl -sS http://pod.vardeman.me:3000/vault/meta/context.jsonld
+curl -sS https://pod.vardeman.me/vault/meta/context.jsonld
 ```
 
-Returns a JSON-LD `@context` block. Two parts:
-
-**Prefix registry** — maps short prefixes to full namespace IRIs:
+Returns a JSON-LD `@context`. **Prefix registry:**
 ```json
-"wiki":  "urn:example:wiki#",
-"dct":   "http://purl.org/dc/terms/",
-"skos":  "http://www.w3.org/2004/02/skos/core#",
-"cito":  "http://purl.org/spar/cito/",
-"foaf":  "http://xmlns.com/foaf/0.1/",
-"prov":  "http://www.w3.org/ns/prov#"
+"wiki": "https://pod.vardeman.me/vault/ontology/wiki#",
+"sub":  "https://pod.vardeman.me/vault/ontology/substrate#",
+"cito": "http://purl.org/spar/cito/",
+"foaf": "http://xmlns.com/foaf/0.1/",
+"schema": "https://schema.org/"
 ```
-
-**Short-form aliases** — let you use compact names in JSON-LD documents:
+**Short-form aliases** (these tell you what the Pod's L3 *means* by each edge):
 ```json
 "title":      "dct:title",
 "references": "dct:references",
-"broader":    "skos:broader",
-"related":    "skos:related",
-"contributor":"dct:contributor",
-"extends":    "cito:extends",       ← NOT wiki:extends. The Pod uses W3C CITO.
-"supports":   "cito:agreesWith",
-"criticizes": "cito:disagreesWith",
-"Concept":    "wiki:Concept",
-"Source":     "wiki:Source",
-"Person":     "wiki:Person",
-"Procedure":  "wiki:Procedure",
-"WorkingNote":"wiki:WorkingNote",
-"Hub":        "wiki:Hub"
+"source":     "dct:source",
+"broader":    "skos:broader",      "related":    "skos:related",
+"contributor":"dct:contributor",   "creator":    "dct:creator",
+"extends":    "cito:extends",       ← W3C CITO, not a pod-local term
+"supports":   "cito:agreesWith",    "criticizes": "cito:disagreesWith",
+"about":      "schema:about",       "affiliation":"schema:affiliation",
+"identifier": "schema:identifier",  "member":     "schema:member"
 ```
-
-**Why this matters**: when you encounter a `.meta` triple like `<resource> cito:extends <other>`, the JSON-LD context tells you "this is what the Pod's L3 means by `extends`." Hybrid vocabulary stance per D79 — DCT/SKOS/CITO/FOAF/PROV by default; `wiki:*` only for genuine gaps.
+Hybrid vocabulary stance (D107): standard terms (DCT/SKOS/CITO/FOAF/schema.org) by default; `wiki:`/`sub:`
+only for genuine gaps. When you meet a `.meta` triple like `<resource> cito:extends <other>`, this
+registry is how you decode it.
 
 ## Step 4: List the affordance catalog (substrate behaviors)
 
 ```bash
-curl -sS -H "Accept: text/turtle" http://pod.vardeman.me:3000/vault/meta/affordances/
+curl -sS -H "Accept: text/turtle" https://pod.vardeman.me/vault/meta/affordances/
 ```
 
-Returns an `ldp:Container` listing 4 affordance descriptors:
+Returns an `ldp:Container` listing ~20 affordance descriptors, grouped by concern:
 
-| Descriptor | Type | Purpose |
+| Group | Descriptors | Purpose |
 |---|---|---|
-| `markdown-projection.ttl` | `wiki:WriteAffordance` | Body markdown wikilinks project to `.meta` triples on write (D58/D71) |
-| `hub-view.ttl` | `wiki:DerivedClassAffordance` | A `wiki:Resource` becomes a `wiki:Hub` when ≥3 children point at it via `skos:broader` (D80) |
-| `breadcrumb-view.ttl` | `wiki:DerivedNavigationAffordance` | Substrate-computed navigation chains |
-| `memento.ttl` | `wiki:VersionAffordance` | RFC 7089 time-travel via `?ext=timemap` and `?version=<14-digit-datetime>` (D61) |
+| Core projection/derivation | `markdown-projection`, `hub-view`, `breadcrumb-view` | Body→`.meta` projection (D58/D71); derived Hub when ≥3 `skos:broader` children (D80); nav chains |
+| Lifecycle | `crystallize`, `supersede`, `demote`, `archive`, `link`, `merge`, `memory-history` | Two-stage commit + memory operations + provenance log |
+| Versioning | `memento` | RFC 7089 time-travel via `?ext=timemap` / `?version=<14-digit-datetime>` (D61) |
+| Search | `wiki-search-grep` | Recursive literal-substring search over markdown bodies (D87) |
+| Contacts/orgs | `contact-find-by-{name,email,orcid,affiliation,group}`, `org-find-by-{name,ror}`, `bridge-card-to-wiki` | vCard AddressBook queries + the contacts↔wiki/people bridge |
 
-Fetch any descriptor for its `sh:agentInstruction`. Example:
-
-```bash
-curl -sS -H "Accept: text/turtle" http://pod.vardeman.me:3000/vault/meta/affordances/markdown-projection.ttl
-```
-
-The markdown-projection descriptor lists exactly which predicates the substrate writes (`wiki:governs`) and which frontmatter keys it reads (`wiki:projectsFromFrontmatter`). This is D81 Model A: substrate owns governed predicates; the agent owns everything else.
-
-`sh:agentInstruction` on the markdown-projection descriptor:
-> "Substrate writes the predicates listed in wiki:governs. To express any of those, edit the body+frontmatter; do not PATCH .meta directly. Other predicates are agent-extensible."
-
-## Step 5: Read container `.meta` files for class-level guidance
-
-Each of the five wiki containers has a `.meta` sidecar carrying its class-level `sh:agentInstruction`. Fetch the container URL with `Accept: text/turtle`:
+Fetch any descriptor for its `sh:agentInstruction`. The key one for writing:
 
 ```bash
-curl -sS -H "Accept: text/turtle" http://pod.vardeman.me:3000/vault/wiki/sources/
+curl -sS -H "Accept: text/turtle" https://pod.vardeman.me/vault/meta/affordances/markdown-projection.ttl
 ```
 
-Returns:
-```turtle
-<> dc:title "Wiki Sources" ;
-   wiki:shape </vault/meta/shapes/source.shacl.ttl> ;
-   sh:agentInstruction "Citation records (literature notes, papers, reports).
-     Shape: wiki:SourceShape. dct:identifier required (DOI, arXiv ID, or citekey).
-     Use cito:extends, cito:agreesWith, cito:disagreesWith for typed citation relationships." .
-```
+It declares `sub:governs` (predicates the substrate writes for you — `rdf:type`, `dct:title`,
+`dct:identifier`, `dct:created/modified`, `dct:references/source/subject/contributor/creator`,
+`skos:broader/related`, `cito:extends/agreesWith/disagreesWith`, `wiki:maturity`, `prov:wasGeneratedBy`)
+and `sub:projectsFromFrontmatter` (frontmatter keys it reads — `type`, `created`, `modified`,
+`maturity`, `aliases`, `identifier`, `citekey`). Its `sh:agentInstruction`:
+> "Substrate writes the predicates listed in sub:governs. To express any of those, edit the
+> body+frontmatter; do not PATCH .meta directly. Other predicates are agent-extensible."
 
-The five containers and what they hold:
+This is D81 Model A: substrate owns governed predicates; you own everything else.
+
+## Step 5: The seven typed containers
+
+The `rdfs:seeAlso` list gives the seven containers. Class is resolved via the Type Index (Step 6).
+Content classes are **standard vocabulary terms** where one exists (D105/D106):
 
 | Container | Class | Use for |
 |---|---|---|
-| `/vault/wiki/pages/` | `wiki:Page` (permissive) | General concepts, MOCs, theory notes, daily notes |
-| `/vault/wiki/sources/` | `wiki:Source` | Citation records — `dct:identifier` required; CITO predicates for relationships |
-| `/vault/wiki/people/` | `wiki:Person` | FOAF-based, with `foaf:nick` aliases for cross-system linking |
-| `/vault/wiki/procedures/` | `wiki:Procedure` | Procedural memory — body carries the procedure |
-| `/vault/wiki/working/` | `wiki:WorkingNote` (permissive) | Low-ceremony scratchpad; promotes to durable via two-stage commit (D73) |
+| `/vault/wiki/concepts/` | `skos:Concept` **and** `wiki:Source` | Concepts (the SKOS backbone — `skos:prefLabel` required) AND citation records (`wiki:Source`, `dct:identifier` required). Both route here. |
+| `/vault/wiki/people/` | `schema:Person` | People — `foaf:name` preferred; `foaf:nick` lists aliases for cross-system linking |
+| `/vault/wiki/places/` | `schema:Place` | Places |
+| `/vault/wiki/events/` | `schema:Event` | Events |
+| `/vault/wiki/organizations/` | `schema:Organization` | Organizations |
+| `/vault/wiki/procedures/` | `schema:HowTo` | Procedural memory — body carries the procedure; `schema:step` for structure |
+| `/vault/wiki/working/` | `wiki:WorkingNote` (permissive) | Low-ceremony scratchpad; promotes to durable via `crystallize` (D73) |
 
-The container `.meta` `sh:agentInstruction` is what you read to know what to write. It cites the shape file under `wiki:shape` — but see "Known substrate gaps" below before fetching that file.
+Some containers carry a class-level `sh:agentInstruction` in their `.meta` (confirmed on `people`,
+`procedures`, `working` — fetch the container with `Accept: text/turtle`):
 
-## Step 6: Decision tree — what to do next
+```bash
+curl -sS -H "Accept: text/turtle" https://pod.vardeman.me/vault/wiki/people/
+# <> dc:title "Wiki People" ;
+#    sh:agentInstruction "Person records. FOAF-based. foaf:name preferred over dct:title.
+#      foaf:nick lists aliases (citekey patterns, social handles, display names)." ;
+#    sub:shape </vault/meta/shapes/person.shacl.ttl> .
+```
+
+> **Current gap (verified 2026-06-03):** `concepts`, `places`, `events`, and `organizations`
+> containers do **not** yet carry a class-level `sh:agentInstruction` or `sub:shape` pointer — their
+> `.meta` holds only the LDP listing. For those, the authoritative write contract is the SHACL shape
+> reached via the Type Index (Step 6) + the `sub:agentGuide`. Don't treat a missing container
+> instruction as "no rules" — the shape still governs writes.
+
+## Step 6: Type Index — class → container routing
+
+The Type Index works (the old Phase-2 PARA drift is resolved). It is the canonical class→container map
+**and** the addressing axis (D105/D106):
+
+```bash
+curl -sS -H "Accept: text/turtle" https://pod.vardeman.me/vault/settings/publicTypeIndex
+```
+
+| `solid:forClass` | `solid:instanceContainer` |
+|---|---|
+| `skos:Concept` | `/vault/wiki/concepts/` |
+| `wiki:Source` | `/vault/wiki/concepts/` |
+| `schema:Person` | `/vault/wiki/people/` |
+| `schema:Place` | `/vault/wiki/places/` |
+| `schema:Event` | `/vault/wiki/events/` |
+| `schema:Organization` | `/vault/wiki/organizations/` |
+| `schema:HowTo` | `/vault/wiki/procedures/` |
+| `wiki:WorkingNote` | `/vault/wiki/working/` |
+| `vcard:AddressBook` | `/vault/contacts/index.ttl#this` (registered as `solid:instance`) |
+
+To write a resource of a given class, resolve its container here, then satisfy that container's shape.
+
+## Step 7: Decision tree — what to do next
 
 ```
-Want to read a specific resource?
-  → GET <resource-url>; read its describedby Link → <resource-url>.meta for triples
+Want to understand the write model before writing?
+  → GET sub:agentGuide (/vault/wiki/concepts/how-wiki-memory-works.md) — the SKOS model + label frames + 422 contract
 
-Want to query across a container?
-  → GET <container-url>?...   (Comunica SPARQL, see pod-query skill once it exists)
+Want to read a specific resource?
+  → GET <resource-url>; follow its describedby Link → <resource-url>.meta for the RDF (the graph view)
+
+Want to query across a container (the graph view)?
+  → The Pod hosts NO SPARQL endpoint — querying is client-side via Comunica with explicit/.meta sources
+    (the solid-pod sparql CLI auto-discovers a container's .meta). See the pod-query skill.
 
 Want to write a new resource?
-  → POST to /vault/wiki/working/ (low-ceremony) OR target container directly
-    (substrate validates per the container's SHACL shape — see pod-write skill once it exists)
+  → Resolve the container via the Type Index (Step 6) → satisfy its SHACL shape.
+    A violation returns HTTP 422 + a sh:ValidationReport; read sh:resultPath / sh:resultMessage and fix.
+    Low-ceremony alternative: POST to /vault/wiki/working/ (permissive), then crystallize.
 
 Want to time-travel?
-  → Append ?ext=timemap or ?version=<14-digit-datetime> to any resource URL
-    (per memento.ttl agentInstruction)
+  → Append ?ext=timemap or ?version=<14-digit-datetime> to any resource URL (memento.ttl)
 
 Want to know which predicates the substrate owns vs you own?
-  → Read /vault/meta/affordances/markdown-projection.ttl wiki:governs list
+  → GET /vault/meta/affordances/markdown-projection.ttl → sub:governs list
 ```
-
-## Known substrate gaps (current Pod state, 2026-05-15)
-
-The Pod is at Rung 1.4 — substrate scaffolding shipped but two surfaces aren't fully populated:
-
-1. **Type Index drift** — `wiki:typeIndex` at `/vault/settings/publicTypeIndex` still registers Phase 2 PARA types (`skos:Concept` → `/vault/resources/concepts/`, `vault:TheoryNote` → `/vault/resources/theories/`, etc.) rather than the 5 wiki classes pointing at `/vault/wiki/*` containers. Don't rely on Type Index for class-to-container routing on this Pod yet. Use the 5 `rdfs:seeAlso` containers from the storage description + each container's `.meta` `sh:agentInstruction` instead.
-
-2. **Shape catalog empty** — `wiki:shapeCatalog` at `/vault/meta/shapes/` exists as a container but holds no `.shacl.ttl` files. Container `.meta` files reference shapes (e.g., `wiki:shape </vault/meta/shapes/source.shacl.ttl>`) but the targeted files return 404. The class-level `sh:agentInstruction` in each container's `.meta` carries the load-bearing guidance until shape files are served.
-
-These are tracked as substrate work — they don't affect the discovery chain through the storage description + affordance catalog + JSON-LD context + container `.meta` paths, which all work.
 
 ## Key principle
 
-**The Pod describes itself. Follow the affordances.** Every URL you fetch should be reachable from a previous URL via a Link header, `rdfs:seeAlso`, or a typed predicate (`wiki:contextDocument`, `wiki:affordanceCatalog`, etc.). If you find yourself guessing a path (`/api/...`, `/admin/...`, `/data/...`), stop — re-read the storage description for the right pointer.
+**The Pod describes itself. Follow the affordances.** Every URL you fetch is reachable from a previous
+one via a Link header, `rdfs:seeAlso`, or a typed pointer (`sub:contextDocument`, `sub:affordanceCatalog`,
+`solid:publicTypeIndex`, …). If you find yourself guessing a path (`/api/…`, `/admin/…`, `/data/…`),
+stop — re-read the storage description for the right pointer. And remember the path segments are
+opaque: read the `.meta`, not the words in the URL.
 
-The discovery chain is short (3 hops to reach the substantive content):
+The discovery chain is short:
 1. `GET <any-url>` → `solid:storageDescription` Link
-2. `GET storage-description` → catalog pointers + container links
-3. `GET <catalog or container>` → the actual capabilities
+2. `GET storage-description` → `sub:agentGuide` + catalog pointers + Type Index + container links
+3. `GET <agentGuide / catalog / container / shape>` → the actual model and capabilities
 
 ## Output reporting
 
 When asked to report what you discovered, include:
 - **Discovery path**: every URL you fetched, in order, with what you learned from each
-- **Resource types**: the 5 wiki classes from the container `.meta` `sh:agentInstruction` (or whatever subset of containers you reached)
-- **Vocabularies**: the `void:vocabulary` list from the storage description
-- **Affordances**: the 4 entries in the affordance catalog, with one-line summaries from their `sh:agentInstruction`
-- **Anything broken**: 404s, stale data, contradictions you noticed
+- **Resource types**: the classes from the Type Index (the 8 wiki classes across 7 containers)
+- **Vocabularies**: the `void:vocabulary` list + how the JSON-LD context maps the short-form aliases
+- **Affordances**: the affordance-catalog groups, with one-line summaries from `sh:agentInstruction`
+- **Write model**: the SKOS-backbone summary from `sub:agentGuide` + the 422 correction contract
+- **Anything broken**: 404s, stale data, missing container instructions, contradictions you noticed
