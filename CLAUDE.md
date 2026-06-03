@@ -21,6 +21,12 @@ sufficient context for development work.
 
 ## Skill suite reset (2026-05-15)
 
+> **Open research agenda (2026-06-03):** whether these hand-written skills are over-built, and whether
+> skills should instead be thin/derived navigation principles + a *learned* procedural layer (GEPA/gskill
+> against a cold-agent eval, with Claude Code kept as the executor). See
+> `docs/research/2026-06-03-pod-skill-acquisition.md` — read it before investing further in detailed
+> hand-written skills.
+
 The 5 Phase 2 skills (`pod-shared`, `pod-discover`, `pod-browse`, `pod-create`,
 `pod-query`) were removed in May 2026 after the reference Pod underwent major
 architectural changes (D42–D81). The skills assumed Phase 2's generic PARA container
