@@ -48,6 +48,12 @@ the live Pod). Planned skills, foundation-first:
 ### Shipped out-of-order (sprint scope expanded)
 
 - **`wiki-search`** (shipped 2026-05-18, commit `b17be6f`) — Recursive literal-substring AND-search over wiki-memory L3 markdown pages via the Pod's `?ext=search-grep` affordance (D87). Thin HTTP wrapper around `solid-pod wiki-search`; handles OSLC §7.3 quoting + URL encoding; parses Turtle with N3.js; emits JSON sorted by `oslc:score` with paging metadata. Discovered via Tier-1 `Link: rel="queryBase"` headers or the D83 capability catalog.
+- **`pod-navigate`** (shipped 2026-06-XX, SP1 of the agentic progressive-disclosure
+  contract — spec in `cogitarelink-solid/docs/superpowers/specs/2026-06-10-agentic-progressive-disclosure-contract-design.md`) —
+  General disclosure-navigation discipline (orient → drill → ground → audit) carrying the
+  three content-laden dispositions (audit-before-trust E5 / ground-unknown-terms E7 /
+  declare-write-context). Deliberately bakes disposition content into the skill (E5b/bootstrap:
+  pointers leak) — a recorded D103 deviation. Gated by the `evals/skill-nav` cold-agent eval.
 
 ## Architecture
 
@@ -55,14 +61,14 @@ Agent skills for Solid Pod interaction, not a traditional CLI. Skills are compos
 context-aware, and integrated into the agent's reasoning loop. Evaluate the Vercel Skills
 framework (https://skills.sh/, https://github.com/vercel-labs/skills) as a substrate.
 
-### CLI Commands (13)
+### CLI Commands (15)
 
 | Command | Purpose |
 |---------|---------|
 | `solid-pod info <url>` | GET .well-known/solid, return VoID/DCAT as JSON-LD |
 | `solid-pod read <url>` | GET resource with Link headers and .meta sidecar |
 | `solid-pod sparql <url> <query>` | SPARQL via embedded Comunica; auto `.meta` discovery for containers; `--source` (repeatable) overrides discovery; `--default-graph-uri` (repeatable) is the RQ-Pod-4 workaround; `--accept-datetime` for Memento time-travel |
-| `solid-pod invoke <url> <affordance>` | Fetch `/meta/affordances/<name>.ttl` and execute its `wiki:constructQuery` / `wiki:selectQuery` via embedded Comunica (D52 machine-actionable affordance) |
+| `solid-pod invoke <resource-url> <affordance>` | Invoke a resource-scoped affordance: catalog discovered via the resource's storageDescription Link (or `--pod`); descriptor query (`sub:`/`wiki:` `selectQuery`/`constructQuery`, matched by localName) has `%RESOURCE%` substituted, then runs via embedded Comunica (D52 Tier-2) |
 | `solid-pod shapes <url>` | List SHACL shapes with sh:agentInstruction |
 | `solid-pod links <url>` | Outgoing references from .meta |
 | `solid-pod types <url>` | rdf:type values with counts |
@@ -72,6 +78,8 @@ framework (https://skills.sh/, https://github.com/vercel-labs/skills) as a subst
 | `solid-pod create <url>` | PUT resource + PATCH .meta |
 | `solid-pod patch <url>` | N3 Patch .meta sidecar |
 | `solid-pod wiki-search <container-url> [terms...]` | Recursive literal-substring AND-search over wiki-memory markdown pages via the Pod's `?ext=search-grep` affordance (D87, Phase 7a). OSLC Query 3.0 response parsed to JSON sorted by `oslc:score`. `--page-size N` `--start-index N` for paging |
+| `solid-pod affordances <url>` | List the Pod's affordance catalog by name (usable with `invoke`), discovered from any resource URL |
+| `solid-pod validate <data> --shape <shape>` | SHACL pre-flight: validate RDF data (URL or file) against a shape (URL or file) before writing — same validator family the Pod's admission floor is migrating to (shacl-engine) |
 
 ### Agent Skills
 
