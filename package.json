@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "description": "Agent-first CLI for Solid Pod interaction",
   "type": "module",
-  "bin": { "solid-pod": "./dist/cli.js" },
+  "bin": {
+    "solid-pod": "./dist/cli.js"
+  },
   "scripts": {
     "build": "tsc && chmod +x dist/cli.js",
     "dev": "tsx src/cli.ts",
@@ -13,7 +15,9 @@
     "@comunica/query-sparql-link-traversal": "0.8.0",
     "commander": "^13.0.0",
     "jsonld": "^9.0.0",
-    "n3": "^1.22.0"
+    "n3": "^1.22.0",
+    "rdf-ext": "^2.6.0",
+    "shacl-engine": "^1.1.0"
   },
   "overrides": {
     "@traqula/parser-sparql-1-2": "^1.0.0",
@@ -22,11 +26,11 @@
     "@traqula/core": "^1.0.0"
   },
   "devDependencies": {
-    "tsx": "^4.0.0",
-    "typescript": "^5.7.0",
-    "vitest": "^3.0.0",
     "@types/jsonld": "^1.5.0",
     "@types/n3": "^1.21.0",
-    "@types/node": "^22.0.0"
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
   }
 }

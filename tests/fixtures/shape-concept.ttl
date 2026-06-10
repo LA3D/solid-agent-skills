@@ -1,0 +1,11 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix ex:   <http://example.org/shapes#> .
+
+ex:ConceptShape a sh:NodeShape ;
+    sh:targetClass skos:Concept ;
+    sh:property [
+        sh:path skos:prefLabel ;
+        sh:minCount 1 ;
+        sh:message "A concept requires skos:prefLabel. Author it inline as [text]{.prefLabel}." ;
+    ] .
