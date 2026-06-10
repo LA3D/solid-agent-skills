@@ -1,0 +1,8 @@
+@prefix wiki: <https://pod.vardeman.me/vault/ontology/wiki#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a wiki:QueryAffordance ;
+    rdfs:label "Hub view" ;
+    wiki:constructQuery """
+        CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o } LIMIT 1
+    """ .

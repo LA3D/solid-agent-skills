@@ -1,0 +1,11 @@
+@prefix sub:  <https://pod.vardeman.me/vault/ontology/substrate#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a sub:QueryAffordance ;
+    rdfs:label "Memory history" ;
+    sub:selectQuery """
+        PREFIX as: <https://www.w3.org/ns/activitystreams#>
+        SELECT ?op ?action ?published WHERE {
+            ?op as:object <%RESOURCE%> ; a ?action ; as:published ?published .
+        } ORDER BY DESC(?published)
+    """ .

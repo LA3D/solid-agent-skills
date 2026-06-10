@@ -170,6 +170,30 @@ export async function discoverMetaSources(containerUrl: string): Promise<string[
     .map(u => u + '.meta')
 }
 
+const STORAGE_DESC_REL = 'http://www.w3.org/ns/solid/terms#storageDescription'
+
+/** Follow the spec-mandated storageDescription Link rel from any resource (D44). */
+export async function discoverStorageDescription(resourceUrl: string): Promise<string | null> {
+  const res = await safeFetch(resourceUrl, { method: 'HEAD' })
+  const links = parseLinkHeaders(res.headers.get('link'))
+  const sd = links[STORAGE_DESC_REL]
+  return typeof sd === 'string' ? sd : null
+}
+
+/** List a container's non-container members (RDF docs usable as direct Comunica sources). */
+export async function listContainerResources(containerUrl: string): Promise<string[]> {
+  const url = containerUrl.endsWith('/') ? containerUrl : containerUrl + '/'
+  const res = await fetchResource(url, 'text/turtle')
+  if (res.status !== 200) return []
+  const N3 = (await import('n3')).default
+  const quads = new N3.Parser({ baseIRI: url }).parse(res.body)
+  const ldpContains = 'http://www.w3.org/ns/ldp#contains'
+  return quads
+    .filter(q => q.predicate.value === ldpContains)
+    .map(q => q.object.value)
+    .filter(u => !u.endsWith('/'))
+}
+
 export async function patchResource(url: string, n3patch: string): Promise<FetchResult> {
   const res = await safeFetch(url, {
     method: 'PATCH',

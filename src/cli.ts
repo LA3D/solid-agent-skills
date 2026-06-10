@@ -45,8 +45,9 @@ program
   .action((url: string, query: string, opts: SparqlOptions) => sparql(url, query, opts))
 
 program
-  .command('invoke <url> <affordance>')
-  .description('Execute an affordance descriptor (wiki:constructQuery / wiki:selectQuery) via embedded Comunica')
+  .command('invoke <resource-url> <affordance>')
+  .description("Invoke a resource-scoped affordance: catalog discovered via the resource's storageDescription; %RESOURCE% substituted")
+  .option('--pod <url>', 'Pod root override (skips storage-description discovery)')
   .option('--source <url>', 'Explicit Comunica source (repeatable)', collectRepeating, [])
   .option('--default-graph-uri <url>', 'SPARQL Protocol default-graph-uri (repeatable)', collectRepeating, [])
   .option('--accept-datetime <rfc1123>', 'RFC 7089 Accept-Datetime for Memento time-travel')
