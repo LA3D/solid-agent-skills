@@ -14,6 +14,7 @@ import { search } from './commands/search.js'
 import { properties } from './commands/properties.js'
 import { wikiSearch, WikiSearchOptions } from './commands/wikiSearch.js'
 import { validate, ValidateOptions } from './commands/validate.js'
+import { affordances, AffordancesOptions } from './commands/affordances.js'
 
 // Commander variadic-flag collector: each --flag <value> appends to the list.
 function collectRepeating(value: string, previous: string[] = []): string[] {
@@ -106,6 +107,12 @@ program
   .description('SHACL pre-flight: validate RDF data (URL or file) against a shape (URL or file) before writing')
   .requiredOption('--shape <shape>', 'SHACL shape document (URL or file)')
   .action((data: string, opts: ValidateOptions) => validate(data, opts))
+
+program
+  .command('affordances <url>')
+  .description("List the Pod's affordance catalog (names usable with invoke), discovered from any resource URL")
+  .option('--pod <url>', 'Pod root override')
+  .action((url: string, opts: AffordancesOptions) => affordances(url, opts))
 
 program
   .command('wiki-search <container-url> [terms...]')
