@@ -46,3 +46,7 @@ pass *or* a fail of these as meaningful.
 - `tests/commands/properties.test.ts > solid-pod properties > returns predicate usage counts for a container`
 - `tests/commands/properties.test.ts > solid-pod properties > includes common predicates (skos:prefLabel, dct:subject)`
 - `tests/e2e/workflow.test.ts > end-to-end: discover → browse → query → create > Step 4: query .meta for concept labels`
+- `tests/commands/read.test.ts > solid-pod read > returns content + affordances for a container`
+  (added 2026-06-10 during SP1: reads the legacy pre-D107 path `resources/concepts/`; passes 3/3 in
+  isolation, trips only under full-suite concurrency against the single live Pod — confirmed not an SP1
+  regression, `read`/`fetchResource` untouched.)
