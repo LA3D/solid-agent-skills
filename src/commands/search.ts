@@ -1,4 +1,4 @@
-import { fetchResource, discoverMetaSources } from '../lib/http.js'
+import { fetchResource, discoverQuerySources } from '../lib/http.js'
 import { output } from '../lib/jsonld.js'
 import { SOLID_CONTEXT } from '../lib/context.js'
 import N3 from 'n3'
@@ -67,7 +67,7 @@ export async function search(
   try {
     const metaSources = options.source
       ? [options.source]
-      : await discoverMetaSources(containerUrl)
+      : await discoverQuerySources(containerUrl)
     if (metaSources.length === 0) {
       output({ '@context': SOLID_CONTEXT, source: containerUrl, terms, method: 'client', results: [] })
       return

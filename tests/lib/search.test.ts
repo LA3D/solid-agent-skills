@@ -25,7 +25,7 @@ vi.mock('../../src/lib/http.js', () => ({
     }
     return { status: 404, headers: {}, contentType: '', body: '' }
   }),
-  discoverMetaSources: vi.fn(),
+  discoverQuerySources: vi.fn(),
 }))
 
 describe('searchMeta', () => {

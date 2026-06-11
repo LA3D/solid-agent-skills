@@ -142,19 +142,48 @@ export async function putResource(url: string, body: string, contentType: string
 }
 
 /**
- * Discover .meta sidecar URLs for all resources in a container.
+ * RDF media types whose body is the queryable graph.
+ * When a member's Content-Type matches one of these, the body IS the RDF —
+ * no .meta sidecar needed. Everything else (markdown, HTML, binary) stores
+ * its RDF projection in a .meta sidecar.
+ */
+const RDF_CONTENT_TYPES = new Set([
+  'text/turtle',
+  'application/n-triples',
+  'application/ld+json',
+  'application/rdf+xml',
+  'application/trig',
+  'text/n3',
+  'application/n-quads',
+])
+
+function isRdfContentType(contentType: string): boolean {
+  // Strip parameters (e.g. "; charset=utf-8") before matching
+  const base = contentType.split(';')[0].trim().toLowerCase()
+  return RDF_CONTENT_TYPES.has(base)
+}
+
+/**
+ * Discover queryable RDF sources for all resources in a container.
  *
  * Comunica's link-traversal cannot follow `describedby` Link headers on
  * non-RDF resources (the RDF parse failure skips metadata extraction).
  * This function works around that gap by:
  * 1. Fetching the container listing (Turtle)
  * 2. Parsing ldp:contains to find contained resources
- * 3. Constructing .meta URLs for each resource
+ * 3. HEADing each member to detect its Content-Type
+ * 4. Returning the member body URL for native RDFSources, or the .meta
+ *    sidecar URL for non-RDF resources (markdown, etc.)
  *
- * Returns the .meta URLs suitable for use as explicit Comunica sources.
- * See: vault finding "Comunica Link-Traversal Meta Sidecar Gap"
+ * This is content-type-driven: a .ttl contact is queried via its body;
+ * a .md wiki note is queried via its .meta projection (the dual-layer model).
+ * Silently querying .meta on a native RDFSource returned empty results (the
+ * silent-empty bug this function fixes).
+ *
+ * Per-member HEADs run in parallel.
+ * See: vault finding "Comunica Link-Traversal Meta Sidecar Gap" (RQ-Pod-4)
  */
-export async function discoverMetaSources(containerUrl: string): Promise<string[]> {
+export async function discoverQuerySources(containerUrl: string): Promise<string[]> {
   const url = containerUrl.endsWith('/') ? containerUrl : containerUrl + '/'
   const res = await fetchResource(url, 'text/turtle')
   if (res.status !== 200) return []
@@ -163,11 +192,26 @@ export async function discoverMetaSources(containerUrl: string): Promise<string[
   const quads = new N3.Parser({ baseIRI: url }).parse(res.body)
   const ldpContains = 'http://www.w3.org/ns/ldp#contains'
 
-  return quads
+  const members = quads
     .filter(q => q.predicate.value === ldpContains)
     .map(q => q.object.value)
     .filter(u => !u.endsWith('/'))  // skip sub-containers
-    .map(u => u + '.meta')
+
+  // HEAD each member in parallel to determine content-type
+  const sources = await Promise.all(
+    members.map(async (memberUrl) => {
+      try {
+        const headRes = await safeFetch(memberUrl, { method: 'HEAD' })
+        const ct = headRes.headers.get('content-type') ?? ''
+        return isRdfContentType(ct) ? memberUrl : memberUrl + '.meta'
+      } catch {
+        // On HEAD failure fall back to .meta (the pre-fix behaviour)
+        return memberUrl + '.meta'
+      }
+    }),
+  )
+
+  return sources
 }
 
 const STORAGE_DESC_REL = 'http://www.w3.org/ns/solid/terms#storageDescription'

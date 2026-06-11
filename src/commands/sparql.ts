@@ -1,5 +1,5 @@
 import { querySparql } from '../lib/comunica.js'
-import { discoverMetaSources } from '../lib/http.js'
+import { discoverQuerySources } from '../lib/http.js'
 import { output } from '../lib/jsonld.js'
 
 export interface SparqlOptions {
@@ -33,7 +33,7 @@ export async function sparql(
       // URLs and include them as Comunica sources. Works around the Comunica
       // link-traversal gap where describedby headers on non-RDF resources are
       // never followed (RQ-Pod-4).
-      const metaSources = await discoverMetaSources(url)
+      const metaSources = await discoverQuerySources(url)
       sources = [url, ...metaSources]
       metaCount = metaSources.length
     } else {
