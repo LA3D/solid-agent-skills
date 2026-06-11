@@ -42,7 +42,8 @@ function escapeRegExp(s: string): string {
 export function substituteParams(query: string, params: Record<string, string>): string {
   let result = query
   for (const [name, value] of Object.entries(params)) {
-    result = result.replace(new RegExp('\\$' + escapeRegExp(name) + '\\b', 'g'), value)
+    // replacer FUNCTION (not string) so $&/$1/$$ in the value are inserted verbatim, not interpreted
+    result = result.replace(new RegExp('\\$' + escapeRegExp(name) + '\\b', 'g'), () => value)
   }
   return result
 }

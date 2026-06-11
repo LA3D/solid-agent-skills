@@ -45,6 +45,11 @@ describe('substituteParams (podless)', () => {
     const out = substituteParams(query, { subj: '<urn:s>', pred: '<urn:p>', obj: '"val"' })
     expect(out).toBe('SELECT * WHERE { <urn:s> <urn:p> "val" }')
   })
+
+  it('inserts values with regex replacement metachars ($&, $1) verbatim', () => {
+    const out = substituteParams('SELECT $x', { x: '<a$&b$1c>' })
+    expect(out).toBe('SELECT <a$&b$1c>')
+  })
 })
 
 const POD = process.env.SOLID_POD_URL || 'https://pod.vardeman.me/vault/'
