@@ -62,6 +62,13 @@ a future agent will audit this context before trusting the resource.
 - For **RDF payloads** (Turtle bodies, proposals, `.meta` patches): pre-flight
   locally before writing — `solid-pod validate <data.ttl> --shape <shape-url>`
   (shapes are listed in the Pod's shape catalog). Fix violations, then write.
+  Prefer `solid-pod create <container-url> --slug <name> --content-type
+  text/turtle < data.ttl` (body via stdin) when the CLI is available.
+- **curl footgun when sending Turtle:** a Turtle body starts with `@prefix`, and
+  curl's `-d`/`--data` treats a leading `@` as a FILE reference — `-d '@prefix
+  …'` fails with exit 26 (or silently sends the wrong thing). Always send RDF
+  bodies with `--data-binary @-` and a heredoc, or `--data-binary @file.ttl`;
+  never inline a Turtle body after `-d`.
 - For **markdown content**: the Pod validates server-side on write. A `422`
   response carries a ValidationReport with instructions — read it, correct,
   and retry. It is the Pod teaching you its write contract, not a dead end.
