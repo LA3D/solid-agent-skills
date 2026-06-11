@@ -47,9 +47,10 @@ program
 
 program
   .command('invoke <resource-url> <affordance>')
-  .description("Invoke a resource-scoped affordance: catalog discovered via the resource's storageDescription; %RESOURCE% substituted")
+  .description("Invoke an affordance: catalog discovered via the resource's storageDescription; %RESOURCE% and $param substituted")
   .option('--pod <url>', 'Pod root override (skips storage-description discovery)')
   .option('--source <url>', 'Explicit Comunica source (repeatable)', collectRepeating, [])
+  .option('--param <name=value>', 'Affordance parameter substitution ($name → value; value is verbatim SPARQL — IRI <…> or literal "…") (repeatable)', collectRepeating, [])
   .option('--default-graph-uri <url>', 'SPARQL Protocol default-graph-uri (repeatable)', collectRepeating, [])
   .option('--accept-datetime <rfc1123>', 'RFC 7089 Accept-Datetime for Memento time-travel')
   .action((url: string, affordance: string, opts: InvokeOptions) => invoke(url, affordance, opts))
