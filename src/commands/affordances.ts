@@ -15,7 +15,7 @@ export async function affordances(url: string, options: AffordancesOptions = {})
     output({
       catalog,
       affordances: await listAffordanceNames(catalog),
-      usage: 'solid-pod invoke <resource-url> <affordance-name>',
+      usage: 'solid-pod invoke <resource-url> <affordance-name> (query-bearing affordances; others carry navigation instructions — read the descriptor)',
     })
   } catch (err) {
     output({ error: `Affordance listing failed: ${(err as Error).message}` })

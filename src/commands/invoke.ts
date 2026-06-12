@@ -24,6 +24,11 @@ export function extractAffordanceQuery(quads: N3.Quad[]): { query: string; kind:
   return null
 }
 
+export function extractAgentInstruction(quads: N3.Quad[]): string | null {
+  const q = quads.find(q => q.predicate.value === 'http://www.w3.org/ns/shacl#agentInstruction')
+  return q ? q.object.value : null
+}
+
 export function substituteResource(query: string, resourceUrl: string): string {
   return query.replaceAll('%RESOURCE%', resourceUrl)
 }
@@ -112,7 +117,16 @@ export async function invoke(
     const quads = new N3.Parser({ baseIRI: descriptorUrl }).parse(res.body)
     const extracted = extractAffordanceQuery(quads)
     if (!extracted) {
-      output({ error: `Affordance ${affordanceName} has no selectQuery or constructQuery`, descriptorUrl })
+      const doc: Record<string, unknown> = {
+        error: `Affordance ${affordanceName} has no selectQuery or constructQuery`,
+        descriptorUrl,
+      }
+      const instruction = extractAgentInstruction(quads)
+      if (instruction) {
+        doc.agentInstruction = instruction
+        doc.hint = 'this affordance is navigation-only — follow its instruction'
+      }
+      output(doc)
       process.exitCode = 1
       return
     }

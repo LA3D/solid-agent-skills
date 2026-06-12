@@ -153,7 +153,7 @@ Returns an `ldp:Container` listing ~20 affordance descriptors, grouped by concer
 
 | Group | Descriptors | Purpose |
 |---|---|---|
-| Core projection/derivation | `markdown-projection`, `hub-view`, `breadcrumb-view` | Body→`.meta` projection (D58/D71); derived Hub when ≥3 `skos:broader` children (D80); nav chains |
+| Core projection/derivation | `markdown-projection`, `hub-view`, `breadcrumb-view` | Body→`.meta` projection (D58/D71); `hub-view`/`breadcrumb-view` are navigation descriptors, not invokable queries — hub routing is each container's derived `index.md`; breadcrumbs are the `skos:broader` chain on `<#this>` |
 | Lifecycle | `crystallize`, `supersede`, `demote`, `archive`, `link`, `merge`, `memory-history` | Two-stage commit + memory operations + provenance log |
 | Versioning | `memento` | RFC 7089 time-travel via `?ext=timemap` / `?version=<14-digit-datetime>` (D61) |
 | Search | `wiki-search-grep` | Recursive literal-substring search over markdown bodies (D87) |

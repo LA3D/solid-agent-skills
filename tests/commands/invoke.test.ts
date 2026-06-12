@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import N3 from 'n3'
 import { execSync } from 'child_process'
-import { extractAffordanceQuery, substituteResource, substituteParams } from '../../src/commands/invoke.js'
+import { extractAffordanceQuery, extractAgentInstruction, substituteResource, substituteParams } from '../../src/commands/invoke.js'
 
 const parse = (path: string) =>
   new N3.Parser({ baseIRI: 'https://pod.example/meta/affordances/x.ttl' }).parse(readFileSync(path, 'utf8'))
@@ -17,6 +17,13 @@ describe('invoke helpers (podless)', () => {
   it('extracts wiki:constructQuery (legacy namespace)', () => {
     const q = extractAffordanceQuery(parse('tests/fixtures/descriptor-wiki.ttl'))
     expect(q?.kind).toBe('construct')
+  })
+
+  it('navigation-only descriptor: no query, but sh:agentInstruction is extractable (F6)', () => {
+    const quads = parse('tests/fixtures/descriptor-nav-only.ttl')
+    expect(extractAffordanceQuery(quads)).toBeNull()
+    const instruction = extractAgentInstruction(quads)
+    expect(instruction).toContain('read the container\'s derived index.md')
   })
 
   it('substitutes every %RESOURCE% occurrence', () => {
@@ -76,6 +83,19 @@ describe.skipIf(!podAvailable)('solid-pod invoke (live)', { timeout: 60_000 }, (
       const r = JSON.parse((e as { stdout: string }).stdout)
       expect(r.error).toContain('not found')
       expect(r.available).toContain('memory-history')
+    }
+  })
+
+  it('navigation-only affordance (hub-view): error output carries sh:agentInstruction + hint (F6)', () => {
+    const url = `${POD}wiki/concepts/photosynthesis.md`
+    try {
+      execSync(`npx tsx src/cli.ts invoke ${url} hub-view`, { encoding: 'utf8', timeout: 55_000 })
+      expect.unreachable('should have exited 1')
+    } catch (e) {
+      const r = JSON.parse((e as { stdout: string }).stdout)
+      expect(r.error).toContain('no selectQuery or constructQuery')
+      expect(r.agentInstruction).toContain('index.md')
+      expect(r.hint).toContain('navigation-only')
     }
   })
 
